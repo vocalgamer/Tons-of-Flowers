@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.5</title>
+<title>TONS OF FLOWERS — Prototype v0.5.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.5（GDD v3.5準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.5.1（GDD v3.5準拠・2.5D・単一HTML）
+  v0.5.1：説明カード・クリアのポップアップの地を半透明に（うしろの おにわが 透けて見える）。
   v0.5  ：操作を ゆび1本／マウスだけに。タップ（クリック）した場所へHanaが歩く（水・岩はよける）。
           Cubeをタップ：とどけば すぐスタンプ、とおければ 歩いていって スタンプ。スタンプボタンと仮想スティックは廃止（キーボードは おまけで残す）。
   v0.4.1：プレイ中に画面が勝手に拡大する問題を修正。ブラウザの拡大（ピンチ・ダブルタップ等）を全面的に禁止。
@@ -111,9 +112,10 @@
 
   /* オーバーレイ */
   .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
-    background:rgba(59,47,42,.35);z-index:10}
+    background:rgba(59,47,42,.18);z-index:10}
   .overlay[hidden]{display:none}
-  .card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:22px 26px 20px;max-width:440px;width:100%;
+  /* 説明・クリアのカードは うしろの おにわが 透けて見える（文字が読める濃さは残す） */
+  .card{background:rgba(255,248,234,.72);border:3px solid var(--ink);border-radius:22px;padding:22px 26px 20px;max-width:440px;width:100%;
     box-shadow:0 8px 0 rgba(59,47,42,.3);text-align:center;max-height:100%;overflow:auto}
   h1{margin:0;font-size:30px;letter-spacing:.06em;line-height:1.15;text-shadow:2px 2px 0 #ffd0de}
   .sub{margin:6px 0 14px;font-size:13px;font-weight:700}
@@ -127,7 +129,7 @@
   .keys{margin:0 0 16px;font-size:13px;font-weight:700;line-height:2}
   .stats{display:flex;justify-content:center;gap:16px;margin:12px 0 18px;font-weight:700;font-size:13px}
   .stats b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
-  .tip{margin:0 0 14px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.6;text-align:left;background:#fff0c9;border:2px dashed var(--ink);border-radius:12px}
+  .tip{margin:0 0 14px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.6;text-align:left;background:rgba(255,240,201,.6);border:2px dashed var(--ink);border-radius:12px}
   .tip b{color:#c2355f}
   #toast{left:50%;top:38%;transform:translate(-50%,-50%);padding:12px 22px;text-align:center;max-width:min(440px,92vw);width:max-content;pointer-events:none;z-index:5;animation:toastIn .35s ease-out}
   #toast b{display:block;font-size:22px;letter-spacing:.06em}
@@ -219,9 +221,9 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.5</p>
+    <p class="sub">Prototype v0.5.1</p>
     <ol class="how">
-      <li><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが あるいていって「上の面」に スタンプ。たねの面が 花の面に なるよ。</li>
+      <li><span><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが あるいていって「上の面」に スタンプ。たねの面が 花の面に なるよ。</span></li>
       <li>Cubeは じぶんで ころころ ころがるよ。ひだり上の 図で、どの面が まだ たねか たしかめよう。♪マークの Cubeは Hanaに よってくる。</li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
     </ol>
