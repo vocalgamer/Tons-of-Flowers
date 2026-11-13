@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.4.1</title>
+<title>TONS OF FLOWERS — Prototype v0.5</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.4.1（GDD v3.5準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.5（GDD v3.5準拠・2.5D・単一HTML）
+  v0.5  ：操作を ゆび1本／マウスだけに。タップ（クリック）した場所へHanaが歩く（水・岩はよける）。
+          Cubeをタップ：とどけば すぐスタンプ、とおければ 歩いていって スタンプ。スタンプボタンと仮想スティックは廃止（キーボードは おまけで残す）。
   v0.4.1：プレイ中に画面が勝手に拡大する問題を修正。ブラウザの拡大（ピンチ・ダブルタップ等）を全面的に禁止。
   v0.4  ：軽快なBGM（Web Audioで合成・16小節ループ）。Hanaが通った花畑の花がなびく。
           クリア時にHanaがジャンプしてよろこぶ。Cubeは手をニョキっと出し、地面をおしてから転がる。
@@ -92,16 +94,8 @@
   kbd{font-family:var(--font);font-size:12px;font-weight:800;background:#fff;border:2px solid var(--ink);
     border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 1px}
 
-  /* タッチ用 */
-  #stampBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:96px;height:96px;border-radius:50%;
-    background:var(--pink);border:3px solid var(--ink);color:#fff;font-size:16px;text-shadow:0 1px 0 rgba(0,0,0,.25);
-    box-shadow:0 5px 0 rgba(59,47,42,.3);display:none}
-  #stampBtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(59,47,42,.3)}
-  #joy{position:fixed;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;border:3px solid rgba(59,47,42,.45);
-    background:rgba(255,248,234,.35);display:none;pointer-events:none}
-  #joyKnob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
-    background:rgba(59,47,42,.55)}
-  body.touch #stampBtn{display:block}
+  /* タッチ用（操作は指1本：タップした場所へ歩く／Cubeをタップでスタンプ） */
+  #game.over-cube{cursor:pointer}
   body.touch #hint{display:none}          /* スマホでは盤面の下にヒントを出さない（操作はスタート画面で説明） */
   body.touch .pc{display:none}
   body:not(.touch) .sp{display:none}
@@ -163,7 +157,6 @@
     #bar{height:10px;margin-top:4px}
     #goal::after{top:12px;font-size:10px}
     #cubePanel,#btns{top:max(8px,env(safe-area-inset-top))}
-    #stampBtn{width:84px;height:84px;font-size:15px}
     .overlay{padding:8px}
     .card{padding:12px 20px 12px;max-width:620px;border-radius:18px}
     h1{font-size:24px}
@@ -208,16 +201,11 @@
 </div>
 
 <div id="hint">
-  <span class="pc">うごく <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></span>
-  <span class="pc">スタンプ <kbd>スペース</kbd> か クリック</span>
-  <span class="pc">やりなおす <kbd>R</kbd></span>
-  <span class="sp">ひだりを なぞって うごく。みぎの ボタンで スタンプ</span>
+  <span class="pc">クリックした ところへ あるく</span>
+  <span class="pc">Cubeを クリックで スタンプ</span>
 </div>
 
 <div id="toast" class="panel" hidden><b id="toastName"></b><span id="toastTip"></span></div>
-
-<button id="stampBtn" aria-label="スタンプ">スタンプ</button>
-<div id="joy"><div id="joyKnob"></div></div>
 
 <div class="overlay" id="rotateOv">
   <div class="card">
@@ -231,18 +219,17 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.4.1</p>
+    <p class="sub">Prototype v0.5</p>
     <ol class="how">
-      <li>Hanaで Bloom Cube に ちかづいて「上の面」に スタンプ。たねの面が 花の面に なるよ。</li>
+      <li><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが あるいていって「上の面」に スタンプ。たねの面が 花の面に なるよ。</li>
       <li>Cubeは じぶんで ころころ ころがるよ。ひだり上の 図で、どの面が まだ たねか たしかめよう。♪マークの Cubeは Hanaに よってくる。</li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
     </ol>
     <p class="tip">ころがりおわる しゅんかんに スタンプすると <b>Perfect!</b> となりの面も おまけで さくよ。大開花の ちかくにいる Cubeにも 花の ちからが とどくよ。<br>
       Cubeどうしが となりあうと、くっついた 面が 花と たねなら <b>花は たねに もどっちゃう</b>。</p>
     <p class="keys">
-      <span class="pc">うごく <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>
-      スタンプ <kbd>スペース</kbd> / クリック</span>
-      <span class="sp">うごく：画面の ひだりがわを なぞる　／　スタンプ：みぎ下の ボタン</span>
+      <span class="pc">マウスだけで あそべるよ：クリックした ところへ あるく ／ Cubeを クリックで スタンプ</span>
+      <span class="sp">ゆび 1本で あそべるよ：タップした ところへ あるく ／ Cubeを タップで スタンプ</span>
     </p>
     <button class="big" id="startBtn">はじめる</button>
   </div>
@@ -379,7 +366,7 @@ function newState(idx){
     stage:idx, flags:STAGE.flags, butterflies:[], maxChain:0, perfects:0, toldBf:false, toldTrample:0, toldTouch:0,
     time:0, started:false, cleared:false, clearAt:0, clearShown:false,
     tiles, groundCount:ground, flowerCount:0,
-    hana:{x:hana.x,y:hana.y,face:'down',moving:false,walk:0,stampT:0,sx:1,joy:false,joyT:0,joyN:-1},
+    hana:{x:hana.x,y:hana.y,face:'down',moving:false,walk:0,stampT:0,sx:1,joy:false,joyT:0,joyN:-1,goal:null},
     cubes:[], bigFlowers:[], events:[],
     blooms:0, stamps:0, spawnT:0, nextId:1, firstSpawn:first,
     target:null, nearest:null,
@@ -550,12 +537,14 @@ function findTargets(){
   S.nearest=best;
   S.target=(best&&bd<=CFG.STAMP_RANGE)?best:null;
 }
-function tryStamp(){
+function stampable(c){ return c&&S.cubes.includes(c)&&c.state!=='drop'&&c.state!=='bloom'&&c.state!=='gone'&&!c.pendingBloom; }
+function tryStamp(pick){   // pick：タップ／クリックで えらんだCube（なければ いちばん近いCube）
   if(!S.started||!document.getElementById("startOv").hidden) return;
   Sfx.ensure();
   const h=S.hana; h.stampT=.28;
   if(S.cleared) return;
-  const c=S.target;
+  let c=S.target;
+  if(pick){ const p=cubePos(pick); c=stampable(pick)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE?pick:null; }
   if(!c){ textFx(h.x,h.y,1.5,'Cubeに ちかづこう','#7a5a48'); Sfx.miss(); return {ok:false,why:'far'}; }
   const f=c.ori.T;                       // スタンプ対象は常に「いま上にある面」
   const p=cubePos(c);
@@ -681,14 +670,58 @@ function walkable(x,y){
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]]){ const t=tileAt(Math.floor(x+ox),Math.floor(y+oy)); if(!t||t.type!=='ground') return false; }
   return true;
 }
+/* ---- タップ（クリック）した場所へ歩く：ゆび1本・マウスだけで あそべる操作 ---- */
+const WALK={ARRIVE:.06, NEAR:1.35, STUCK:.7};   // 着いたとみなす距離／Cubeの そばで止まる距離（スタンプ範囲1.7の内側）／進めない秒数で あきらめる
+const N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+const groundTile=(i,j)=>{ const t=tileAt(i,j); return !!t&&t.type==='ground'; };
+function walkMap(si,sj){   // Hanaのマスから 歩いて行けるマス（水・岩は よける。ななめは 角をすりぬけない）
+  const prev=new Map(), q=[[si,sj]]; prev.set(sj*COLS+si,-1);
+  for(let n=0;n<q.length;n++){ const [i,j]=q[n];
+    for(const [di,dj] of N8){ const ni=i+di,nj=j+dj, k=nj*COLS+ni;
+      if(!groundTile(ni,nj)||prev.has(k)) continue;
+      if(di&&dj&&(!groundTile(i+di,j)||!groundTile(i,j+dj))) continue;
+      prev.set(k,j*COLS+i); q.push([ni,nj]); } }
+  return prev;
+}
+function lineClear(ax,ay,bx,by){ const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.12); for(let k=1;k<=n;k++){ const t=k/n; if(!walkable(ax+(bx-ax)*t,ay+(by-ay)*t)) return false; } return true; }
+function setGoalPoint(x,y){
+  const h=S.hana; x=clamp(x,.3,COLS-.3); y=clamp(y,.3,ROWS-.3);
+  const prev=walkMap(Math.floor(h.x),Math.floor(h.y)), gi=Math.floor(x), gj=Math.floor(y);
+  if(!prev.has(gj*COLS+gi)){   // 水・岩・とどかない場所をタップ：いちばん近い 行けるマスへ
+    let bd=1e9,bk=-1; for(const k of prev.keys()){ const d=Math.hypot(k%COLS+.5-x,Math.floor(k/COLS)+.5-y); if(d<bd){bd=d;bk=k;} }
+    if(bk<0) return; x=bk%COLS+.5; y=Math.floor(bk/COLS)+.5;
+  }else if(!walkable(x,y)){ x=clamp(x,gi+.23,gi+.77); y=clamp(y,gj+.23,gj+.77); if(!walkable(x,y)){ x=gi+.5; y=gj+.5; } }   // 水ぎわは すこし内側
+  h.goal={x,y,stuckT:0};
+}
+function walkTarget(h,gx,gy){   // つぎに向かう点：まっすぐ行けるなら ゴール、だめなら 道すじのうち 見通せる いちばん先のマス
+  if(lineClear(h.x,h.y,gx,gy)) return {x:gx,y:gy};
+  const si=Math.floor(h.x), sj=Math.floor(h.y), prev=walkMap(si,sj);
+  let k=Math.floor(gy)*COLS+Math.floor(gx); if(!prev.has(k)) return null;
+  const path=[]; while(k!==-1){ path.push(k); k=prev.get(k); }   // ゴール → Hana の順
+  for(const p of path){ const x=p%COLS+.5, y=Math.floor(p/COLS)+.5; if(lineClear(h.x,h.y,x,y)) return {x,y}; }
+  return {x:si+.5,y:sj+.5};
+}
+function goalStep(h,dt){   // 目的地へ すすむ向き（グリッド上）。着いたら null
+  const g=h.goal; let gx,gy;
+  if(g.c){   // Cubeを えらんだ：スタンプが とどく所まで歩いて、着いたら スタンプ
+    const c=g.c, falling=S.cubes.includes(c)&&c.state==='drop';
+    if(!stampable(c)&&!falling){ h.goal=null; return null; }
+    const p=cubePos(c); gx=p.x; gy=p.y;
+    if(Math.hypot(gx-h.x,gy-h.y)<=WALK.NEAR){ if(!falling){ h.goal=null; tryStamp(c); } return null; }   // 降ってくる途中なら 着地を まつ
+  }else{ gx=g.x; gy=g.y; if(Math.hypot(gx-h.x,gy-h.y)<=WALK.ARRIVE){ h.goal=null; return null; } }
+  const w=walkTarget(h,gx,gy); if(!w){ h.goal=null; return null; }
+  const dx=w.x-h.x, dy=w.y-h.y, d=Math.hypot(dx,dy);
+  return {x:dx,y:dy,m:Math.min(1,d/(CFG.HANA_SPEED*dt+1e-9))};
+}
 const JOY={P:.52, LOCK:1.5};   // よろこびジャンプ：1回の周期（秒）／最初にかならず見せる秒数
 function updateHana(dt){
   const h=S.hana, v=Input.vector();
   if(h.stampT>0) h.stampT-=dt;
   h.moving=false;
+  if(v.x||v.y) h.goal=null;   // キーボードで うごかしたら、タップの目的地は やめる
   // ステージクリア：正面を向いて ぴょんぴょん跳ねて よろこぶ。動かすと おしまい（最初の1.5秒は止めない）
   if(h.joy){
-    if((v.x||v.y)&&h.joyT>JOY.LOCK) h.joy=false;
+    if((v.x||v.y||h.goal)&&h.joyT>JOY.LOCK) h.joy=false;
     else{
       h.joyT+=dt; h.face='down';
       const n=Math.floor(h.joyT/JOY.P);
@@ -697,12 +730,16 @@ function updateHana(dt){
       return;
     }
   }
-  if(v.x||v.y){
-    if(v.x) h.sx=v.x>0?1:-1;
-    h.face=Math.abs(v.x)>Math.abs(v.y)?(v.x>0?'right':'left'):(v.y>0?'down':'up');
-    // 画面上の方向 → グリッド方向
-    let gx=v.x+2*v.y, gy=2*v.y-v.x; const l=Math.hypot(gx,gy)||1; const m=Math.min(1,Math.hypot(v.x,v.y));
-    gx=gx/l*CFG.HANA_SPEED*m*dt; gy=gy/l*CFG.HANA_SPEED*m*dt;
+  // すすむ向き（グリッド上）：キーボード（画面の上下左右 → グリッド）か、タップした目的地
+  let mx=0,my=0,m=0,want=0; const x0=h.x, y0=h.y;
+  if(v.x||v.y){ mx=v.x+2*v.y; my=2*v.y-v.x; m=Math.min(1,Math.hypot(v.x,v.y)); }
+  else if(h.goal){ const r=goalStep(h,dt); if(r){ mx=r.x; my=r.y; m=r.m; } }
+  if((mx||my)&&m>0){
+    const l=Math.hypot(mx,my); mx/=l; my/=l;
+    const vx=mx-my, vy=(mx+my)/2;   // 画面上の向き（顔の向きに使う）
+    if(Math.abs(vx)>.05) h.sx=vx>0?1:-1;
+    h.face=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up');
+    want=CFG.HANA_SPEED*m*dt; const gx=mx*want, gy=my*want;
     if(walkable(h.x+gx,h.y)){h.x+=gx;h.moving=true;}
     if(walkable(h.x,h.y+gy)){h.y+=gy;h.moving=true;}
     if(h.moving) h.walk+=dt;
@@ -715,6 +752,8 @@ function updateHana(dt){
       if(walkable(nx,ny)){h.x=nx;h.y=ny;} else if(walkable(nx,h.y)) h.x=nx; else if(walkable(h.x,ny)) h.y=ny;
     }
   }
+  // 目的地へ 進めない（Cubeに ふさがれた 等）ときは、しばらくして あきらめる
+  if(h.goal&&want>0){ if(Math.hypot(h.x-x0,h.y-y0)<want*.3) h.goal.stuckT+=dt; else h.goal.stuckT=0; if(h.goal.stuckT>WALK.STUCK) h.goal=null; }
   // 花畑・つぼみの中を通ると、花がかき分けられ、通りすぎたあとも ゆらゆら なびく
   if(h.moving){
     for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){
@@ -767,16 +806,42 @@ function updateFx(dt){
  * 7. INPUT
  * ================================================================ */
 const Input={
-  keys:new Set(), joy:null,
-  vector(){
+  keys:new Set(),
+  vector(){   // キーボード（おまけ。なくても マウスだけで あそべる）
     let x=0,y=0; const k=this.keys;
     if(k.has('ArrowLeft')||k.has('KeyA')) x-=1;
     if(k.has('ArrowRight')||k.has('KeyD')) x+=1;
     if(k.has('ArrowUp')||k.has('KeyW')) y-=1;
     if(k.has('ArrowDown')||k.has('KeyS')) y+=1;
     if(x||y){ const l=Math.hypot(x,y); return {x:x/l,y:y/l}; }
-    if(this.joy&&this.joy.mag>.15) return {x:this.joy.x,y:this.joy.y};
     return {x:0,y:0};
+  },
+  // 画面の点 → 盤面（地面の高さ）の座標
+  toWorld(cx,cy){ const r=canvas.getBoundingClientRect(), lx=(cx-r.left-View.ox)/View.scale, ly=(cy-r.top-View.oy)/View.scale;
+    const a=lx/(CFG.TW/2), b=ly/(CFG.TH/2); return {x:(a+b)/2,y:(b-a)/2}; },
+  // タップ（クリック）した所にいる Cube。指でも押しやすいよう、見た目より すこし大きめに判定
+  pickCube(cx,cy){
+    const r=canvas.getBoundingClientRect(), lx=(cx-r.left-View.ox)/View.scale, ly=(cy-r.top-View.oy)/View.scale, w=this.toWorld(cx,cy);
+    let best=null,bs=1;
+    for(const c of S.cubes){
+      if(c.state==='bloom'||c.state==='gone'||c.pendingBloom) continue;
+      const p=cubePos(c), q=iso(p.x,p.y,CFG.CUBE*.5);
+      let s=Math.pow((lx-q.x)/40,2)+Math.pow((ly-q.y)/46,2);
+      s=Math.min(s,Math.hypot(w.x-p.x,w.y-p.y)/.8);   // Cubeの足もと付近の地面も Cube あつかい
+      if(s<=bs){ bs=s; best=c; }
+    }
+    return best;
+  },
+  tap(cx,cy){
+    const h=S.hana, c=this.pickCube(cx,cy);
+    if(c){
+      const p=cubePos(c);
+      if(stampable(c)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE){ h.goal=null; tryStamp(c); }   // とどく：すぐスタンプ（Perfectのタイミングも そのまま）
+      else h.goal={c,stuckT:0};                                                                      // とおい：歩いていって スタンプ
+      return;
+    }
+    const w=this.toWorld(cx,cy); setGoalPoint(w.x,w.y);
+    if(h.goal) ringFx(h.goal.x,h.goal.y,'#ffffff',.32);
   },
   init(canvas){
     const MOVE=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','KeyA','KeyD','KeyW','KeyS'];
@@ -789,26 +854,27 @@ const Input={
       else if(e.code==='KeyM'){ UI.toggleSound(); }
     });
     window.addEventListener('keyup',e=>this.keys.delete(e.code));
-    window.addEventListener('blur',()=>{this.keys.clear();this.joy=null;UI.joy(null);});
+    window.addEventListener('blur',()=>{this.keys.clear();});
 
-    // マウス：クリックでスタンプ ／ タッチ：左側ドラッグで移動・右側タップでスタンプ
-    let joyId=null,ox=0,oy=0;
+    // ゆび1本／マウスだけ：タップ（クリック）した所へ歩く。Cubeをタップでスタンプ（とおければ 歩いていって スタンプ）。
+    // 押したまま なぞると、Hanaが 指（マウス）を おいかける。2本目の指は つかわない
+    let pid=null,sx0=0,sy0=0,drag=false;
     canvas.addEventListener('pointerdown',e=>{
       Sfx.ensure();
-      if(e.pointerType==='mouse'){ if(e.button===0) tryStamp(); return; }
-      document.body.classList.add('touch'); fit();
-      if(e.clientX<window.innerWidth*.6&&joyId===null){ joyId=e.pointerId; ox=e.clientX; oy=e.clientY; this.joy={x:0,y:0,mag:0}; UI.joy({ox,oy,dx:0,dy:0}); try{canvas.setPointerCapture(e.pointerId);}catch(_){} }
-      else tryStamp();
+      if(e.pointerType==='mouse'&&e.button!==0) return;
       e.preventDefault();
+      if(e.pointerType!=='mouse'&&!document.body.classList.contains('touch')){ document.body.classList.add('touch'); fit(); }
+      if(pid!==null||!S.started||!document.getElementById('startOv').hidden||PORTRAIT.matches) return;
+      pid=e.pointerId; sx0=e.clientX; sy0=e.clientY; drag=false;
+      try{canvas.setPointerCapture(pid);}catch(_){}
+      this.tap(e.clientX,e.clientY);
     });
     canvas.addEventListener('pointermove',e=>{
-      if(e.pointerId!==joyId) return;
-      let dx=e.clientX-ox, dy=e.clientY-oy; const l=Math.hypot(dx,dy), M=44;
-      if(l>M){dx=dx/l*M;dy=dy/l*M;}
-      const mag=Math.min(1,l/M); this.joy={x:l?dx/Math.min(l,M)*mag:0,y:l?dy/Math.min(l,M)*mag:0,mag};
-      UI.joy({ox,oy,dx,dy});
+      if(e.pointerId!==pid){ if(e.pointerType==='mouse'&&pid===null) canvas.classList.toggle('over-cube',!!this.pickCube(e.clientX,e.clientY)); return; }
+      if(!drag&&Math.hypot(e.clientX-sx0,e.clientY-sy0)>14) drag=true;
+      if(drag){ const w=this.toWorld(e.clientX,e.clientY); setGoalPoint(w.x,w.y); }
     });
-    const end=e=>{ if(e.pointerId===joyId){ joyId=null; this.joy=null; UI.joy(null); } };
+    const end=e=>{ if(e.pointerId===pid) pid=null; };
     canvas.addEventListener('pointerup',end); canvas.addEventListener('pointercancel',end);
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
   }
@@ -1134,6 +1200,7 @@ function drawCubeShadow(c){
   const G=cubeGeometry(c), k=c.state==='drop'?clamp(c.t/CFG.DROP_T):1;
   groundEllipse(G.cx+.05,G.cy+.05,(.3+.26*k)*G.sc); ctx.fillStyle=`rgba(59,47,42,${.1+.16*k})`; ctx.fill();
   if(S.target===c&&!S.cleared){ const p=.5+.5*Math.sin(S.time*5); groundEllipse(G.cx,G.cy,.66+.03*p); ctx.strokeStyle=`rgba(255,255,255,${.6+.3*p})`; ctx.lineWidth=2.5; ctx.setLineDash([6,5]); ctx.lineDashOffset=-S.time*14; ctx.stroke(); ctx.setLineDash([]); }
+  else if(S.hana.goal&&S.hana.goal.c===c&&!S.cleared){ const p=.5+.5*Math.sin(S.time*7); groundEllipse(G.cx,G.cy,.66+.04*p); ctx.strokeStyle='#ff8fb1'; ctx.lineWidth=3; ctx.setLineDash([6,5]); ctx.lineDashOffset=-S.time*20; ctx.stroke(); ctx.setLineDash([]); }   // えらんだCube：いま 向かっている
 }
 /* Cubeの上に浮かぶ「6面の展開図」。見えない面の状態もここで分かる */
 const NET={T:[0,0],E:[1,0],S:[0,1],W:[-1,0],N:[0,-1],B:[-2,0]};
@@ -1307,6 +1374,10 @@ function render(){
 
   // 地面の輪エフェクト
   for(const r of S.fx.rings){ if(r.t<0) continue; const t=r.t/r.max; groundEllipse(r.x,r.y,.2+easeOut(t)*r.rMax,r.z); ctx.strokeStyle=r.color; ctx.globalAlpha=1-t; ctx.lineWidth=5*(1-t)+1; ctx.stroke(); ctx.globalAlpha=1; }
+  // タップ（クリック）した目的地の しるし
+  const goal=S.hana.goal;
+  if(goal&&!goal.c){ const p=.5+.5*Math.sin(time*7); groundEllipse(goal.x,goal.y,.17+.05*p); ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=2.4; ctx.stroke();
+    groundEllipse(goal.x,goal.y,.07); ctx.fillStyle='#ff8fb1'; ctx.fill(); }
   for(const c of S.cubes) drawCubeShadow(c);
 
   // 奥行き順に並べて描く
@@ -1375,7 +1446,6 @@ const UI={
     $('helpBtn').onclick=()=>{ $('startBtn').textContent=S.started?'つづける':'はじめる'; $('startOv').hidden=false; $('startBtn').focus(); };
     $('soundBtn').onclick=()=>this.toggleSound();
     $('rotBtn').hidden=!canFull; $('rotBtn').onclick=()=>goLandscape();
-    const sb=$('stampBtn'); sb.addEventListener('pointerdown',e=>{ e.preventDefault(); tryStamp(); });
     for(const b of document.querySelectorAll('button')) b.addEventListener('keyup',e=>{ if(e.code==='Space') e.preventDefault(); });
     if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
   },
@@ -1386,22 +1456,22 @@ const UI={
   restart(){ this.load(S.stage); },
   load(idx){ const was=S.started; S=newState(idx); S.started=was; fit(); if(was) this.toast(); $('clearOv').hidden=true; this.lastRate=-1; Input.keys.clear(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on) Sfx.ensure(); },
-  joy(j){ const el=$('joy'); if(!j){el.style.display='none';return;} el.style.display='block'; el.style.left=j.ox+'px'; el.style.top=j.oy+'px'; $('joyKnob').style.transform=`translate(${j.dx}px,${j.dy}px)`; },
   update(){
     const r=Math.floor(flowerRate()*100+1e-6);
     if(r!==this.lastRate){ this.lastRate=r; $('rateNum').innerHTML=r+'<small>%</small>'; $('barFill').style.width=Math.min(100,r)+'%'; }
     // 6面パネル
     const g=this.netCtx, c=S.target||S.nearest;
     g.setTransform(2,0,0,2,0,0); g.clearRect(0,0,168,104);
-    let msg='', ok=false;
+    let msg='', ok=false; const touch=document.body.classList.contains('touch');
     if(c){ drawNet(g,c,96,44,24,12,S.time,true);
       g.font=`800 10px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillStyle='#3b2f2a';
       g.fillText('下',14,20); g.fillText('上の面',96,88); g.strokeStyle='#e0a400'; g.lineWidth=2; g.beginPath(); g.moveTo(96,60); g.lineTo(96,79); g.stroke();
       $('cubeCount').textContent=grownCount(c)+' / 6';
       if(S.cleared) msg='おにわが できたよ';
-      else if(!S.target) msg='Cubeに ちかづこう';
+      else if(S.hana.goal&&S.hana.goal.c) msg='Cubeへ むかってるよ';
+      else if(!S.target) msg=touch?'Cubeを タップしてね':'Cubeを クリックしてね';
       else if(c.grown[c.ori.T]) msg='ころがるのを まとう';
-      else { msg='いまだ！ 上の面に スタンプ'; ok=true; }
+      else { msg=touch?'いまだ！ Cubeを タップ':'いまだ！ Cubeを クリック'; ok=true; }
     }else{ $('cubeCount').textContent='- / 6'; msg=S.cleared?'おにわが できたよ':'つぎの Cubeが ふってくるよ'; }
     if(msg!==this.lastMsg){ this.lastMsg=msg; const el=$('cubeMsg'); el.textContent=msg; el.className=ok?'ok':''; }
     // クリア表示
@@ -1445,7 +1515,7 @@ window.addEventListener('orientationchange',()=>{ fit(); setTimeout(fit,250); })
 document.addEventListener('fullscreenchange',fit);
 document.addEventListener('webkitfullscreenchange',fit);
 if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
-const onTurn=()=>{ Input.keys.clear(); Input.joy=null; UI.joy(null); fit(); };
+const onTurn=()=>{ Input.keys.clear(); fit(); };
 if(PORTRAIT.addEventListener) PORTRAIT.addEventListener('change',onTurn); else if(PORTRAIT.addListener) PORTRAIT.addListener(onTurn);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) Bgm.stop(.1); });   // 画面を離れたら すぐ止める
 $('stageName').textContent=STAGE.name;
