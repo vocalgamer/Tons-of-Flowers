@@ -3,10 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>TONS OF FLOWERS — Prototype v0.3.1</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>TONS OF FLOWERS — Prototype v0.3.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.3.1（GDD v3.5準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.3.2（GDD v3.5準拠・2.5D・単一HTML）
   このファイル1つだけで動きます。外部ライブラリ・通信・ビルドは不要です。
+  v0.3.2：スマホはよこ向き固定。ステージを画面いっぱいに表示（HUDは四隅へ）。
+          縦向きのときは「よこむきに してね」画面を出してゲームを止める。
+          Androidでは「はじめる」で全画面＋よこ向きロック（対応ブラウザのみ）。
   v0.3.1：Hanaを仮グラフィック（Hana_Movement_SpriteSheet_alpha.png）に差し替え。
           待機・歩き × 前後左右4方向 × 4コマ。画像はこのファイルに埋め込み済み（HANA_SPR）。
           画像が読めない場合は、従来のCanvas描画のHanaで表示する。
@@ -40,8 +45,10 @@
   .panel{position:fixed;background:rgba(255,248,234,.93);border:2px solid var(--ink);border-radius:14px;
     box-shadow:0 3px 0 rgba(59,47,42,.25)}
 
+  /* HUDは、ひし形の盤面が届かない画面の四隅に置く（盤面を最大まで大きくするため）
+     左上＝Cubeの6面 ／ 右上＝ボタンと花率 ／ 右下＝スタンプ（タッチ時） */
   /* 花率 */
-  #rate{top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(340px,46vw);padding:7px 14px 24px}
+  #rate{top:calc(max(10px,env(safe-area-inset-top)) + 46px);right:max(10px,env(safe-area-inset-right));width:min(250px,30vw);padding:7px 14px 24px}
   #rate .row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   #rate .name{font-weight:700;font-size:14px}
   #rateNum{font-weight:800;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
@@ -52,14 +59,14 @@
   #goal::after{content:"90%で クリア";position:absolute;top:15px;right:-12px;white-space:nowrap;font-size:11px;font-weight:800}
 
   /* Cubeの6面パネル */
-  #cubePanel{top:max(10px,env(safe-area-inset-top));left:10px;padding:6px 10px 6px;width:190px}
+  #cubePanel{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 10px 6px;width:190px}
   #cubePanel .name{font-weight:700;font-size:13px;display:flex;justify-content:space-between}
   #net{display:block;width:168px;height:104px;margin:0 auto}
   #cubeMsg{font-size:12px;font-weight:700;text-align:center;min-height:16px}
   #cubeMsg.ok{color:#c2355f}
 
   /* ボタン */
-  #btns{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;display:flex;gap:6px}
+  #btns{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));display:flex;gap:6px}
   button{font-family:var(--font);font-weight:800;color:var(--ink);cursor:pointer}
   .btn{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:8px 12px;font-size:13px;
     box-shadow:0 3px 0 rgba(59,47,42,.25)}
@@ -76,7 +83,7 @@
     border-bottom-width:3px;border-radius:6px;padding:0 6px;margin:0 1px}
 
   /* タッチ用 */
-  #stampBtn{position:fixed;right:18px;bottom:max(22px,env(safe-area-inset-bottom));width:96px;height:96px;border-radius:50%;
+  #stampBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:96px;height:96px;border-radius:50%;
     background:var(--pink);border:3px solid var(--ink);color:#fff;font-size:16px;text-shadow:0 1px 0 rgba(0,0,0,.25);
     box-shadow:0 5px 0 rgba(59,47,42,.3);display:none}
   #stampBtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(59,47,42,.3)}
@@ -85,8 +92,18 @@
   #joyKnob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
     background:rgba(59,47,42,.55)}
   body.touch #stampBtn{display:block}
-  body.touch #hint .pc{display:none}
-  body:not(.touch) #hint .sp{display:none}
+  body.touch #hint{display:none}          /* スマホでは盤面の下にヒントを出さない（操作はスタート画面で説明） */
+  body.touch .pc{display:none}
+  body:not(.touch) .sp{display:none}
+
+  /* スマホを縦にしているとき：よこ向きにするよう案内し、ゲームは止める */
+  #rotateOv{display:none;z-index:30;background:linear-gradient(180deg,#bfe6e0 0%,#dff1dc 55%,#f8ecd0 100%)}
+  @media (orientation:portrait) and (pointer:coarse){ #rotateOv{display:flex} }
+  .phone{width:64px;height:104px;margin:4px auto 14px;border:4px solid var(--ink);border-radius:14px;background:#fff;position:relative;
+    animation:turn 2.4s ease-in-out infinite}
+  .phone::after{content:"";position:absolute;left:50%;bottom:6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;border:2px solid var(--ink)}
+  @keyframes turn{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+  @media (prefers-reduced-motion:reduce){.phone{animation:none;transform:rotate(-90deg)}}
 
   /* オーバーレイ */
   .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
@@ -116,17 +133,47 @@
   .link{background:none;border:none;font-size:13px;text-decoration:underline;margin-top:12px;display:block;width:100%}
 
   @media (max-width:700px){
-    #rate{left:auto;right:10px;transform:none;top:calc(max(10px,env(safe-area-inset-top)) + 46px);width:min(230px,52vw)}
     #cubePanel{width:160px;padding:4px 6px}
     #net{width:144px;height:89px}
     .btn{padding:7px 9px;font-size:12px}
     #hint{font-size:12px;padding:5px 12px}
     h1{font-size:25px}
   }
+  /* よこ向きのスマホ（高さが小さい画面）：HUDを小さくまとめ、盤面の場所を広げる */
   @media (max-height:520px){
     #hint{display:none}
-    .card{padding:14px 20px}
-    ol.how li{padding:3px 0;font-size:13.5px}
+    #cubePanel{width:146px;padding:3px 6px 4px;border-radius:12px}
+    #cubePanel .name{font-size:11.5px}
+    #net{width:132px;height:82px}
+    #cubeMsg{font-size:11px;min-height:14px}
+    .btn{padding:5px 9px;font-size:12px;border-radius:10px}
+    #rate{top:calc(max(8px,env(safe-area-inset-top)) + 38px);width:min(196px,28vw);padding:4px 10px 20px;border-radius:12px}
+    #rate .name{font-size:12px}
+    #rateNum{font-size:20px}
+    #bar{height:10px;margin-top:4px}
+    #goal::after{top:12px;font-size:10px}
+    #cubePanel,#btns{top:max(8px,env(safe-area-inset-top))}
+    #stampBtn{width:84px;height:84px;font-size:15px}
+    .overlay{padding:8px}
+    .card{padding:12px 20px 12px;max-width:620px;border-radius:18px}
+    h1{font-size:24px}
+    #startOv h1 br{display:none}
+    .sub{margin:2px 0 8px}
+    ol.how{margin-bottom:8px}
+    ol.how li{padding:2px 0;font-size:13px;line-height:1.45}
+    ol.how li::before{width:22px;height:22px;font-size:12px}
+    .tip{font-size:12px;padding:6px 10px;margin-bottom:10px;line-height:1.5}
+    .keys{margin-bottom:8px;line-height:1.5;font-size:12px}
+    .stats{margin:8px 0 10px}
+    .big{font-size:17px;padding:8px 26px}
+    .link{margin-top:6px}
+  }
+  /* とても低い画面（小型スマホ＋ブラウザのバー）：補足のヒントは省く（同じ内容はステージ1開始時にも出る） */
+  @media (max-height:380px){
+    .card .tip{display:none}
+    .sub{margin:0 0 4px}
+    ol.how li{line-height:1.35}
+    .big{padding:6px 24px}
   }
 </style>
 </head>
@@ -162,10 +209,19 @@
 <button id="stampBtn" aria-label="スタンプ">スタンプ</button>
 <div id="joy"><div id="joyKnob"></div></div>
 
+<div class="overlay" id="rotateOv">
+  <div class="card">
+    <div class="phone" aria-hidden="true"></div>
+    <h1>よこむきに してね</h1>
+    <p class="sub">スマホを よこにすると、おにわが 大きく 見えるよ</p>
+    <button class="big" id="rotBtn" hidden>よこ画面で あそぶ</button>
+  </div>
+</div>
+
 <div class="overlay" id="startOv">
   <div class="card">
-    <h1>TONS OF<br>FLOWERS</h1>
-    <p class="sub">Prototype v0.3.1</p>
+    <h1>TONS OF <br>FLOWERS</h1>
+    <p class="sub">Prototype v0.3.2</p>
     <ol class="how">
       <li>Hanaで Bloom Cube に ちかづいて「上の面」に スタンプ。たねの面が 花の面に なるよ。</li>
       <li>Cubeは じぶんで ころころ ころがるよ。ひだり上の 図で、どの面が まだ たねか たしかめよう。♪マークの Cubeは Hanaに よってくる。</li>
@@ -175,6 +231,7 @@
     <p class="keys">
       <span class="pc">うごく <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>
       スタンプ <kbd>スペース</kbd> / クリック</span>
+      <span class="sp">うごく：画面の ひだりがわを なぞる　／　スタンプ：みぎ下の ボタン</span>
     </p>
     <button class="big" id="startBtn">はじめる</button>
   </div>
@@ -760,17 +817,32 @@ function drawSprite(ctx,s,x,y,scale,rot){ ctx.save(); ctx.translate(x,y); if(rot
  * ================================================================ */
 const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
 const View={scale:1,ox:0,oy:0,dpr:1,w:0,h:0};
+// ステージ全体（ひし形の盤面＋奥のマスに立つCube・花・Hanaの高さ＋手前の側面）が画面いっぱいに収まる倍率にする。
+// HUDは盤面のひし形が届かない四隅に置いているので、上下左右の余白は最小限でよい。
+const FIT={TOP:50, BOT:CFG.ZH*.55+6, SIDE:16, MARGIN:6, MAX:3.2};   // TOP＝いちばん奥のマスに立つHana・Cube（6面図つき）が切れない高さ
 function fit(){
   const w=window.innerWidth,h=window.innerHeight,dpr=Math.min(window.devicePixelRatio||1,2.5);
   const touch=document.body.classList.contains('touch');
-  const narrow=w<=700;
-  const top=narrow?150:96, bottom=touch?(h<520?20:120):(h<=520?14:58);
-  const availH=Math.max(120,h-top-bottom), DW=COLS*CFG.TW+70, DH=(COLS+ROWS)*CFG.TH/2+150;
-  const sc=clamp(Math.min(w/DW,availH/DH),.25,2.4);
+  const span=COLS+ROWS, DW=span*CFG.TW/2+FIT.SIDE, DH=span*CFG.TH/2+FIT.TOP+FIT.BOT;
+  const top=FIT.MARGIN, bottom=(!touch&&h>520)?52:FIT.MARGIN;     // PCは下に操作ヒントの帯がある
+  const availH=Math.max(120,h-top-bottom);
+  const sc=clamp(Math.min((w-FIT.MARGIN*2)/DW,availH/DH),.25,FIT.MAX);
   canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
   View.scale=sc; View.dpr=dpr; View.w=w; View.h=h;
   View.ox=w/2 - ((COLS-ROWS)*CFG.TW/4)*sc;
-  View.oy=top+(availH-DH*sc)/2+112*sc;
+  View.oy=top+(availH-DH*sc)/2+FIT.TOP*sc;
+}
+// スマホ：全画面にして よこ向きにロック（Android Chrome等。iPhoneは非対応なので案内画面のみ）
+const PORTRAIT=window.matchMedia?window.matchMedia('(orientation:portrait) and (pointer:coarse)'):{matches:false};
+const canFull=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+function goLandscape(){
+  if(!document.body.classList.contains('touch')&&!PORTRAIT.matches) return;
+  try{
+    const el=document.documentElement, lock=()=>{ try{ const p=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape'); if(p&&p.catch) p.catch(()=>{}); }catch(_){} };
+    if(document.fullscreenElement||document.webkitFullscreenElement){ lock(); return; }
+    const p=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen?el.webkitRequestFullscreen():null;
+    if(p&&p.then) p.then(lock).catch(()=>{}); else lock();
+  }catch(_){}
 }
 const FONT='"Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic UI","Meiryo",sans-serif';
 const GROUND=[['#cdaa91','#c6a189'],['#bcd486','#b4cd7d'],['#86cf72','#7cc869']];
@@ -1082,11 +1154,12 @@ const UI={
     $('lookBtn').onclick=()=>{ $('clearOv').hidden=true; };
     $('helpBtn').onclick=()=>{ $('startBtn').textContent=S.started?'つづける':'はじめる'; $('startOv').hidden=false; $('startBtn').focus(); };
     $('soundBtn').onclick=()=>this.toggleSound();
+    $('rotBtn').hidden=!canFull; $('rotBtn').onclick=()=>goLandscape();
     const sb=$('stampBtn'); sb.addEventListener('pointerdown',e=>{ e.preventDefault(); tryStamp(); });
     for(const b of document.querySelectorAll('button')) b.addEventListener('keyup',e=>{ if(e.code==='Space') e.preventDefault(); });
     if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
   },
-  start(){ Sfx.ensure(); const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
+  start(){ Sfx.ensure(); goLandscape(); const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   toastT:0,
   toast(){ $('stageName').textContent=STAGE.name; $('toastName').textContent=(S.stage+1)+'. '+STAGE.name; $('toastTip').textContent=STAGE.tip; const el=$('toast'); el.hidden=true; void el.offsetWidth; el.hidden=false; clearTimeout(this.toastT); this.toastT=setTimeout(()=>{el.hidden=true;},4200); },
   next(){ this.load(S.stage+1>=STAGES.length?0:S.stage+1); },
@@ -1126,7 +1199,7 @@ const UI={
  * 12. MAIN
  * ================================================================ */
 function update(dt){
-  if(S.started && $('startOv').hidden){
+  if(S.started && $('startOv').hidden && !PORTRAIT.matches){   // 縦向きの間は止める
     S.time+=dt;
     updateHana(dt);
     updateCubes(dt);
@@ -1145,7 +1218,12 @@ function frame(ts){
 S=newState(0);
 Assets.init(); UI.init(); Input.init(canvas); fit();
 window.addEventListener('resize',fit);
-window.addEventListener('orientationchange',fit);
+window.addEventListener('orientationchange',()=>{ fit(); setTimeout(fit,250); });   // 回転直後はサイズが遅れて変わる端末がある
+document.addEventListener('fullscreenchange',fit);
+document.addEventListener('webkitfullscreenchange',fit);
+if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
+const onTurn=()=>{ Input.keys.clear(); Input.joy=null; UI.joy(null); fit(); };
+if(PORTRAIT.addEventListener) PORTRAIT.addEventListener('change',onTurn); else if(PORTRAIT.addListener) PORTRAIT.addListener(onTurn);
 $('stageName').textContent=STAGE.name;
 requestAnimationFrame(frame);
 
