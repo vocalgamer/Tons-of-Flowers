@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.3.2</title>
+<title>TONS OF FLOWERS — Prototype v0.4.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.3.2（GDD v3.5準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.4.1（GDD v3.5準拠・2.5D・単一HTML）
+  v0.4.1：プレイ中に画面が勝手に拡大する問題を修正。ブラウザの拡大（ピンチ・ダブルタップ等）を全面的に禁止。
+  v0.4  ：軽快なBGM（Web Audioで合成・16小節ループ）。Hanaが通った花畑の花がなびく。
+          クリア時にHanaがジャンプしてよろこぶ。Cubeは手をニョキっと出し、地面をおしてから転がる。
+          Cube同士がとなりあい、くっついた面が「花」と「たね」なら、花の面はたねに戻る（着地時に判定）。
   このファイル1つだけで動きます。外部ライブラリ・通信・ビルドは不要です。
   v0.3.2：スマホはよこ向き固定。ステージを画面いっぱいに表示（HUDは四隅へ）。
           縦向きのときは「よこむきに してね」画面を出してゲームを止める。
@@ -36,7 +40,13 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;overflow:hidden;font-family:var(--font);color:var(--ink);
-    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+    -webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
+  /* ブラウザの拡大（ピンチ・ダブルタップ）をさせない：すべての要素でタッチの標準動作を止める。
+     iPhoneのSafariは viewport の user-scalable=no を無視するため、これが必要。
+     スクロールが必要なカード（説明・クリア画面）だけ たて方向のスクロールを許す（pan-y でも拡大はできない） */
+  *{touch-action:none}
+  .card,.card *{touch-action:pan-y}
   body{background:
     radial-gradient(60vmax 40vmax at 82% 8%, #fff6c9 0%, rgba(255,246,201,0) 60%),
     linear-gradient(180deg,#bfe6e0 0%,#dff1dc 48%,#f8ecd0 100%)}
@@ -221,13 +231,14 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.3.2</p>
+    <p class="sub">Prototype v0.4.1</p>
     <ol class="how">
       <li>Hanaで Bloom Cube に ちかづいて「上の面」に スタンプ。たねの面が 花の面に なるよ。</li>
       <li>Cubeは じぶんで ころころ ころがるよ。ひだり上の 図で、どの面が まだ たねか たしかめよう。♪マークの Cubeは Hanaに よってくる。</li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
     </ol>
-    <p class="tip">ころがりおわる しゅんかんに スタンプすると <b>Perfect!</b> となりの面も おまけで さくよ。大開花の ちかくにいる Cubeにも 花の ちからが とどくよ。</p>
+    <p class="tip">ころがりおわる しゅんかんに スタンプすると <b>Perfect!</b> となりの面も おまけで さくよ。大開花の ちかくにいる Cubeにも 花の ちからが とどくよ。<br>
+      Cubeどうしが となりあうと、くっついた 面が 花と たねなら <b>花は たねに もどっちゃう</b>。</p>
     <p class="keys">
       <span class="pc">うごく <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> / <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>
       スタンプ <kbd>スペース</kbd> / クリック</span>
@@ -264,6 +275,7 @@ const CFG = {
   TW:64, TH:32, ZH:38,        // タイル幅・高さ、高さ1あたりの画面px
   CUBE:0.76,                  // Cubeの一辺（タイル単位）
   ROLL_T:0.55,                // 転がりにかかる秒数
+  PREP_T:0.34,                // 転がる前に「手」がニョキっと出て地面をおすまでの秒数
   REST_SEED:1.9,              // 上の面が「たね」のとき、次に転がるまでの秒数
   REST_GROWN:1.1,             // 上の面が「花」のとき
   DROP_T:0.75, BLOOM_T:0.55,
@@ -359,14 +371,15 @@ function newState(idx){
       if(type==='ground') ground++;
       const deco=[]; for(let k=0;k<5;k++) deco.push({u:.14+rnd()*.72, v:.14+rnd()*.72, c:Math.floor(rnd()*5), s:.8+rnd()*.35, ph:rnd()*6.28});
       deco.sort((a,b)=>(a.u+a.v)-(b.u+b.v));
-      row.push({i,j,type,state:ch==='b'?1:0,bf:null,pop:1,flash:0,deco,crack:[rnd(),rnd(),rnd(),rnd()]});
+      row.push({i,j,type,state:ch==='b'?1:0,bf:null,pop:1,flash:0,deco,crack:[rnd(),rnd(),rnd(),rnd()],
+        wt:9, wd:1});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
     } tiles.push(row);
   }
   return {
-    stage:idx, flags:STAGE.flags, butterflies:[], maxChain:0, perfects:0, toldBf:false, toldTrample:0,
+    stage:idx, flags:STAGE.flags, butterflies:[], maxChain:0, perfects:0, toldBf:false, toldTrample:0, toldTouch:0,
     time:0, started:false, cleared:false, clearAt:0, clearShown:false,
     tiles, groundCount:ground, flowerCount:0,
-    hana:{x:hana.x,y:hana.y,face:'down',moving:false,walk:0,stampT:0},
+    hana:{x:hana.x,y:hana.y,face:'down',moving:false,walk:0,stampT:0,sx:1,joy:false,joyT:0,joyN:-1},
     cubes:[], bigFlowers:[], events:[],
     blooms:0, stamps:0, spawnT:0, nextId:1, firstSpawn:first,
     target:null, nearest:null,
@@ -429,9 +442,12 @@ function chooseRoll(c){
   if(pick.near) c.emoteT=1;
   return pick.d;
 }
+// 生き物らしさ：転がる前に、左右の面から「手」がニョキっと出て うしろ寄りの地面をおし、その勢いで転がる
+function startPrep(c,d){ c.state='prep'; c.t=0; c.dir=d; c.planted=false; c.armBack=null; }
+function cancelPrep(c){ c.armBack={dir:c.dir,t:0}; c.state='idle'; c.t=0; c.rest=.5; }   // 行き先がふさがったら手を引っこめる
 function startRoll(c,d){
   c.prevOri=c.ori; c.ori=rolledOri(c.ori,d); c.fi=c.i; c.fj=c.j; c.i+=DIRS[d].dx; c.j+=DIRS[d].dy;
-  c.dir=d; c.state='roll'; c.t=0;
+  c.dir=d; c.state='roll'; c.t=0; c.armBack=null;
 }
 // 未熟なCube：たねの面を下にして花畑に乗ると、その1マスだけ つぼみに戻る（荒地までは戻さない）
 function onLand(c){
@@ -440,6 +456,23 @@ function onLand(c){
   if(S.flags.trample&&!S.cleared&&t&&t.state===2&&!c.grown[c.ori.B]&&!bigAt(c.i,c.j)){
     setTile(t,1); wiltFx(c.i+.5,c.j+.5); Sfx.wilt();
     if(S.toldTrample<3){ S.toldTrample++; textFx(c.i+.5,c.j+.5,1.9,'ふまれて つぼみに…','#6c6f8f'); }
+  }
+  touchRule(c);
+}
+// Cube同士がとなりあったとき、くっついた面が「花」と「たね」なら、花の面は たねに もどる。
+// （花どうし・たねどうしは そのまま）判定は Cubeが着地した（ころがり終わった・空から降りた）ときに行う。
+function touchRule(c){
+  if(S.cleared||c.pendingBloom) return;
+  for(const k in DIRS){
+    const o=cubeAt(c.i+DIRS[k].dx,c.j+DIRS[k].dy,c);
+    if(!o||o.pendingBloom||o.state==='roll'||o.state==='drop'||o.state==='bloom'||o.state==='gone') continue;   // 動いている相手は、相手の着地時に判定
+    const fa=c.ori[k], fb=o.ori[DIRS[k].opp];
+    if(c.grown[fa]===o.grown[fb]) continue;
+    const [cc,id]=c.grown[fa]?[c,fa]:[o,fb];
+    cc.grown[id]=false; cc.pop[id]=0; cc.shake=.35; S.touchN=(S.touchN||0)+1;
+    const mx=(c.i+o.i)/2+.5, my=(c.j+o.j)/2+.5;
+    wiltFx(mx,my); Sfx.wilt();
+    if(S.toldTouch<3){ S.toldTouch++; textFx(mx,my,1.9,'くっついて たねに もどっちゃった…','#6c6f8f'); }
   }
 }
 function cubePos(c){ // 見た目上の中心（当たり判定・距離計算にも使用）
@@ -451,17 +484,25 @@ function updateCubes(dt){
     for(let k=0;k<6;k++) c.pop[k]+=dt;
     c.landT+=dt; if(c.emoteT>0) c.emoteT-=dt;
     if(c.shake>0) c.shake-=dt;
+    if(c.armBack){ c.armBack.t+=dt; if(c.armBack.t>.2) c.armBack=null; }
     c.t+=dt;
     if(c.state==='drop'){
-      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); }
+      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); touchRule(c); }
     }else if(c.state==='idle'){
       if(c.pendingBloom){ startBloom(c); continue; }
       if(S.cleared) continue;
       if(c.t>=c.rest){
         const d=chooseRoll(c);
-        if(d) startRoll(c,d);
+        if(d) startPrep(c,d);
         else { c.t=0; c.rest=.5; }
       }
+    }else if(c.state==='prep'){
+      if(c.pendingBloom||S.cleared){ const pb=c.pendingBloom; cancelPrep(c); if(pb) startBloom(c); continue; }
+      if(!c.planted&&c.t>=CFG.PREP_T*.75){   // 手が地面についた：ぐっ と おす
+        c.planted=true; const d=DIRS[c.dir], r=CFG.CUBE*.5+.2;
+        for(const sg of [1,-1]) dustFx(c.i+.5+d.dy*sg*r-d.dx*.34,c.j+.5-d.dx*sg*r-d.dy*.34); Sfx.push();
+      }
+      if(c.t>=CFG.PREP_T){ const d=DIRS[c.dir]; if(cubeCanEnter(c.i+d.dx,c.j+d.dy,c)) startRoll(c,c.dir); else cancelPrep(c); }
     }else if(c.state==='roll'){
       if(c.t>=CFG.ROLL_T){ c.state='idle'; c.t=0; c.prevOri=null; c.rest=c.grown[c.ori.T]?CFG.REST_GROWN:CFG.REST_SEED; Sfx.roll(); onLand(c); }
     }else if(c.state==='bloom'){
@@ -541,7 +582,7 @@ function finishBloom(c){
   c.state='gone'; S.blooms++;
   const ch=c.chain||1, bonus=Math.min(1,(ch-1)*CFG.CHAIN_BONUS), x=c.i+.5, y=c.j+.5;
   S.maxChain=Math.max(S.maxChain,ch);
-  S.bigFlowers.push({i:c.i,j:c.j,t:0,c:Math.floor(Math.random()*5),ph:Math.random()*6});
+  S.bigFlowers.push({i:c.i,j:c.j,t:0,c:Math.floor(Math.random()*5),ph:Math.random()*6,wt:9,wd:1,inside:false});
   spreadFlowers(c.i,c.j,bonus);
   // 花の連鎖：開花の波が届いた近くのCubeは、面が1つ咲く。それで6面そろえば続けて開花する
   for(const o of S.cubes){
@@ -588,7 +629,7 @@ function spreadFlowers(ci,cj,bonus=0){
   }
 }
 function updateGarden(dt){
-  for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.pop<1) t.pop=Math.min(1,t.pop+dt/.5); if(t.flash>0) t.flash=Math.max(0,t.flash-dt/.5); }
+  for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.pop<1) t.pop=Math.min(1,t.pop+dt/.5); if(t.flash>0) t.flash=Math.max(0,t.flash-dt/.5); if(t.wt<9) t.wt+=dt; }
   if(S.events.length){
     const rest=[];
     for(const e of S.events){
@@ -604,7 +645,8 @@ function updateGarden(dt){
     S.events=rest;
     if(!rest.length) S.tickN=0;
   }
-  if(!S.cleared && flowerRate()>=CFG.CLEAR){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); }
+  if(!S.cleared && flowerRate()>=CFG.CLEAR){ S.cleared=true; S.clearAt=S.time; Sfx.clear();
+    const h=S.hana; h.joy=true; h.joyT=0; h.joyN=-1; }   // Hanaが ぴょんぴょん跳ねて よろこぶ
 }
 const flowerRate=()=>S.groundCount?S.flowerCount/S.groundCount:0;
 
@@ -639,11 +681,24 @@ function walkable(x,y){
   for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]]){ const t=tileAt(Math.floor(x+ox),Math.floor(y+oy)); if(!t||t.type!=='ground') return false; }
   return true;
 }
+const JOY={P:.52, LOCK:1.5};   // よろこびジャンプ：1回の周期（秒）／最初にかならず見せる秒数
 function updateHana(dt){
   const h=S.hana, v=Input.vector();
   if(h.stampT>0) h.stampT-=dt;
   h.moving=false;
+  // ステージクリア：正面を向いて ぴょんぴょん跳ねて よろこぶ。動かすと おしまい（最初の1.5秒は止めない）
+  if(h.joy){
+    if((v.x||v.y)&&h.joyT>JOY.LOCK) h.joy=false;
+    else{
+      h.joyT+=dt; h.face='down';
+      const n=Math.floor(h.joyT/JOY.P);
+      // 頭の上から花びらが はじける（顔はかくさない）
+      if(n!==h.joyN){ h.joyN=n; petalFx(h.x,h.y,1.75,6,1.0); textFx(h.x+(n%2?.25:-.25),h.y,2.1,n%2?'♡':'♪','#ff5f8f',1.3); }
+      return;
+    }
+  }
   if(v.x||v.y){
+    if(v.x) h.sx=v.x>0?1:-1;
     h.face=Math.abs(v.x)>Math.abs(v.y)?(v.x>0?'right':'left'):(v.y>0?'down':'up');
     // 画面上の方向 → グリッド方向
     let gx=v.x+2*v.y, gy=2*v.y-v.x; const l=Math.hypot(gx,gy)||1; const m=Math.min(1,Math.hypot(v.x,v.y));
@@ -660,6 +715,20 @@ function updateHana(dt){
       if(walkable(nx,ny)){h.x=nx;h.y=ny;} else if(walkable(nx,h.y)) h.x=nx; else if(walkable(h.x,ny)) h.y=ny;
     }
   }
+  // 花畑・つぼみの中を通ると、花がかき分けられ、通りすぎたあとも ゆらゆら なびく
+  if(h.moving){
+    for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){
+      const t=tileAt(i,j); if(!t||t.type!=='ground'||t.state===0) continue;
+      if(Math.hypot(i+.5-h.x,j+.5-h.y)<.65){ t.wt=0; t.wd=h.sx; }
+    }
+    const here=tileAt(Math.floor(h.x),Math.floor(h.y));
+    if(here&&here.state===2&&Math.random()<dt*5) petalFx(h.x,h.y,.25,1,.45);   // 花びらが ふわっと舞う
+  }
+  for(const b of S.bigFlowers){   // 大きな花も、そばを通ると ゆれる
+    const inside=Math.hypot(b.i+.5-h.x,b.j+.5-h.y)<.7;
+    if(inside&&!b.inside){ b.wt=0; b.wd=h.sx; }
+    b.inside=inside;
+  }
 }
 
 /* ---- エフェクト（見た目だけ。判定には影響しない） ---- */
@@ -672,6 +741,8 @@ function petalFx(x,y,z,n,pow){
 }
 function wiltFx(x,y){ const P=S.fx.petals; for(let k=0;k<7;k++){ const a=Math.random()*6.283;
   P.push({x,y,z:.3,vx:Math.cos(a)*.9,vy:Math.sin(a)*.9,vz:1.4,life:0,max:1,c:'#9aa0b8',rot:Math.random()*6,vr:(Math.random()-.5)*6,s:2.6}); } }
+function dustFx(x,y){ const P=S.fx.petals; if(P.length>420) return; for(let k=0;k<5;k++){ const a=Math.random()*6.283;
+  P.push({x,y,z:.05,vx:Math.cos(a)*.55,vy:Math.sin(a)*.55,vz:.7+Math.random()*.5,life:0,max:.45,c:'#d6bc9f',rot:0,vr:0,s:2+Math.random()*1.4}); } }
 function ringFx(x,y,color,rMax,z=0,delay=0){ S.fx.rings.push({x,y,z,color,rMax,t:-delay,max:.7}); }
 function textFx(x,y,z,text,color,scale=1){
   const T=S.fx.texts; for(const o of T) if(o.text===text&&o.t<.4) return;
@@ -684,7 +755,7 @@ function updateFx(dt){
   f.petals=f.petals.filter(p=>p.life<p.max);
   for(const r of f.rings) r.t+=dt; f.rings=f.rings.filter(r=>r.t<r.max);
   for(const t of f.texts) t.t+=dt; f.texts=f.texts.filter(t=>t.t<t.max);
-  for(const b of S.bigFlowers) b.t+=dt;
+  for(const b of S.bigFlowers){ b.t+=dt; if(b.wt<9) b.wt+=dt; }
   // クリア後の花吹雪
   if(S.cleared && S.time-S.clearAt<6 && Math.random()<dt*26){
     const P=f.petals; if(P.length<420){ const x=Math.random()*COLS,y=Math.random()*ROWS;
@@ -762,6 +833,7 @@ const Sfx={
   perfect(){ [1568,2093,2637].forEach((f,k)=>this.tone(f,.22,{delay:.05+k*.055,vol:.07})); },
   wilt(){ this.tone(420,.3,{to:210,vol:.07}); },
   roll(){ this.tone(150,.09,{to:95,vol:.07,type:'triangle'}); },
+  push(){ this.tone(110,.08,{to:70,vol:.07,type:'triangle'}); this.tone(320,.06,{delay:.02,to:240,vol:.025}); },
   land(){ this.tone(180,.14,{to:80,vol:.11,type:'triangle'}); },
   drop(){ this.tone(900,.5,{to:260,vol:.035}); },
   bloomStart(){ this.tone(400,.5,{to:1200,vol:.07}); },
@@ -770,6 +842,71 @@ const Sfx={
   tick(n){ if(!this.ac) return; const now=this.ac.currentTime; if(now-this.lastTick<.05) return; this.lastTick=now;
     const sc=[523,587,659,784,880,1047,1175,1319,1568,1760]; this.tone(sc[n%sc.length],.16,{vol:.04}); },
   clear(){ [[523,0],[659,.14],[784,.28],[1047,.42],[784,.62],[1047,.76],[1319,.9]].forEach(([f,d])=>{ this.tone(f,.45,{delay:d+.5,vol:.11,type:'triangle'}); this.tone(f/2,.45,{delay:d+.5,vol:.05}); }); }
+};
+
+/* ---- BGM：軽快なオリジナル曲（素材ファイルなし。Web Audioでその場で演奏する16小節のループ） ----
+ *  ハ長調・BPM128。メロディ（木琴ふう）＋ベース＋うら拍のコード＋軽いリズム。後半8小節はシェイカーが加わる。
+ *  「おと OFF」・縦向き・タブを隠す・あそびかた画面・クリア直後のファンファーレ中は止まる。 */
+const Bgm={
+  BPM:128, VOL:.8, gain:null, noise:null, playing:false, timer:0, next:0, step:0,
+  // メロディ：1小節＝8分音符8つ（MIDI番号、0＝休み）
+  MEL:[76,79,84,79,76,0,79,0,  74,79,83,79,74,0,71,0,  72,76,81,76,72,0,76,0,  69,72,77,81,79,0,0,0,
+       76,79,84,86,88,0,86,84, 83,0,79,0,74,76,77,79,   81,0,77,81,79,0,74,77,  76,0,72,0,72,0,0,0,
+       84,0,81,77,81,84,0,81,  83,0,79,74,79,83,0,79,   79,0,76,71,76,79,83,79, 81,0,76,72,76,81,84,0,
+       86,84,81,77,74,77,81,84, 83,0,86,0,83,81,79,77,  76,79,84,0,79,0,76,0,   74,0,79,0,83,0,86,0],
+  //        C  G  Am F  C  G  F  C   F  G  Em Am Dm G  C  G
+  ROOT:[36,43,45,41,36,43,41,36, 41,43,40,45,38,43,36,43],
+  CHORD:{36:[60,64,67],43:[59,62,67],45:[57,60,64],41:[57,60,65],40:[59,64,67],38:[57,62,65]},
+  mtof:m=>440*Math.pow(2,(m-69)/12),
+  start(){
+    const ac=Sfx.ac; if(!ac||this.playing) return;
+    try{
+      if(!this.gain){
+        this.gain=ac.createGain(); this.gain.gain.value=0; this.gain.connect(ac.destination);
+        const n=ac.createBuffer(1,ac.sampleRate,ac.sampleRate), d=n.getChannelData(0); for(let k=0;k<d.length;k++) d[k]=Math.random()*2-1; this.noise=n;
+      }
+      const t=ac.currentTime, g=this.gain.gain;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(this.VOL,t+.8);
+      this.playing=true; this.step=0; this.next=t+.1;
+      clearInterval(this.timer); this.timer=setInterval(()=>this.pump(),25); this.pump();
+    }catch(_){ this.playing=false; }
+  },
+  stop(fade=.6){
+    if(!this.playing) return; this.playing=false; clearInterval(this.timer); this.timer=0;
+    try{ const t=Sfx.ac.currentTime, g=this.gain.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(0,t+fade); }catch(_){}
+  },
+  pump(){
+    const ac=Sfx.ac; if(!this.playing||!ac) return;
+    const sd=60/this.BPM/4;   // 16分音符の長さ
+    if(this.next<ac.currentTime-.05) this.next=ac.currentTime+.05;   // 止まっていた分は追いかけない
+    try{ while(this.next<ac.currentTime+.15){ this.play(this.step,this.next); this.next+=sd; this.step=(this.step+1)%(16*16); } }
+    catch(e){ console.error(e); this.stop(.1); }
+  },
+  play(step,t){
+    const bar=step>>4, s=step&15, root=this.ROOT[bar];
+    if(!(s&1)){ const m=this.MEL[bar*8+(s>>1)]; if(m) this.lead(m,t); }
+    if(s===0) this.bass(root,t,.22); else if(s===6||s===14) this.bass(root+12,t,.1); else if(s===8) this.bass(root+7,t,.18); else if(s===12) this.bass(root,t,.14);
+    if(s===2||s===6||s===10||s===14) for(const n of this.CHORD[root]) this.osc('sine',this.mtof(n),t,.12,.022);
+    if(s===0||s===8) this.kick(t);
+    if(s===4||s===12) this.hit(t,.11,.07,'bandpass',1600);           // クラップ
+    if(!(s&1)) this.hit(t,.035,.022,'highpass',7000);                // ハイハット
+    else if(bar>=8) this.hit(t,.03,.011,'highpass',8500);            // 後半はシェイカー
+  },
+  osc(type,f,t,dur,vol,att=.005){
+    const ac=Sfx.ac, o=ac.createOscillator(), g=ac.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+att); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t+dur+.02); return o;
+  },
+  lead(m,t){ const f=this.mtof(m); this.osc('triangle',f,t,.24,.11); this.osc('sine',f*2,t,.16,.03); },
+  bass(m,t,d){ this.osc('triangle',this.mtof(m),t,d,.13,.008); },
+  kick(t){ const o=this.osc('sine',110,t,.14,.2,.003); o.frequency.exponentialRampToValueAtTime(42,t+.12); },
+  hit(t,dur,vol,type,freq){
+    const ac=Sfx.ac, src=ac.createBufferSource(), f=ac.createBiquadFilter(), g=ac.createGain();
+    src.buffer=this.noise; f.type=type; f.frequency.value=freq;
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(f); f.connect(g); g.connect(this.gain); src.start(t,Math.random()*.5); src.stop(t+dur+.02);
+  }
 };
 
 /* ================================================================
@@ -821,6 +958,9 @@ const View={scale:1,ox:0,oy:0,dpr:1,w:0,h:0};
 // HUDは盤面のひし形が届かない四隅に置いているので、上下左右の余白は最小限でよい。
 const FIT={TOP:50, BOT:CFG.ZH*.55+6, SIDE:16, MARGIN:6, MAX:3.2};   // TOP＝いちばん奥のマスに立つHana・Cube（6面図つき）が切れない高さ
 function fit(){
+  // 万一ブラウザが拡大してしまったときは、拡大後の小さいサイズで作り直さない（ずれが大きくなるため）。拡大を元に戻すことを試みる
+  const vv=window.visualViewport;
+  if(vv&&vv.scale>1.01){ resetZoom(); return; }
   const w=window.innerWidth,h=window.innerHeight,dpr=Math.min(window.devicePixelRatio||1,2.5);
   const touch=document.body.classList.contains('touch');
   const span=COLS+ROWS, DW=span*CFG.TW/2+FIT.SIDE, DH=span*CFG.TH/2+FIT.TOP+FIT.BOT;
@@ -832,6 +972,24 @@ function fit(){
   View.ox=w/2 - ((COLS-ROWS)*CFG.TW/4)*sc;
   View.oy=top+(availH-DH*sc)/2+FIT.TOP*sc;
 }
+// ブラウザの拡大を元に戻す（viewport の指定を書き直すと、iPhoneなどで等倍に戻る）
+let zoomResetT=0;
+function resetZoom(){
+  const m=document.querySelector('meta[name=viewport]'); if(!m||zoomResetT) return;
+  const c=m.getAttribute('content'); m.setAttribute('content',c+', minimum-scale=1');
+  zoomResetT=setTimeout(()=>{ m.setAttribute('content',c); zoomResetT=0; setTimeout(fit,60); },60);
+}
+// ブラウザの拡大操作そのものを止める（Safariのピンチ、2本指、ダブルタップ、PCのCtrl＋ホイール／Ctrl＋＋−）
+['gesturestart','gesturechange','gestureend'].forEach(n=>document.addEventListener(n,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{ if(e.touches.length>1||(e.scale&&e.scale!==1)) e.preventDefault(); },{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{   // すばやい2回目のタップ（ダブルタップ拡大）を止める。ボタンは押せるようにそのまま
+  const now=Date.now(), onBtn=e.target&&e.target.closest&&e.target.closest('button');
+  if(now-lastTouchEnd<350&&!onBtn) e.preventDefault(); lastTouchEnd=now;
+},{passive:false});
+window.addEventListener('wheel',e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});
+window.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&['Equal','Minus','NumpadAdd','NumpadSubtract','Digit0','Numpad0','Semicolon'].includes(e.code)) e.preventDefault(); });
 // スマホ：全画面にして よこ向きにロック（Android Chrome等。iPhoneは非対応なので案内画面のみ）
 const PORTRAIT=window.matchMedia?window.matchMedia('(orientation:portrait) and (pointer:coarse)'):{matches:false};
 const canFull=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
@@ -993,8 +1151,63 @@ function drawNet(g,c,x,y,hw,hh,time,big){
     else { g.fillStyle='#8a5a3c'; g.beginPath(); g.ellipse(cx,cy,h*.34,h*.26,0,0,7); g.fill(); }
   }
 }
+/* ---- Cubeの「手」：うしろの面からニョキっと出て、地面をおして転がる ---- */
+// 回転前のCube内の点（中心が原点・底がz=0・単位は辺の長さ）→ ワールド座標（cubeGeometryと同じ回転）
+function cubeWorldPt(c,lx,ly,lz){
+  const s=CFG.CUBE, h=s/2; let cx=c.i+.5, cy=c.j+.5, x=lx*s, y=ly*s, z=lz*s;
+  if(c.state==='roll'){
+    const t=easeInOut(clamp(c.t/CFG.ROLL_T)), d=DIRS[c.dir], cos=Math.cos(t*Math.PI/2), sin=Math.sin(t*Math.PI/2);
+    cx=c.fi+.5+d.dx*(1-s)*t; cy=c.fj+.5+d.dy*(1-s)*t;
+    const al=x*d.dx+y*d.dy-h, px=x*(1-Math.abs(d.dx)), py=y*(1-Math.abs(d.dy)), na=h+al*cos+z*sin;
+    z=-al*sin+z*cos; x=px+d.dx*na; y=py+d.dy*na;
+  }
+  return {x:cx+x,y:cy+y,z};
+}
+function armInfo(c){
+  let dir, e, press=false;
+  if(c.state==='prep'){ dir=c.dir; e=easeBack(clamp(c.t/(CFG.PREP_T*.75))); press=c.t>=CFG.PREP_T*.75; }
+  else if(c.state==='roll'){ dir=c.dir; const u=c.t/CFG.ROLL_T; if(u<.42){ e=1; press=true; } else e=1-easeOut(clamp((u-.42)/.24)); }
+  else if(c.state==='idle'&&c.armBack){ dir=c.armBack.dir; e=1-clamp(c.armBack.t/.2); }
+  else return null;
+  if(!dir||e<=.02) return null;
+  // 手は左右の横の面から2本。少しうしろ寄りの地面について、ぐっと おす（どの向きでも1本は必ず見える）
+  const d=DIRS[dir], ox=c.state==='roll'?c.fi:c.i, oy=c.state==='roll'?c.fj:c.j, arms=[];
+  for(const sg of [1,-1]){
+    const px=d.dy*sg, py=-d.dx*sg;   // 進行方向に垂直な横向き
+    const b=cubeWorldPt(c,px*.5-d.dx*.12,py*.5-d.dy*.12,.3);
+    const side=px>0?'E':px<0?'W':py>0?'S':'N';
+    arms.push({B:iso(b.x,b.y,b.z), T:iso(ox+.5+px*(CFG.CUBE*.5+.2)-d.dx*.34, oy+.5+py*(CFG.CUBE*.5+.2)-d.dy*.34, 0), e, press,
+      front:side==='E'||side==='S'});   // 手前を向いた面から出る手は、Cubeより手前に描く
+  }
+  return arms;
+}
+function drawArm(a){
+  const ep=Math.min(1,a.e), B=a.B, T={x:lerp(B.x,a.T.x,ep),y:lerp(B.y,a.T.y,ep)};
+  const mx=(B.x+T.x)/2, my=(B.y+T.y)/2-7*ep;   // ひじのように少し上へふくらむ
+  ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(B.x,B.y); ctx.quadraticCurveTo(mx,my,T.x,T.y);
+  ctx.strokeStyle='#3a8068'; ctx.lineWidth=8.5; ctx.stroke();
+  ctx.strokeStyle='#86d6ad'; ctx.lineWidth=5.5; ctx.stroke();
+  const r=3.3+1.5*a.e, wx=a.press?1.45:1.2, wy=a.press?.68:.85;   // 地面をおしている間は手がつぶれる
+  ctx.beginPath(); ctx.ellipse(T.x,T.y,r*wx,r*wy,0,0,7); ctx.fillStyle='#9be0bd'; ctx.fill(); ctx.strokeStyle='#3a8068'; ctx.lineWidth=1.4; ctx.stroke();
+  if(ep>.6){ ctx.lineWidth=1; for(const k of [-1,0,1]){ ctx.beginPath(); ctx.moveTo(T.x+k*r*.5,T.y+r*wy*.1); ctx.lineTo(T.x+k*r*.6,T.y+r*wy*.85); ctx.stroke(); } }
+  ctx.restore();
+}
+
+/* ---- 花のなびき：Hanaがそばにいると かき分けられ、通りすぎたあとは ゆらゆら ゆれて おさまる ---- */
+function flowerBend(t,wx,wy){
+  let r=0;
+  if(t.wt<2.6){ const k=t.wt-((wx%1)+(wy%1))*.07; if(k>0) r+=t.wd*Math.exp(-2.2*k)*Math.sin(10*k)*.5; }
+  const h=S.hana, dx=wx-h.x, dy=wy-h.y, d=Math.hypot(dx,dy);
+  if(d<.62) r+=(dx-dy>=0?1:-1)*(1-d/.62)*.75;
+  return r;
+}
+
 function drawBigFlower(b,time){
-  const p=iso(b.i+.5,b.j+.5), k=easeBack(clamp(b.t/.7)), [pc,po,cc]=FLOWER_COL[b.c], sway=Math.sin(time*1.4+b.ph)*.05;
+  const p=iso(b.i+.5,b.j+.5), k=easeBack(clamp(b.t/.7)), [pc,po,cc]=FLOWER_COL[b.c];
+  let sway=Math.sin(time*1.4+b.ph)*.05;
+  if(b.wt<3) sway+=b.wd*Math.exp(-2*b.wt)*Math.sin(9*b.wt)*.22;
+  { const h=S.hana, dx=b.i+.5-h.x, dy=b.j+.5-h.y, d=Math.hypot(dx,dy); if(d<.7) sway+=(dx-dy>=0?1:-1)*(1-d/.7)*.22; }
   ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+1,18*k,7*k,0,0,7); ctx.fill();
   ctx.save(); ctx.translate(p.x,p.y); ctx.scale(k,k); ctx.rotate(sway);
   ctx.lineCap='round'; ctx.strokeStyle='#3f8f45'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(3,-22,0,-42); ctx.stroke();
@@ -1024,12 +1237,19 @@ function drawHana(time){
   const H=HANA_SPR;
   if(!H.ok||!H.img) return drawHanaVector(time);   // 画像が使えないときは従来の描画
   const h=S.hana, p=iso(h.x,h.y);
-  const hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;   // スタンプ時の小さなジャンプ
-  ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,13-hop*.3,5-hop*.12,0,0,7); ctx.fill();
-  const row=H.rows[(h.moving?'walk_':'idle_')+h.face]|0;
-  const fr=h.moving?Math.floor(h.walk*H.walkFps)%H.frames:H.idleSeq[Math.floor(time*H.idleFps)%H.idleSeq.length];
+  let hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;   // スタンプ時の小さなジャンプ
+  let row=H.rows[(h.moving?'walk_':'idle_')+h.face]|0;
+  let fr=h.moving?Math.floor(h.walk*H.walkFps)%H.frames:H.idleSeq[Math.floor(time*H.idleFps)%H.idleSeq.length];
+  let kx=1, ky=1, tilt=0;
+  if(h.joy){   // クリアのよろこび：目を細めた笑顔で ぴょんぴょん。着地でむぎゅっと つぶれ、跳ぶときに のびる
+    const u=(h.joyT%JOY.P)/JOY.P, AIR=.7; row=H.rows.idle_down; fr=2;
+    if(u<AIR){ const a=u/AIR, st=1-Math.sin(Math.PI*a); hop=Math.sin(Math.PI*a)*17; ky=1+.07*st; kx=1-.04*st; tilt=(h.joyN%2?1:-1)*.08*Math.sin(Math.PI*a); }
+    else{ const q=Math.sin(Math.PI*(u-AIR)/(1-AIR)); ky=1-.13*q; kx=1+.1*q; }
+  }
+  const sh=1-Math.min(.5,hop/40);
+  ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,13*sh,5*sh,0,0,7); ctx.fill();
   const s=H.scale;
-  ctx.save(); ctx.translate(p.x,p.y-hop);
+  ctx.save(); ctx.translate(p.x,p.y-hop); if(tilt) ctx.rotate(tilt); if(kx!==1||ky!==1) ctx.scale(kx,ky);
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
   ctx.drawImage(H.img,fr*H.cw,row*H.ch,H.cw,H.ch,-H.ax*s,-H.ay*s,H.cw*s,H.ch*s);
   ctx.restore();
@@ -1037,7 +1257,7 @@ function drawHana(time){
 function drawHanaVector(time){
   const h=S.hana, p=iso(h.x,h.y), f=h.face;
   const step=h.moving?Math.sin(h.walk*13):0, bob=h.moving?Math.abs(step)*1.6:Math.sin(time*2.2)*.5;
-  const hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;
+  const hop=h.joy?Math.abs(Math.sin(h.joyT*Math.PI/JOY.P))*15:h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;
   ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,11-hop*.3,4.6-hop*.12,0,0,7); ctx.fill();
   ctx.save(); ctx.translate(p.x,p.y-hop); ctx.lineJoin='round'; ctx.lineCap='round';
   const ink='#3b2f2a', side=f==='left'?-1:f==='right'?1:0;
@@ -1104,13 +1324,13 @@ function render(){
   items.sort((a,b)=>a.d-b.d);
   const geo=new Map();
   for(const it of items){
-    if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07;
+    if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07+flowerBend(t,t.i+de.u,t.j+de.v);
       if(s<=0) continue;
       ctx.fillStyle='rgba(59,47,42,.16)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y,5*s,2*s,0,0,7); ctx.fill();
       drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*(t.state===1?.95:.9),rot); }
     else if(it.k==='r') drawRock(it.i,it.j);
     else if(it.k==='b') drawBigFlower(it.b,time);
-    else if(it.k==='c') geo.set(it.c,drawCube(it.c,time));
+    else if(it.k==='c'){ const A=armInfo(it.c)||[]; for(const a of A) if(!a.front) drawArm(a); geo.set(it.c,drawCube(it.c,time)); for(const a of A) if(a.front) drawArm(a); }
     else drawHana(time);
   }
 
@@ -1185,7 +1405,7 @@ const UI={
     }else{ $('cubeCount').textContent='- / 6'; msg=S.cleared?'おにわが できたよ':'つぎの Cubeが ふってくるよ'; }
     if(msg!==this.lastMsg){ this.lastMsg=msg; const el=$('cubeMsg'); el.textContent=msg; el.className=ok?'ok':''; }
     // クリア表示
-    if(S.cleared&&!S.clearShown&&S.time-S.clearAt>1.8&&!S.events.length){
+    if(S.cleared&&!S.clearShown&&S.time-S.clearAt>2.6&&!S.events.length){   // Hanaのよろこぶ姿を見せてから
       S.clearShown=true; $('stRate').textContent=Math.floor(flowerRate()*100)+'%'; $('stChain').textContent=S.maxChain; $('stPerfect').textContent=S.perfects;
       const lastSt=S.stage+1>=STAGES.length; $('nextBtn').textContent=lastSt?'さいしょの ステージへ':'つぎの ステージへ';
       $('clearSub').textContent=lastSt?'ぜんぶの ステージを 花で いっぱいに したよ。ありがとう！':'「'+STAGE.name+'」が 花で いっぱいに なったよ';
@@ -1208,6 +1428,9 @@ function update(dt){
     updateGarden(dt);
     updateFx(dt);
   }
+  // BGM：あそんでいる間だけ流す（クリア直後はファンファーレを聞かせるため5秒休む）
+  const want=Sfx.on&&S.started&&$('startOv').hidden&&!PORTRAIT.matches&&!document.hidden&&!(S.cleared&&S.time-S.clearAt<5);
+  if(want&&!Bgm.playing) Bgm.start(); else if(!want&&Bgm.playing) Bgm.stop();
 }
 let last=0;
 function frame(ts){
@@ -1224,11 +1447,12 @@ document.addEventListener('webkitfullscreenchange',fit);
 if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
 const onTurn=()=>{ Input.keys.clear(); Input.joy=null; UI.joy(null); fit(); };
 if(PORTRAIT.addEventListener) PORTRAIT.addEventListener('change',onTurn); else if(PORTRAIT.addListener) PORTRAIT.addListener(onTurn);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) Bgm.stop(.1); });   // 画面を離れたら すぐ止める
 $('stageName').textContent=STAGE.name;
 requestAnimationFrame(frame);
 
 // 動作確認用（コンソールから TOF.state() などで中身を見られます）
-window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR};
+window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule};
 })();
 </script>
 </body>
