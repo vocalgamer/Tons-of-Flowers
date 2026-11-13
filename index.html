@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.5.1</title>
+<title>TONS OF FLOWERS — Prototype v0.6</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.5.1（GDD v3.5準拠・2.5D・単一HTML）
-  v0.5.1：説明カード・クリアのポップアップの地を半透明に（うしろの おにわが 透けて見える）。
+  TONS OF FLOWERS  Prototype v0.6（GDD v3.6準拠・2.5D・単一HTML）
+  v0.6  ：GDDの未実装要素をすべて実装（GDD v3.6）。全20ステージ（1ステージ1つずつ新要素）＋Flower Queen戦＋おはなし（オープニング／エンディング）。
+          ひみつの庭（5種）・蜂とはちみつ（タップで取る→右上のアイテムをタップで飲む→30秒Cubeを押せる）・Flower Dash・Butterflyスキル・
+          Cubeの色（6色）・性格（6種）・属性面（6種）・巨大Cube・レア花と花図鑑・風・黒い花粉・新しい地形（生け垣/飛び石/木かげ/雲の橋/温室/風車）・
+          つぼみが周りの花で育つルール・蝶がCubeを見つけて教える・ステージ別のBGMと空・セーブ（localStorage）・ゲームパッド。  v0.5.1：説明カード・クリアのポップアップの地を半透明に（うしろの おにわが 透けて見える）。
   v0.5  ：操作を ゆび1本／マウスだけに。タップ（クリック）した場所へHanaが歩く（水・岩はよける）。
           Cubeをタップ：とどけば すぐスタンプ、とおければ 歩いていって スタンプ。スタンプボタンと仮想スティックは廃止（キーボードは おまけで残す）。
   v0.4.1：プレイ中に画面が勝手に拡大する問題を修正。ブラウザの拡大（ピンチ・ダブルタップ等）を全面的に禁止。
@@ -101,6 +104,66 @@
   body.touch .pc{display:none}
   body:not(.touch) .sp{display:none}
 
+  /* ステージごとの空の色（GDD 46：草原・森・池・雲の上・星空・女王） */
+  body[data-theme=forest]{background:radial-gradient(60vmax 40vmax at 82% 8%,#ffe0b0 0%,rgba(255,224,176,0) 60%),linear-gradient(180deg,#f7c59a 0%,#e9d8b4 50%,#d9e6c4 100%)}
+  body[data-theme=water]{background:radial-gradient(60vmax 40vmax at 82% 8%,#f0fbff 0%,rgba(240,251,255,0) 60%),linear-gradient(180deg,#a9dcf0 0%,#cdeeea 50%,#eef3d8 100%)}
+  body[data-theme=sky]{background:radial-gradient(70vmax 50vmax at 20% 15%,#ffffff 0%,rgba(255,255,255,0) 55%),linear-gradient(180deg,#9fd0f5 0%,#c7e6fb 55%,#f3f8ff 100%)}
+  body[data-theme=night]{background:radial-gradient(50vmax 30vmax at 80% 10%,#5b5f9e 0%,rgba(91,95,158,0) 60%),linear-gradient(180deg,#2f3366 0%,#565a8e 50%,#8d86a8 100%)}
+  body[data-theme=garden]{background:radial-gradient(60vmax 40vmax at 82% 8%,#fffbe0 0%,rgba(255,251,224,0) 60%),linear-gradient(180deg,#cfe8d0 0%,#e6f2e0 50%,#f6eedb 100%)}
+  body[data-theme=queen]{background:radial-gradient(60vmax 40vmax at 50% 0%,#a58bb8 0%,rgba(165,139,184,0) 60%),linear-gradient(180deg,#6e5b85 0%,#a593a8 55%,#e2cfc0 100%)}
+
+  /* もちもの（はちみつ）：右上の花率パネルの下 */
+  #itemBox{top:calc(max(10px,env(safe-area-inset-top)) + 132px);right:max(10px,env(safe-area-inset-right));width:118px;padding:5px 6px 6px;text-align:center}
+  #itemBox[hidden]{display:none}
+  #itemTip{font-size:11.5px;font-weight:800;line-height:1.3;color:#c2355f;margin-bottom:2px}
+  #itemBtn{display:block;margin:0 auto;padding:0;background:none;border:none;width:62px;height:62px}
+  #itemBtn canvas{width:62px;height:62px;display:block}
+  #itemBtn.ready{animation:wob 1.4s ease-in-out infinite}
+  @keyframes wob{0%,100%{transform:rotate(-5deg) scale(1)}50%{transform:rotate(5deg) scale(1.08)}}
+  #itemTime{font-size:12px;font-weight:800;min-height:15px}
+  /* スキル（ダッシュ・ちょうちょ）：右下 */
+  #skills{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
+  .skill{position:relative;width:78px;height:78px;border-radius:50%;border:3px solid var(--ink);background:#fff8ea;box-shadow:0 4px 0 rgba(59,47,42,.3);
+    font-size:12.5px;line-height:1.1;padding:0;overflow:hidden}
+  .skill[hidden]{display:none}
+  .skill b{display:block;font-size:24px;line-height:1;margin-bottom:2px}
+  .skill i{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+  .skill:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(59,47,42,.3)}
+  .skill.cool{color:#9b8b82}
+  /* 女王戦のもくひょう：左上の6面パネルの下 */
+  #questBox{top:calc(max(10px,env(safe-area-inset-top)) + 158px);left:max(10px,env(safe-area-inset-left));width:190px;padding:6px 10px}
+  #questBox[hidden]{display:none}
+  #questBox b{display:block;font-size:13px}
+  #questBox span{display:block;font-size:12px;font-weight:700;line-height:1.4}
+  /* スタート画面のメニュー・ステージ選択・図鑑・おはなし */
+  .menu{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .menu .btn{font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:8px 0 12px}
+  .grid button{border:2px solid var(--ink);border-radius:12px;background:#fff8ea;padding:6px 2px;font-size:11.5px;line-height:1.25;min-height:54px}
+  .grid button b{display:block;font-size:16px}
+  .grid button.done{background:#ffe3ec}
+  .grid button:disabled{opacity:.45;cursor:default}
+  #dexGrid{grid-template-columns:repeat(4,1fr)}
+  .dex{border:2px solid var(--ink);border-radius:12px;background:rgba(255,248,234,.8);padding:4px;font-size:11px;font-weight:700;line-height:1.3}
+  .dex canvas{width:56px;height:56px;display:block;margin:0 auto}
+  .dex b{display:block;font-size:12px}
+  .dex.no{color:#8d7f77}
+  #storyArt{width:100%;max-width:360px;height:auto;aspect-ratio:2/1;display:block;margin:4px auto 8px;border:2px solid var(--ink);border-radius:12px;background:#dff1dc}
+  #storyText{font-size:15px;font-weight:700;line-height:1.7;min-height:52px;margin:0 0 10px}
+  @media (max-height:520px){
+    #itemBox{top:calc(max(8px,env(safe-area-inset-top)) + 106px);width:104px;padding:3px 4px 4px}
+    #itemBtn,#itemBtn canvas{width:50px;height:50px}
+    #itemTip{font-size:10.5px}
+    .skill{width:66px;height:66px;font-size:11px}
+    .skill b{font-size:20px}
+    #questBox{top:calc(max(8px,env(safe-area-inset-top)) + 126px);width:146px;padding:4px 7px}
+    #questBox b{font-size:11.5px} #questBox span{font-size:10.5px}
+    .grid button{min-height:44px;padding:3px 2px;font-size:10.5px}
+    .dex canvas{width:44px;height:44px}
+    #storyArt{max-width:300px}
+    #storyText{font-size:13.5px;line-height:1.55;min-height:40px;margin-bottom:6px}
+  }
+
   /* スマホを縦にしているとき：よこ向きにするよう案内し、ゲームは止める */
   #rotateOv{display:none;z-index:30;background:linear-gradient(180deg,#bfe6e0 0%,#dff1dc 55%,#f8ecd0 100%)}
   @media (orientation:portrait) and (pointer:coarse){ #rotateOv{display:flex} }
@@ -186,7 +249,7 @@
 <canvas id="game" aria-label="TONS OF FLOWERS のゲーム画面"></canvas>
 
 <div id="cubePanel" class="panel">
-  <div class="name"><span>Cubeの 6つの面</span><span id="cubeCount">0 / 6</span></div>
+  <div class="name"><span id="cubeName">Cubeの 6つの面</span><span id="cubeCount">0 / 6</span></div>
   <canvas id="net" width="336" height="208"></canvas>
   <div id="cubeMsg">Cubeに ちかづこう</div>
 </div>
@@ -209,6 +272,17 @@
 
 <div id="toast" class="panel" hidden><b id="toastName"></b><span id="toastTip"></span></div>
 
+<div id="itemBox" class="panel" hidden>
+  <div id="itemTip"></div>
+  <button id="itemBtn" aria-label="はちみつを のむ"><canvas id="itemCv" width="124" height="124"></canvas></button>
+  <div id="itemTime"></div>
+</div>
+<div id="skills">
+  <button class="skill" id="dashBtn" hidden aria-label="ダッシュ"><b>»</b>ダッシュ<i></i></button>
+  <button class="skill" id="bfBtn" hidden aria-label="ちょうちょを よぶ"><b>✿</b>ちょうちょ<i></i></button>
+</div>
+<div id="questBox" class="panel" hidden><b id="questTitle"></b><span id="questText"></span></div>
+
 <div class="overlay" id="rotateOv">
   <div class="card">
     <div class="phone" aria-hidden="true"></div>
@@ -221,19 +295,52 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.5.1</p>
+    <p class="sub">Prototype v0.6</p>
     <ol class="how">
       <li><span><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが あるいていって「上の面」に スタンプ。たねの面が 花の面に なるよ。</span></li>
       <li>Cubeは じぶんで ころころ ころがるよ。ひだり上の 図で、どの面が まだ たねか たしかめよう。♪マークの Cubeは Hanaに よってくる。</li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
     </ol>
     <p class="tip">ころがりおわる しゅんかんに スタンプすると <b>Perfect!</b> となりの面も おまけで さくよ。大開花の ちかくにいる Cubeにも 花の ちからが とどくよ。<br>
-      Cubeどうしが となりあうと、くっついた 面が 花と たねなら <b>花は たねに もどっちゃう</b>。</p>
+      Cubeどうしが となりあうと、くっついた 面が 花と たねなら <b>花は たねに もどっちゃう</b>。<br>
+      ステージが すすむと、ひみつの庭・はちみつ・ダッシュ・ちょうちょ など、あたらしい ちからや しかけが ふえるよ。</p>
     <p class="keys">
       <span class="pc">マウスだけで あそべるよ：クリックした ところへ あるく ／ Cubeを クリックで スタンプ</span>
       <span class="sp">ゆび 1本で あそべるよ：タップした ところへ あるく ／ Cubeを タップで スタンプ</span>
     </p>
     <button class="big" id="startBtn">はじめる</button>
+    <div class="menu">
+      <button class="btn" id="selBtn">ステージを えらぶ</button>
+      <button class="btn" id="dexBtn">はなずかん</button>
+      <button class="btn" id="storyBtn">おはなし</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="selectOv" hidden>
+  <div class="card">
+    <h1>ステージ</h1>
+    <p class="sub">クリアすると つぎの ステージで あそべるよ</p>
+    <div class="grid" id="selGrid"></div>
+    <button class="link" id="selBack">もどる</button>
+  </div>
+</div>
+
+<div class="overlay" id="dexOv" hidden>
+  <div class="card">
+    <h1>はなずかん</h1>
+    <p class="sub" id="dexSub"></p>
+    <div class="grid" id="dexGrid"></div>
+    <button class="link" id="dexBack">もどる</button>
+  </div>
+</div>
+
+<div class="overlay" id="storyOv" hidden>
+  <div class="card">
+    <canvas id="storyArt" width="720" height="360"></canvas>
+    <p id="storyText"></p>
+    <button class="big" id="storyNext">つぎへ</button>
+    <button class="link" id="storySkip">とばす</button>
   </div>
 </div>
 
@@ -275,10 +382,18 @@ const CFG = {
   CLEAR:0.9,
   MAX_CUBES:3,
   SPAWN_DELAY:1.3,
-  CURIOUS_EVERY:[2,4],        // 5体ごとの出現順のうち「好奇心」になる番目（=約4割）
+  CURIOUS_EVERY:[2,4],        // 5体ごとの出現順のうち「性格もち（好奇心など）」になる番目（=約4割）
   PERFECT_PRE:0.14, PERFECT_POST:0.42, // 着地の前後、この秒数内のスタンプがPerfect
   CHAIN_BONUS:0.5,            // 連鎖1段ごとに広がる半径
-  MAX_BUTTERFLY:3, BF_SPEED:1.4, BF_WORK:2.6, BF_REST:1.6
+  MAX_BUTTERFLY:3, BF_SPEED:1.4, BF_WORK:2.6, BF_REST:1.6,
+  // ここから GDD v3.6 で実装した しくみ（試作値）
+  BEE_VISITS:6,               // 蜂が この数の花を まわると はちみつが 1こ できる
+  HONEY_T:30,                 // はちみつの こうか（秒）：Cubeを なんかいでも おせる
+  HONEY_COOL:12,              // こうかが きれてから つぎの はちみつが できるまで（秒）
+  DASH_CD:8, DASH_LEN:3.2, DASH_T:.32,   // Flower Dash：再使用・きょり・かかる時間
+  BFS_CD:15, BFS_T:8,         // Butterflyスキル：再使用・ちょうちょが いる時間
+  GIANT:1.3,                  // 巨大Cubeの大きさ（ふつうの何倍）／1つの面に 3回 スタンプ
+  RARE:.012                   // 花畑に なったとき めずらしい花が うまれる もとの かくりつ
 };
 
 /* ================================================================
@@ -296,65 +411,85 @@ const shade=(c,b)=>`rgb(${Math.round(clamp(c[0]*b,0,255))},${Math.round(clamp(c[
 /* ================================================================
  * 3. STAGE  （.=地面 R=岩 W=池 H=Hana開始 C=最初のCube）
  * ================================================================ */
+/* マップの文字：. 地面 ／ b つぼみ ／ R 岩 ／ W 池 ／ s 飛び石（Hanaだけ わたれる） ／ h 生け垣 ／ T 木（まわりは木かげ）
+ *               x 雲のすきま ／ = 雲の橋（Hanaだけ わたれる） ／ G 温室のかべ ／ M 風車 ／ Q 花の女王（2×2） ／ H Hana ／ C 最初のCube
+ * 新しい要素は 1ステージに 1つずつ（GDD 25章の 20面の ならび）。前のステージで出た要素は そのあとも つづく（stageFlags）。 */
 const STAGES = [
-  { name:'はじまりの草原', tip:'ころがりおわる しゅんかんに スタンプすると Perfect!',
-    flags:{butterfly:false,trample:false},
-    map:[
-      '........',
-      '.....R..',
-      '........',
-      '..H..C..',
-      '........',
-      '.WW.....',
-      '......R.',
-      '........'
-    ]},
-  { name:'ちょうちょの小道', tip:'さいた花から ちょうちょが きて、つぼみを そだててくれるよ',
-    flags:{butterfly:true,trample:false},
-    map:[
-      '..........',
-      '..R.......',
-      '.......WW.',
-      '.......W..',
-      '..........',
-      '...H..C...',
-      '.R........',
-      '......R...',
-      '..WW......',
-      '..........'
-    ]},
-  { name:'眠れる花畑', tip:'たねの面を 下にした Cubeが 花を ふむと、つぼみに もどっちゃう',
-    flags:{butterfly:true,trample:true},   // b = 最初からつぼみ（弱った花）
-    map:[
-      '...........',
-      '.R....b....',
-      '...bb......',
-      '..bb...WW..',
-      '.......W...',
-      '..H..C.....',
-      '.....R..bb.',
-      '.WW.....b..',
-      '..W...R....',
-      '......b....',
-      '...........'
-    ]}
+  { name:'はじまりの草原', theme:'meadow', tip:'ころがりおわる しゅんかんに スタンプすると Perfect!',
+    map:['........','.....R..','........','..H..C..','........','.WW.....','......R.','........']},
+  { name:'ころころ丘', theme:'meadow', fastRoll:true, tip:'♪マークの Cubeは Hanaに よってくるよ。ころころ ころがる Cubeを おいかけよう',
+    map:['.........','..R......','.........','......W..','..H...C..','.........','.W.......','.....R...','.........']},
+  { name:'ちょうちょの小道', theme:'meadow', tip:'さいた花から ちょうちょが きて、つぼみを そだててくれるよ',
+    map:['..........','..R.......','.......WW.','.......W..','..........','...H..C...','.R........','......R...','..WW......','..........']},
+  { name:'ひみつの花壇', theme:'garden', tip:'花で ぐるっと かこむと「ひみつの庭」が できるよ。岩も かべに なるよ',
+    map:['..........','.RRR......','.R.R..RRR.','.R.R..R.R.','......R...','...H...C..','..........','.RR...RRR.','.R.....R..','..........']},
+  { name:'大きな種の広場', theme:'meadow', giantFirst:true, giantP:.2, tip:'大きな Cubeは 1つの面に 3回 スタンプ。さくと 巨大な ひまわりに なるよ',
+    map:['..........','..........','..R....R..','..........','....C.....','..........','..H.......','.......W..','..R....W..','..........']},
+  { name:'そよ風の高原', theme:'sky', wind:'E', tip:'かぜが ふくと、Cubeは かざしもへ ころがりやすいよ',
+    map:['..........','.R........','..........','.....R....','..H....C..','..........','....W.....','....W...R.','..........','..........']},
+  { name:'しずくの谷', theme:'water', attrs:['rain','sun','leaf'], tip:'Cubeの 面の マーク（おひさま・あめ・はっぱ）は、さいたときに とくべつな ちからを だすよ',
+    map:['.....W....','.....W....','....WW....','....W.....','..H....C..','....W.....','...WW.....','...W......','..........','...W....R.']},
+  { name:'迷いの生け垣', theme:'forest', tip:'はちが 花を まわると はちみつが できるよ。のむと 30びょう Cubeを おせるよ',
+    map:['...........','.hhh...hhh.','...........','...h...h...','...h.C.h...','...h...h...','...........','.hh..H..hh.','...........','.hhh...hhh.','...........']},
+  { name:'きらめく池', theme:'water', tip:'池の 石は Hanaだけ わたれるよ。「ダッシュ」で とおった 荒地に つぼみが できるよ。！マークの Cubeは こわがりさん',
+    map:['...........','..R........','...WWsWW...','...WWsWW...','...sssss...','...WWsWW...','...WWsWW...','...........','.H.......C.','...........','.......R...']},
+  { name:'虹の庭', theme:'meadow', tip:'いろんな いろの Cubeが いるよ。あか＝はやく そだつ・あお＝ひろく さく・きいろ＝れんさ・むらさき＝めずらしい花',
+    map:['...........','.R.......R.','...........','....W......','...WW..C...','...........','..H....W...','.......WW..','...........','.R.......R.','...........']},
+  { name:'夕焼けの森', theme:'forest', tip:'木かげでは つぼみが ひとりでに そだつよ。「ちょうちょ」で ちょうちょを よべるよ。♥の Cubeは なかまが すき',
+    map:['...........','.T...T...T.','...........','...T.......','.......T...','..H....C...','.T.........','.....T...T.','...........','..T....T...','...........']},
+  { name:'眠れる花畑', theme:'night', tip:'たねの面を 下にした Cubeが 花を ふむと、つぼみに もどっちゃう。×の Cubeは 花が きらい',
+    map:['...........','.R....b....','...bb......','..bb...WW..','.......W...','..H..C.....','.....R..bb.','.WW.....b..','..W...R....','......b....','...........']},
+  { name:'風車の丘', theme:'sky', wind:'E', windChange:15, tip:'風車が まわって、かぜの むきが ときどき かわるよ',
+    map:['...........','...........','..R.....R..','...........','.....M.....','...........','..H.....C..','...........','..R..W..R..','.....W.....','...........']},
+  { name:'星降る原っぱ', theme:'night', attrs:['star','star','rain','sun','butterfly'], rareMul:2, tip:'星の マークが さくと、めずらしい 花が うまれるよ。はなずかんを うめよう',
+    map:['...........','.....R.....','...........','.W.......W.','...........','..H..C.....','...........','.W.......W.','...........','.....R.....','...........']},
+  { name:'巨大ひまわりの庭', theme:'meadow', giantP:.3, rainbow:.15, tip:'大きな Cubeや にじいろの Cubeが さくと、巨大な 花が さくよ',
+    map:['............','............','..R......R..','............','............','....C.......','.......H....','............','............','..R......R..','............','............']},
+  { name:'雲の上の庭', theme:'sky', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
+    map:['.....xx.....','.....xx.....','.....==.....','.....xx.....','..H..xx..C..','.....xx.....','xx=xxxxxx=xx','.....xx.....','.....xx.....','.....==.....','.....xx.....','.....xx.....']},
+  { name:'黒い花粉の森', theme:'forest', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
+    map:['...........','.T.......T.','...........','....T......','...........','..H...C....','...........','......T....','.T.........','.......T...','...........']},
+  { name:'忘れられた温室', theme:'garden', tip:'温室の かべを つかって ひみつの庭を つくろう。庭の中は 花が はやく そだつよ',
+    map:['...........','.GGGG......','.G..G..GGG.','.G..G..G.G.','.GG.G..G...','...........','..H....C...','.GGG.......','.G.G...GGG.','.G.....G.G.','.GGG...GGG.']},
+  { name:'女王の庭園', theme:'garden', pollen:10, giantP:.12, tip:'これまでの ちからを ぜんぶ つかって、女王の 庭園を 花で いっぱいに しよう',
+    map:['............','.h..T...h...','............','...W....R...','...W........','.......C....','....H.......','..........W.','..R.....h...','.....T......','............','............']},
+  { name:'Flower Queen', theme:'queen', pollen:6, boss:true, giantP:.12, tip:'黒い 花の 女王が 花粉を とばすよ。花を まもって、ふやして、女王を 花で つつもう',
+    map:['............','............','..R......R..','............','............','.....QQ.....','.....QQ.....','..H.........','.........C..','..R......R..','............','............']}
 ];
+// ステージで つかう しくみ（前のステージで おぼえたものは そのまま つづく）
+const ALL_ATTRS=['sun','rain','butterfly','leaf','star','rainbow'];
+function stageFlags(idx,st){
+  const n=idx+1;
+  return {
+    butterfly:n>=3, garden:n>=4, bees:n>=8, dash:n>=9, colors:n>=10, bfSkill:n>=11, trample:n>=12,
+    giantFirst:!!st.giantFirst, giantP:st.giantP||(n>5?.06:0), rainbow:st.rainbow||.03,
+    attrs:st.attrs||(n>=10?ALL_ATTRS:n>=7?['sun','rain','leaf']:[]),
+    wind:st.wind||null, windChange:st.windChange||0, pollen:st.pollen||0, boss:!!st.boss,
+    rareMul:st.rareMul||1, fastRoll:!!st.fastRoll,
+    pers:[].concat(n>=2?['curious']:[],n>=9?['shy']:[],n>=11?['herd']:[],n>=12?['flowerhate']:[],n>=16?['flowerlove']:[])
+  };
+}
 let STAGE=STAGES[0], ROWS=STAGE.map.length, COLS=STAGE.map[0].length;
 
 /* ================================================================
  * 4. STATE  （描画に依存しないゲームデータ）
  * ================================================================ */
 // 地面 state: 0=荒地 1=つぼみ 2=花畑
+// 地形 type：ground（花が さく・花率の対象）／ rock・water・hedge・tree・cloud・glass・mill・queen（通れない）
+//            stone・bridge（Hanaだけ 通れる。花率には 入らない）
+const TILE_CH={R:'rock',W:'water',s:'stone',h:'hedge',T:'tree',x:'cloud','=':'bridge',G:'glass',M:'mill',Q:'queen'};
+const HANA_OK={ground:1,stone:1,bridge:1};
 let S=null;
 function newState(idx){
   idx=clamp(idx|0,0,STAGES.length-1);
   STAGE=STAGES[idx]; ROWS=STAGE.map.length; COLS=STAGE.map[0].length;
   const rnd=rng32(20261111+idx*977);
-  const tiles=[]; let hana={x:3.5,y:5.5}, first={i:6,j:5}, ground=0;
+  const tiles=[]; let hana={x:3.5,y:5.5}, first={i:6,j:5}, ground=0, queen=null;
   for(let j=0;j<ROWS;j++){ const row=[];
     for(let i=0;i<COLS;i++){
       const ch=STAGE.map[j][i];
-      const type= ch==='R'?'rock': ch==='W'?'water':'ground';
+      const type=TILE_CH[ch]||'ground';
+      if(ch==='Q'&&!queen) queen={i,j};
       if(ch==='H') hana={x:i+.5,y:j+.5};
       if(ch==='C') first={i,j};
       if(type==='ground') ground++;
@@ -364,8 +499,18 @@ function newState(idx){
         wt:9, wd:1});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
     } tiles.push(row);
   }
+  // 木のまわりの地面は「木かげ」
+  for(const row of tiles) for(const t of row){ if(t.type!=='ground') continue;
+    for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){ const r=tiles[t.j+dj]; const o=r&&r[t.i+di]; if(o&&o.type==='tree') t.shade=true; } }
+  const flags=stageFlags(idx,STAGE);
   return {
-    stage:idx, flags:STAGE.flags, butterflies:[], maxChain:0, perfects:0, toldBf:false, toldTrample:0, toldTouch:0,
+    stage:idx, flags, butterflies:[], maxChain:0, perfects:0, toldBf:false, toldTrample:0, toldTouch:0,
+    gardens:[], gardenDirty:false, gardenT:0, growT:0, rareN:0, giantN:0, told:{},
+    honey:null, honeyHeld:false, honeyT:0, honeyCool:4, bees:[],
+    wind:flags.wind?{dir:flags.wind,t:0}:null, windFx:[],
+    pollen:[], pollenT:flags.pollen?flags.pollen*.7:0,
+    skill:{dash:0,bf:0}, dash:null, skillBf:[], forceRainbow:false,
+    queen:queen?{i:queen.i,j:queen.j,phase:1,pure:false,pureT:0,t:0}:null,
     time:0, started:false, cleared:false, clearAt:0, clearShown:false,
     tiles, groundCount:ground, flowerCount:0,
     hana:{x:hana.x,y:hana.y,face:'down',moving:false,walk:0,stampT:0,sx:1,joy:false,joyT:0,joyN:-1,goal:null},
@@ -389,31 +534,59 @@ function rolledOri(o,d){
   n.T=o[op]; n[d]=o.T; n.B=o[d]; n[op]=o.B;   // 転がる方向へ上面が倒れる
   return n;
 }
+// 性格（GDD 15）：のんびり（基本）／好奇心♪（Hanaに近づく）／臆病！（Hanaから逃げる）／群れ好き♥（ほかのCubeへ）／花好き✿（花畑へ）／花嫌い×（花畑をさける）
+// カラー（GDD 16）：みどり（基本）／あか（はやく そだつ）／あお（ひろく さく）／きいろ（れんさが とくい）／むらさき（めずらしい花）／にじいろ（巨大な花）
+// 属性面（GDD 17）：6面ぜんぶ さいたとき、マークの ちからが でる
 function makeCube(i,j){
+  const F=S.flags, first=S.blooms===0&&S.cubes.length===0;
+  let pers='calm';
+  if(!first&&F.pers.length&&CFG.CURIOUS_EVERY.includes(S.nextId%5)) pers=F.pers[Math.floor(Math.random()*F.pers.length)];   // 約4割が 性格もち
+  let color='green';
+  if(S.forceRainbow){ color='rainbow'; S.forceRainbow=false; }
+  else if(F.colors&&!first){ const r=Math.random(); if(r<F.rainbow) color='rainbow'; else if(r<.55) color=['red','blue','yellow','purple'][Math.floor(Math.random()*4)]; }
+  else if(F.rainbow>=.1&&!first&&Math.random()<F.rainbow) color='rainbow';
+  const giant=(F.giantFirst&&first)||(!first&&Math.random()<F.giantP);
+  const attr=[null,null,null,null,null,null];
+  if(F.attrs.length){ let n=Math.random()<.7?1:0; if(Math.random()<.2) n++; for(let k=0;k<n;k++) attr[1+Math.floor(Math.random()*5)]=F.attrs[Math.floor(Math.random()*F.attrs.length)]; }
   return {id:S.nextId++, i, j, fi:i, fj:j,
     ori:{T:0,B:1,E:2,W:3,S:4,N:5}, prevOri:null,
-    grown:[false,false,false,false,false,false], pop:[9,9,9,9,9,9],
+    grown:[false,false,false,false,false,false], pop:[9,9,9,9,9,9], prog:[0,0,0,0,0,0],
     state:'drop', t:0, rest:1.0, dir:null, shake:0, pendingBloom:false,
     landT:9, chain:1, emoteT:0,
-    curious:CFG.CURIOUS_EVERY.includes(S.nextId%5)};   // 性格：のんびり（基本）／好奇心（Hanaに近づく）
+    pers, curious:pers==='curious', color, giant, attr};
+}
+const cs=c=>CFG.CUBE*(c.giant?CFG.GIANT:1);   // Cubeの一辺（巨大Cubeは大きい）
+// 面を育てる：巨大Cubeは 3回で 1面。そろったら true
+function growFace(c,id,n=1){
+  if(c.grown[id]) return false;
+  c.pop[id]=0;
+  if(c.giant){ c.prog[id]=Math.min(3,c.prog[id]+n); if(c.prog[id]<3) return false; }
+  c.grown[id]=true; return true;
+}
+function ungrowFace(c,id){ c.grown[id]=false; c.prog[id]=0; c.pop[id]=0; }
+const nearestCube=c=>{ let b=null,bd=1e9; for(const o of S.cubes){ if(o===c||o.state==='gone'||o.state==='bloom') continue; const d=Math.hypot(o.i-c.i,o.j-c.j); if(d<bd){bd=d;b=o;} } return b; };
+function restTime(c){
+  let r=c.grown[c.ori.T]?CFG.REST_GROWN:CFG.REST_SEED;
+  if(c.giant) r*=1.35;
+  if(S.flags.fastRoll) r*=.75;
+  const t=tileAt(c.i,c.j); if(t&&t.garden) r*=1.5;   // ひみつの庭の中では おだやか
+  return r;
 }
 const grownCount=c=>c.grown.reduce((n,g)=>n+(g?1:0),0);
 const cubeAt=(i,j,except)=>S.cubes.find(c=>c!==except&&c.i===i&&c.j===j);
 const bigAt=(i,j)=>S.bigFlowers.find(b=>b.i===i&&b.j===j);
-function cubeCanEnter(i,j,c){
-  const t=tileAt(i,j); if(!t||t.type!=='ground') return false;
-  if(cubeAt(i,j,c)) return false;
-  if(Math.floor(S.hana.x)===i&&Math.floor(S.hana.y)===j) return false;
-  return true;
-}
+function cubeFree(i,j,c){ const t=tileAt(i,j); return !!t&&t.type==='ground'&&!cubeAt(i,j,c); }
+const hanaOn=(i,j)=>Math.floor(S.hana.x)===i&&Math.floor(S.hana.y)===j;
+function cubeCanEnter(i,j,c){ return cubeFree(i,j,c)&&!hanaOn(i,j); }
 // Cubeの転がる方向は基本ランダム。軽い傾向として、たねの面が上に来る方向・花のない場所を少し選びやすい。
 // 性格「好奇心」のCubeは、Hanaのいる方へ近づきやすい。プレイヤーがCubeを直接動かすことはできない。
 function chooseRoll(c){
   const opts=[]; let sum=0; const h=S.hana, d0=Math.hypot(c.i+.5-h.x,c.j+.5-h.y);
   for(const d in DIRS){
     const ni=c.i+DIRS[d].dx, nj=c.j+DIRS[d].dy;
-    if(!cubeCanEnter(ni,nj,c)) continue;
-    let w=1; const o=rolledOri(c.ori,d);
+    if(!cubeFree(ni,nj,c)) continue;
+    let w=hanaOn(ni,nj)?.03:1;   // Hanaの いるマスへは ふつう ころがらない。でも ほかに 行き場が なければ、Hanaを そっと おしのけて ころがる（とじこめ防止）
+    const o=rolledOri(c.ori,d);
     if(!c.grown[o.T]) w*=4;
     else{ // 1回では出せない面（下の面など）も、2回目で上に出せる方向を少し選びやすく
       for(const d2 in DIRS){ if(d2!==DIRS[d].opp&&!c.grown[rolledOri(o,d2).T]&&cubeCanEnter(ni+DIRS[d2].dx,nj+DIRS[d2].dy,c)){ w*=2.2; break; } }
@@ -422,6 +595,13 @@ function chooseRoll(c){
     const ts=tileAt(ni,nj).state; w*= ts===0?3: ts===1?1.8:1;   // まだ花のない場所へ向かいやすい
     let near=false;
     if(c.curious){ const d1=Math.hypot(ni+.5-h.x,nj+.5-h.y); if(d0>1.6){ if(d1<d0){ w*=3.5; near=true; } } else if(d1>1.9) w*=.3; }
+    else if(c.pers==='shy'){ const d1=Math.hypot(ni+.5-h.x,nj+.5-h.y); if(d0<2.8){ if(d1>d0){ w*=3.5; near=true; } else w*=.25; } }
+    else if(c.pers==='herd'){ const o=nearestCube(c); if(o){ const e0=Math.hypot(c.i-o.i,c.j-o.j), e1=Math.hypot(ni-o.i,nj-o.j); if(e0>1.5&&e1<e0){ w*=3; near=true; } } }
+    else if(c.pers==='flowerlove'){ if(ts===2){ w*=4; near=true; } }
+    else if(c.pers==='flowerhate'){ if(ts===2) w*=.2; else if(ts===0){ w*=1.8; near=true; } }
+    if(S.wind){ if(d===S.wind.dir) w*=2.6; else if(d===DIRS[S.wind.dir].opp) w*=.45; }   // かぜ：かざしもへ ころがりやすい
+    for(const p of S.pollen) if(Math.hypot(ni+.5-p.x,nj+.5-p.y)<1.3) w*=.25;           // 黒い花粉は こわい
+    const Q=S.queen; if(Q&&!Q.pure){ const q0=Math.hypot(c.i-Q.i-.5,c.j-Q.j-.5), q1=Math.hypot(ni-Q.i-.5,nj-Q.j-.5); if(q0<3.4&&q1<q0) w*=.4; }   // 女王も こわい
     opts.push({d,w,near}); sum+=w;
   }
   if(!opts.length) return null;
@@ -442,7 +622,7 @@ function startRoll(c,d){
 function onLand(c){
   c.landT=0;
   const t=tileAt(c.i,c.j);
-  if(S.flags.trample&&!S.cleared&&t&&t.state===2&&!c.grown[c.ori.B]&&!bigAt(c.i,c.j)){
+  if(S.flags.trample&&!S.cleared&&t&&t.state===2&&!t.garden&&!c.grown[c.ori.B]&&!bigAt(c.i,c.j)){   // ひみつの庭の花は ふまれても 弱らない
     setTile(t,1); wiltFx(c.i+.5,c.j+.5); Sfx.wilt();
     if(S.toldTrample<3){ S.toldTrample++; textFx(c.i+.5,c.j+.5,1.9,'ふまれて つぼみに…','#6c6f8f'); }
   }
@@ -452,13 +632,14 @@ function onLand(c){
 // （花どうし・たねどうしは そのまま）判定は Cubeが着地した（ころがり終わった・空から降りた）ときに行う。
 function touchRule(c){
   if(S.cleared||c.pendingBloom) return;
+  { const t=tileAt(c.i,c.j); if(t&&t.garden) return; }   // ひみつの庭の中では Cubeが おだやか
   for(const k in DIRS){
     const o=cubeAt(c.i+DIRS[k].dx,c.j+DIRS[k].dy,c);
     if(!o||o.pendingBloom||o.state==='roll'||o.state==='drop'||o.state==='bloom'||o.state==='gone') continue;   // 動いている相手は、相手の着地時に判定
     const fa=c.ori[k], fb=o.ori[DIRS[k].opp];
     if(c.grown[fa]===o.grown[fb]) continue;
     const [cc,id]=c.grown[fa]?[c,fa]:[o,fb];
-    cc.grown[id]=false; cc.pop[id]=0; cc.shake=.35; S.touchN=(S.touchN||0)+1;
+    ungrowFace(cc,id); cc.shake=.35; S.touchN=(S.touchN||0)+1;
     const mx=(c.i+o.i)/2+.5, my=(c.j+o.j)/2+.5;
     wiltFx(mx,my); Sfx.wilt();
     if(S.toldTouch<3){ S.toldTouch++; textFx(mx,my,1.9,'くっついて たねに もどっちゃった…','#6c6f8f'); }
@@ -476,7 +657,7 @@ function updateCubes(dt){
     if(c.armBack){ c.armBack.t+=dt; if(c.armBack.t>.2) c.armBack=null; }
     c.t+=dt;
     if(c.state==='drop'){
-      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); touchRule(c); }
+      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); touchRule(c); introCube(c); }
     }else if(c.state==='idle'){
       if(c.pendingBloom){ startBloom(c); continue; }
       if(S.cleared) continue;
@@ -491,9 +672,9 @@ function updateCubes(dt){
         c.planted=true; const d=DIRS[c.dir], r=CFG.CUBE*.5+.2;
         for(const sg of [1,-1]) dustFx(c.i+.5+d.dy*sg*r-d.dx*.34,c.j+.5-d.dx*sg*r-d.dy*.34); Sfx.push();
       }
-      if(c.t>=CFG.PREP_T){ const d=DIRS[c.dir]; if(cubeCanEnter(c.i+d.dx,c.j+d.dy,c)) startRoll(c,c.dir); else cancelPrep(c); }
+      if(c.t>=CFG.PREP_T){ const d=DIRS[c.dir]; if(cubeFree(c.i+d.dx,c.j+d.dy,c)) startRoll(c,c.dir); else cancelPrep(c); }
     }else if(c.state==='roll'){
-      if(c.t>=CFG.ROLL_T){ c.state='idle'; c.t=0; c.prevOri=null; c.rest=c.grown[c.ori.T]?CFG.REST_GROWN:CFG.REST_SEED; Sfx.roll(); onLand(c); }
+      if(c.t>=CFG.ROLL_T){ c.state='idle'; c.t=0; c.prevOri=null; c.rest=restTime(c); Sfx.roll(); onLand(c); }
     }else if(c.state==='bloom'){
       if(c.t>=CFG.BLOOM_T) finishBloom(c);
     }
@@ -553,51 +734,96 @@ function tryStamp(pick){   // pick：タップ／クリックで えらんだCub
   if(c.grown[f]){ c.shake=.3; textFx(p.x,p.y,1.9,'ここは もう さいてるよ','#7a5a48'); Sfx.miss(); return {ok:false,why:'dup'}; }
   // タイミングスタンプ：転がり終わる瞬間に押すと、となりの面も1つ咲く（失敗はなく、純粋なおまけ）
   const perfect=(c.state==='roll'&&c.t>=CFG.ROLL_T-CFG.PERFECT_PRE)||(c.state==='idle'&&c.landT<=CFG.PERFECT_POST);
-  c.grown[f]=true; c.pop[f]=0; S.stamps++;
+  const done=growFace(c,f); S.stamps++;
   Sfx.stamp();
-  ringFx(p.x,p.y,'#ffd0de',.7,CFG.CUBE);
-  petalFx(p.x,p.y,CFG.CUBE,6,1.2);
+  const z=cs(c);
+  ringFx(p.x,p.y,'#ffd0de',.7,z);
+  petalFx(p.x,p.y,z,6,1.2);
+  let extra='';
   if(perfect){
     S.perfects++;
     const sides=['E','S','W','N'].filter(k=>!c.grown[c.ori[k]]);
-    if(sides.length){ const id=c.ori[sides[Math.floor(Math.random()*sides.length)]]; c.grown[id]=true; c.pop[id]=0; }
-    Sfx.perfect(); ringFx(p.x,p.y,'#ffc93c',1.1,CFG.CUBE); petalFx(p.x,p.y,CFG.CUBE,10,1.8);
+    if(sides.length) growFace(c,c.ori[sides[Math.floor(Math.random()*sides.length)]]);
+    Sfx.perfect(); ringFx(p.x,p.y,'#ffc93c',1.1,z); petalFx(p.x,p.y,z,10,1.8);
+  }
+  // あかい Cube：はやく そだつ（スタンプで もう1面さくことがある）／おなじ色の なかまが ちかいと たすけあう（GDD 22）
+  if(grownCount(c)<6){
+    const un=[0,1,2,3,4,5].filter(k=>!c.grown[k]&&k!==f);
+    const buddy=S.flags.colors&&c.color!=='green'&&S.cubes.some(o=>o!==c&&o.color===c.color&&o.state!=='bloom'&&Math.hypot(o.i-c.i,o.j-c.j)<=2.3);
+    if(un.length&&((c.color==='red'&&Math.random()<.5)||(buddy&&Math.random()<.3))){ growFace(c,un[Math.floor(Math.random()*un.length)]); extra=c.color==='red'?'あかの ちから！':'なかまの ちから！'; }
   }
   const n=grownCount(c);
   if(n===6){ c.pendingBloom=true; c.chain=1; if(perfect) textFx(p.x,p.y,1.9,'Perfect!','#d98a00',1.25); }
-  else textFx(p.x,p.y,1.9,perfect?'Perfect!':n===5?'あと 1めん！':'ぽん！',perfect?'#d98a00':'#c2355f',perfect?1.25:1);
+  else if(c.giant&&!done&&!perfect) textFx(p.x,p.y,2.3,c.prog[f]===1?'あと 2かい！':'あと 1かい！','#c2355f');
+  else textFx(p.x,p.y,1.9+(c.giant?.4:0),perfect?'Perfect!':extra||(n===5?'あと 1めん！':'ぽん！'),perfect||extra?'#d98a00':'#c2355f',perfect?1.25:1);
   return {ok:true,face:f,perfect};
+}
+// はちみつの こうか中：Cubeを タップすると、スタンプしてから Hanaの むこうがわへ 1マス おす（GDD 18.5）
+function interactCube(c){
+  if(S.honeyT>0&&!S.cleared){
+    let r=null; if(!c.grown[c.ori.T]) r=tryStamp(c); else { S.hana.stampT=.28; Sfx.ensure(); }
+    if(!c.pendingBloom) pushCube(c);
+    return r;
+  }
+  return tryStamp(c);
+}
+function pushCube(c){
+  if(!stampable(c)||!(c.state==='idle'||c.state==='prep')) return false;
+  const h=S.hana, p=cubePos(c), dx=p.x-h.x, dy=p.y-h.y;
+  const d=Math.abs(dx)>Math.abs(dy)?(dx>0?'E':'W'):(dy>0?'S':'N'), ni=c.i+DIRS[d].dx, nj=c.j+DIRS[d].dy;
+  if(!cubeCanEnter(ni,nj,c)){ c.shake=.3; textFx(p.x,p.y,2,'うごかない…','#7a5a48'); Sfx.miss(); return false; }
+  startRoll(c,d); Sfx.push(); dustFx(p.x-DIRS[d].dx*.4,p.y-DIRS[d].dy*.4);
+  if((S.told.push|0)<3){ S.told.push=(S.told.push|0)+1; textFx(p.x,p.y,2.2,'えいっ！','#d98a00'); }
+  return true;
 }
 function startBloom(c){ c.state='bloom'; c.t=0; c.pendingBloom=false; Sfx.bloomStart(); }
 function finishBloom(c){
   c.state='gone'; S.blooms++;
-  const ch=c.chain||1, bonus=Math.min(1,(ch-1)*CFG.CHAIN_BONUS), x=c.i+.5, y=c.j+.5;
+  const ch=c.chain||1, x=c.i+.5, y=c.j+.5, has=a=>c.attr.some((v,k)=>v===a);
+  let bonus=Math.min(1,(ch-1)*CFG.CHAIN_BONUS);
+  if(c.color==='blue') bonus+=1;          // あお：ひろく さく
+  if(has('leaf')) bonus+=1;               // はっぱ：花が ひろがりやすい
+  if(c.giant) bonus+=1.5;                 // 巨大Cube：とても ひろく さく
+  let rm=1;                               // めずらしい花の できやすさ
+  if(c.color==='purple') rm*=3; if(has('star')) rm*=3; if(c.color==='rainbow'||has('rainbow')) rm*=2;
+  if(S.flags.colors&&S.cubes.some(o=>o!==c&&o.color!==c.color&&o.state!=='gone'&&Math.hypot(o.i-c.i,o.j-c.j)<=3)) rm*=2;   // ちがう色の なかまが ちかい（GDD 22）
   S.maxChain=Math.max(S.maxChain,ch);
-  S.bigFlowers.push({i:c.i,j:c.j,t:0,c:Math.floor(Math.random()*5),ph:Math.random()*6,wt:9,wd:1,inside:false});
-  spreadFlowers(c.i,c.j,bonus);
-  // 花の連鎖：開花の波が届いた近くのCubeは、面が1つ咲く。それで6面そろえば続けて開花する
+  // 根づく花：巨大Cube＝巨大ひまわり、にじいろ・虹のマーク＝巨大な花（ひまわり／桜／バラ）
+  let kind='normal';
+  if(c.giant) kind='sunflower';
+  else if(c.color==='rainbow'||(has('rainbow')&&Math.random()<.6)) kind=['sunflower','sakura','rose'][Math.floor(Math.random()*3)];
+  S.bigFlowers.push({i:c.i,j:c.j,t:0,c:Math.floor(Math.random()*5),ph:Math.random()*6,wt:9,wd:1,inside:false,kind});
+  if(kind!=='normal'){ S.giantN++; const nw=dexAdd('g_'+kind); textFx(x,y,3.4,DEX_NAME['g_'+kind]+(nw?' はっけん！':'！'),'#d98a00',1.4); Sfx.rare(); }
+  spreadFlowers(c.i,c.j,bonus,rm);
+  // 花の連鎖：開花の波が届いた近くのCubeは、面が1つ咲く。それで6面そろえば続けて開花する（きいろは れんさが とくい）
+  const reach=CFG.R_FLOWER+bonus+(c.color==='yellow'?1:0), pw=c.color==='yellow'?2:1;
   for(const o of S.cubes){
     if(o===c||o.state==='gone'||o.state==='bloom'||o.state==='drop'||o.pendingBloom) continue;
     const q=cubePos(o), d=Math.hypot(q.x-x,q.y-y);
-    if(d<=CFG.R_FLOWER+bonus) S.events.push({at:S.time+.1+d*.13,cube:o,chain:ch+1});
+    if(d<=reach) S.events.push({at:S.time+.1+d*.13,cube:o,chain:ch+1,pw});
   }
+  // 開花の波は 黒い花粉を はらう
+  S.pollen=S.pollen.filter(p=>{ if(Math.hypot(p.x-x,p.y-y)<=CFG.R_FLOWER+bonus){ petalFx(p.x,p.y,.6,6,1); return false; } return true; });
+  applyAttrs(c,x,y,has);
   ringFx(x,y,'#fff3a8',CFG.R_FLOWER+bonus+.4); ringFx(x,y,'#ffd0de',CFG.R_BUD+bonus+.4,0,.15);
   petalFx(x,y,.6,40+ch*10,3.2);
   textFx(x,y,2.4,ch>=3?'だいれんさ！！':ch===2?'れんさ かいか！':'だいかいか！',ch>=2?'#d98a00':'#c2355f',ch>=3?2.1:ch===2?1.8:1.6);
   Sfx.bloom(ch);
   if(S.flags.butterfly&&S.butterflies.length<CFG.MAX_BUTTERFLY){
-    S.butterflies.push({x,y,tx:x,ty:y,mode:'rest',t:0,tile:null,ph:Math.random()*6,c:S.butterflies.length,dir:1});
+    S.butterflies.push({x,y,tx:x,ty:y,mode:'rest',t:0,tile:null,ph:Math.random()*6,c:S.butterflies.length,dir:1}); Sfx.flutter();
     if(!S.toldBf){ S.toldBf=true; textFx(x,y,3.1,'ちょうちょが きたよ','#5a7fd0'); }
   }
 }
 function chainTouch(e){
   const o=e.cube; if(o.state==='gone'||o.state==='bloom'||o.pendingBloom) return;
-  let id=-1;
-  if(!o.grown[o.ori.B]) id=o.ori.B;                       // いちばん押しにくい下の面から
-  else{ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]); if(un.length) id=un[Math.floor(Math.random()*un.length)]; }
-  if(id<0) return;
-  o.grown[id]=true; o.pop[id]=0;
-  const q=cubePos(o); ringFx(q.x,q.y,'#fff3a8',.8,CFG.CUBE); petalFx(q.x,q.y,CFG.CUBE,8,1.4); Sfx.perfect();
+  for(let n=0;n<(e.pw||1);n++){
+    let id=-1;
+    if(!o.grown[o.ori.B]) id=o.ori.B;                       // いちばん押しにくい下の面から
+    else{ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]); if(un.length) id=un[Math.floor(Math.random()*un.length)]; }
+    if(id<0) break;
+    growFace(o,id,o.giant?3:1);
+  }
+  const q=cubePos(o); ringFx(q.x,q.y,'#fff3a8',.8,cs(o)); petalFx(q.x,q.y,cs(o),8,1.4); Sfx.perfect();
   if(grownCount(o)===6){ o.pendingBloom=true; o.chain=e.chain; }
   else textFx(q.x,q.y,1.9,'花の ちから！','#d98a00');
 }
@@ -610,13 +836,16 @@ function setTile(t,ns){
   if(t.state===2) S.flowerCount--;
   if(ns===2) S.flowerCount++;
   t.state=ns; t.pop=0; t.flash=1;
+  S.gardenDirty=true;
+  if(ns<2) t.rare=null;
+  else for(let k=0;k<5;k++) dexAdd('c'+t.deco[k].c);   // ふつうの花も 図鑑に のる
 }
-function spreadFlowers(ci,cj,bonus=0){
+function spreadFlowers(ci,cj,bonus=0,rm=1){
   for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
     const t=S.tiles[j][i]; if(t.type!=='ground') continue;
     const d=Math.hypot(i-ci,j-cj);
     const add=d<=CFG.R_FLOWER+bonus?2:d<=CFG.R_BUD+bonus?1:0;
-    if(add) S.events.push({at:S.time+.08+d*.13,i,j,add});
+    if(add) S.events.push({at:S.time+.08+d*.13,i,j,add,rm});
   }
 }
 function updateGarden(dt){
@@ -626,17 +855,21 @@ function updateGarden(dt){
     for(const e of S.events){
       if(e.at>S.time){ rest.push(e); continue; }
       if(e.cube){ chainTouch(e); continue; }
+      if(e.rareAt){ const t=tileAt(e.rareAt.i,e.rareAt.j); if(t&&t.state===2&&!t.rare) makeRare(t); continue; }
       const t=S.tiles[e.j][e.i], ns=Math.min(2,t.state+e.add);
       if(ns!==t.state){
         setTile(t,ns);
-        if(ns===2) petalFx(e.i+.5,e.j+.5,.1,2,1.0);
+        if(ns===2){ petalFx(e.i+.5,e.j+.5,.1,2,1.0); maybeRare(t,e.rm||1); }
         Sfx.tick(S.tickN++);
       }
     }
     S.events=rest;
     if(!rest.length) S.tickN=0;
   }
-  if(!S.cleared && flowerRate()>=CFG.CLEAR){ S.cleared=true; S.clearAt=S.time; Sfx.clear();
+  if(!S.cleared){ S.growT+=dt; if(S.growT>=1){ S.growT-=1; slowGrowth(); } }
+  if(S.flags.garden&&S.gardenDirty&&(S.gardenT+=dt)>=.4){ S.gardenT=0; detectGardens(); }
+  const goalOk=S.flags.boss?(S.queen&&S.queen.pure&&S.queen.pureT>2.2):flowerRate()>=CFG.CLEAR;   // 女王戦は 女王を じょうかしたら クリア
+  if(!S.cleared && goalOk){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); S.honeyHeld=false; S.honey=null; S.honeyT=0; S.dash=null;   // もちものは ステージごとに リセット
     const h=S.hana; h.joy=true; h.joyT=0; h.joyN=-1; }   // Hanaが ぴょんぴょん跳ねて よろこぶ
 }
 const flowerRate=()=>S.groundCount?S.flowerCount/S.groundCount:0;
@@ -651,7 +884,13 @@ function updateButterflies(dt){
         if(t.type!=='ground'||t.state!==1||(t.bf&&t.bf!==b)) continue;
         const d=Math.hypot(i+.5-b.x,j+.5-b.y)+Math.random()*2.5; if(d<bs){bs=d;best=t;} }
       if(best){ best.bf=b; b.tile=best; b.tx=best.i+.5; b.ty=best.j+.5; }
-      else { b.tile=null; b.tx=.5+Math.random()*(COLS-1); b.ty=.5+Math.random()*(ROWS-1); }
+      else{
+        b.tile=null;
+        // つぼみが ないときは、上の面が たねの Cubeを 見つけて 上を とび、Hanaに おしえる（GDD 18）
+        const cand=S.cubes.filter(c=>c.state==='idle'&&!c.grown[c.ori.T]&&!c.pendingBloom);
+        if(cand.length&&Math.random()<.6){ const c=cand[Math.floor(Math.random()*cand.length)]; b.tx=c.i+.5; b.ty=c.j+.5; b.find=true; }
+        else { b.tx=.5+Math.random()*(COLS-1); b.ty=.5+Math.random()*(ROWS-1); b.find=false; }
+      }
       b.mode='go';
     }else if(b.mode==='go'){
       const dx=b.tx-b.x, dy=b.ty-b.y, d=Math.hypot(dx,dy), st=CFG.BF_SPEED*dt;
@@ -659,7 +898,7 @@ function updateButterflies(dt){
       if(d<=st){ b.x=b.tx; b.y=b.ty; b.mode='work'; b.t=0; } else { b.x+=dx/d*st; b.y+=dy/d*st; }
     }else if(b.mode==='work'){
       b.t+=dt; const T=b.tile;
-      if(!T){ if(b.t>=1.2) b.mode='pick'; }
+      if(!T){ if(b.t>=(b.find?2:1.2)){ b.mode='pick'; b.find=false; } }
       else if(T.state!==1){ T.bf=null; b.tile=null; b.mode='pick'; }
       else if(b.t>=CFG.BF_WORK){ setTile(T,2); petalFx(T.i+.5,T.j+.5,.2,4,1); Sfx.tick(Math.floor(Math.random()*8)); T.bf=null; b.tile=null; b.mode='rest'; b.t=0; }
     }else{ b.t+=dt; if(b.t>=CFG.BF_REST) b.mode='pick'; }
@@ -669,13 +908,13 @@ function updateButterflies(dt){
 /* ---- Hana ---- */
 function walkable(x,y){
   const r=.22;
-  for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]]){ const t=tileAt(Math.floor(x+ox),Math.floor(y+oy)); if(!t||t.type!=='ground') return false; }
+  for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]]){ const t=tileAt(Math.floor(x+ox),Math.floor(y+oy)); if(!t||!HANA_OK[t.type]) return false; }
   return true;
 }
 /* ---- タップ（クリック）した場所へ歩く：ゆび1本・マウスだけで あそべる操作 ---- */
 const WALK={ARRIVE:.06, NEAR:1.35, STUCK:.7};   // 着いたとみなす距離／Cubeの そばで止まる距離（スタンプ範囲1.7の内側）／進めない秒数で あきらめる
 const N8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-const groundTile=(i,j)=>{ const t=tileAt(i,j); return !!t&&t.type==='ground'; };
+const groundTile=(i,j)=>{ const t=tileAt(i,j); return !!t&&!!HANA_OK[t.type]; };   // Hanaが 歩けるマス（地面・飛び石・雲の橋）
 function walkMap(si,sj){   // Hanaのマスから 歩いて行けるマス（水・岩は よける。ななめは 角をすりぬけない）
   const prev=new Map(), q=[[si,sj]]; prev.set(sj*COLS+si,-1);
   for(let n=0;n<q.length;n++){ const [i,j]=q[n];
@@ -709,8 +948,11 @@ function goalStep(h,dt){   // 目的地へ すすむ向き（グリッド上）�
     const c=g.c, falling=S.cubes.includes(c)&&c.state==='drop';
     if(!stampable(c)&&!falling){ h.goal=null; return null; }
     const p=cubePos(c); gx=p.x; gy=p.y;
-    if(Math.hypot(gx-h.x,gy-h.y)<=WALK.NEAR){ if(!falling){ h.goal=null; tryStamp(c); } return null; }   // 降ってくる途中なら 着地を まつ
-  }else{ gx=g.x; gy=g.y; if(Math.hypot(gx-h.x,gy-h.y)<=WALK.ARRIVE){ h.goal=null; return null; } }
+    if(Math.hypot(gx-h.x,gy-h.y)<=WALK.NEAR){ if(!falling){ h.goal=null; interactCube(c); } return null; }   // 降ってくる途中なら 着地を まつ
+  }else{
+    if(g.pollen){ if(!S.pollen.includes(g.pollen)){ h.goal=null; return null; } g.x=clamp(g.pollen.x,.3,COLS-.3); g.y=clamp(g.pollen.y,.3,ROWS-.3); }   // 花粉を おいかける
+    if(g.honey&&!S.honey){ h.goal=null; return null; }
+    gx=g.x; gy=g.y; if(Math.hypot(gx-h.x,gy-h.y)<=WALK.ARRIVE){ h.goal=null; return null; } }
   const w=walkTarget(h,gx,gy); if(!w){ h.goal=null; return null; }
   const dx=w.x-h.x, dy=w.y-h.y, d=Math.hypot(dx,dy);
   return {x:dx,y:dy,m:Math.min(1,d/(CFG.HANA_SPEED*dt+1e-9))};
@@ -732,6 +974,8 @@ function updateHana(dt){
       return;
     }
   }
+  // Flower Dash 中：すばやく まっすぐ すすみ、とおった荒地に つぼみを のこす
+  if(S.dash){ updateDash(dt); return; }
   // すすむ向き（グリッド上）：キーボード（画面の上下左右 → グリッド）か、タップした目的地
   let mx=0,my=0,m=0,want=0; const x0=h.x, y0=h.y;
   if(v.x||v.y){ mx=v.x+2*v.y; my=2*v.y-v.x; m=Math.min(1,Math.hypot(v.x,v.y)); }
@@ -772,6 +1016,312 @@ function updateHana(dt){
   }
 }
 
+/* ================================================================
+ * 6b. GDD v3.6 の しくみ：ひみつの庭・レア花と図鑑・セーブ・蜂とはちみつ・風・黒い花粉・花の女王・スキル
+ * ================================================================ */
+const COLOR_INFO={green:{n:'',d:''},red:{n:'あかい',d:'はやく そだつ'},blue:{n:'あおい',d:'ひろく さく'},yellow:{n:'きいろい',d:'れんさが とくい'},
+  purple:{n:'むらさきの',d:'めずらしい 花が さく'},rainbow:{n:'にじいろの',d:'巨大な 花が さく'}};
+const PERS_INFO={curious:{g:'♪',col:'#e0569a',d:'Hanaに よってくる'},shy:{g:'！',col:'#4f7fd6',d:'Hanaから にげる こわがりさん'},
+  herd:{g:'♥',col:'#e07a2e',d:'なかまの そばが すき'},flowerlove:{g:'✿',col:'#d94f8a',d:'花畑が だいすき'},flowerhate:{g:'×',col:'#7a6a5a',d:'花畑が にがて'}};
+const ATTR_INFO={sun:'おひさま',rain:'あめ',butterfly:'ちょうちょ',leaf:'はっぱ',star:'ほし',rainbow:'にじ'};
+const GARDEN_INFO={small:'小さな庭',butterfly:'蝶の庭',growth:'成長の庭',rainbow:'虹の庭',royal:'王家の庭'};
+// 花図鑑（GDD 21）。見つけた花は 自動で 登録。まだの花は シルエット
+const DEX=[
+  {id:'c0',name:'ピンクの花',d:'いちばん よく さく 花'},{id:'c1',name:'きいろの花',d:'おひさまみたいな 花'},
+  {id:'c2',name:'しろい花',d:'すずしげな 花'},{id:'c3',name:'むらさきの花',d:'ちょっぴり おとなっぽい 花'},
+  {id:'c4',name:'オレンジの花',d:'げんき いっぱいの 花'},
+  {id:'rose_r',name:'赤バラ',d:'あたたかい 色の 花が おおい ところに さく'},{id:'rose_b',name:'青バラ',d:'しろや むらさきの 花の ちかくに さく'},
+  {id:'rainbowflower',name:'にじいろの花',d:'赤バラと 青バラが あつまると さく'},
+  {id:'g_sunflower',name:'巨大ひまわり',d:'大きな Cubeや にじの ちからで さく'},{id:'g_sakura',name:'巨大桜',d:'にじの ちからで さく'},
+  {id:'g_rose',name:'巨大バラ',d:'にじの ちからで さく'},{id:'queen',name:'花の女王',d:'じょうかされた 女王の ほんとうの すがた'}
+];
+const DEX_NAME={}; DEX.forEach(d=>DEX_NAME[d.id]=d.name);
+// セーブ（GDD 52）：ステージの解放・クリア・花率の記録・図鑑・設定。ブラウザの中だけに保存
+const Save={key:'tof_save_v1',data:{unlocked:1,best:{},dex:{},sound:true,story:false},
+  load(){ try{ const s=JSON.parse(localStorage.getItem(this.key)||'null'); if(s&&typeof s==='object') Object.assign(this.data,s); }catch(_){}
+    try{ if(/[?&]all\b/.test(location.search)) this.data.unlocked=STAGES.length; }catch(_){} },   // 確認用：URLに ?all で全ステージ解放
+  save(){ try{ localStorage.setItem(this.key,JSON.stringify(this.data)); }catch(_){} }};
+function dexAdd(id){ if(Save.data.dex[id]) return false; Save.data.dex[id]=1; Save.save(); return true; }
+
+// はじめて 見る Cubeの 色・性格は、上に みじかく 説明を 出す
+function introCube(c){
+  const p=cubePos(c), say=(key,txt,col)=>{ if(S.told[key]) return; S.told[key]=1; textFx(p.x,p.y,2.7+(c.giant?.4:0),txt,col,1.05,3); };
+  if(c.giant) say('giant','大きな Cube！ 1つの面に 3回 スタンプ','#c2355f');
+  else if(c.color!=='green') say('col_'+c.color,COLOR_INFO[c.color].n+'Cube：'+COLOR_INFO[c.color].d,'#b06a00');
+  else if(c.pers!=='calm') say('pers_'+c.pers,PERS_INFO[c.pers].g+' '+PERS_INFO[c.pers].d,PERS_INFO[c.pers].col);
+  else if(c.attr.some(a=>a)) say('attr','マークの面は さくと とくべつな ちからが でるよ','#4f7fd6');
+}
+// 属性面の ちから（GDD 17）：6面ぜんぶ さいたときに でる
+function applyAttrs(c,x,y,has){
+  const said=[];
+  if(has('sun')){   // おひさま：まわりの Cubeを そだてる
+    for(const o of S.cubes){ if(o===c||!stampable(o)) continue;
+      if(Math.hypot(o.i-c.i,o.j-c.j)<=4.5){ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]); if(un.length){ growFace(o,un[Math.floor(Math.random()*un.length)],o.giant?3:1);
+        if(grownCount(o)===6){ o.pendingBloom=true; o.chain=2; } const q=cubePos(o); ringFx(q.x,q.y,'#ffd34d',.9,cs(o)); } } }
+    said.push('おひさまの ちから！');
+  }
+  if(has('rain')){   // あめ：ちかくの つぼみを 花に、荒地を つぼみに
+    for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.type!=='ground'||t.state===2) continue; const d=Math.hypot(i+.5-x,j+.5-y); if(d<=5.2) S.events.push({at:S.time+.7+d*.1,i,j,add:1,rm:1}); }
+    for(let k=0;k<26;k++){ const a=Math.random()*6.283, r=Math.random()*4; S.fx.petals.push({x:x+Math.cos(a)*r,y:y+Math.sin(a)*r,z:3+Math.random()*2,vx:0,vy:0,vz:-3,life:0,max:1.2,c:'#7fb8ff',rot:0,vr:0,s:2}); }
+    said.push('あめの ちから！');
+  }
+  if(has('butterfly')){ for(let k=0;k<2;k++) if(S.butterflies.length<CFG.MAX_BUTTERFLY+2) S.butterflies.push({x,y,tx:x,ty:y,mode:'rest',t:0,tile:null,ph:Math.random()*6,c:S.butterflies.length,dir:1}); said.push('ちょうちょの ちから！'); }
+  if(has('leaf')) said.push('はっぱの ちから！ ひろく さいた');
+  if(has('star')){   // ほし：めずらしい花を かならず 1つ
+    const cand=[]; for(let j=c.j-2;j<=c.j+2;j++)for(let i=c.i-2;i<=c.i+2;i++){ const t=tileAt(i,j); if(t&&t.type==='ground'&&!bigAt(i,j)) cand.push(t); }
+    if(cand.length){ const t=cand[Math.floor(Math.random()*cand.length)]; S.events.push({at:S.time+1.1,rareAt:{i:t.i,j:t.j}}); }
+    said.push('ほしの ちから！');
+  }
+  if(has('rainbow')) said.push('にじの ちから！');
+  said.forEach((s,k)=>textFx(x,y,3+k*.5,s,'#4f7fd6',1.1,2.2));
+}
+// めずらしい花（GDD 21）：花畑に なるとき ときどき うまれる。まわりの 花の 色で 種類が きまる
+function maybeRare(t,rm){
+  if(t.rare||t.type!=='ground'||t.state!==2) return;
+  let p=CFG.RARE*rm*S.flags.rareMul;
+  if(t.garden) p*=t.garden.kind==='rainbow'?4:2;
+  if(Math.random()<p) makeRare(t);
+}
+function makeRare(t){
+  let warm=0,cool=0,rr=false,rb=false;
+  for(let j=t.j-2;j<=t.j+2;j++)for(let i=t.i-2;i<=t.i+2;i++){ const o=tileAt(i,j); if(!o||o.type!=='ground'||o.state!==2) continue;
+    if(o.rare==='rose_r') rr=true; if(o.rare==='rose_b') rb=true;
+    if(Math.abs(i-t.i)<=1&&Math.abs(j-t.j)<=1) for(let k=0;k<5;k++){ const c=o.deco[k].c; if(c===0||c===4||c===1) warm++; else cool++; } }
+  t.rare=((rr&&rb)||Math.random()<.08)?'rainbowflower':(warm>=cool*1.5?'rose_r':'rose_b');
+  S.rareN++; const nw=dexAdd(t.rare);
+  textFx(t.i+.5,t.j+.5,1.7,DEX_NAME[t.rare]+(nw?' はっけん！':''),'#c2355f',1.1,2); Sfx.rare();
+}
+// 1秒ごとの ゆっくりした 成長：花の おおい つぼみ（GDD 12）・木かげ・ひみつの庭の中
+function slowGrowth(){
+  for(const row of S.tiles) for(const t of row){
+    if(t.type!=='ground'||t.state===2) continue;
+    let up=false;
+    if(t.state===1){ let n=0; for(const [di,dj] of N8){ const o=tileAt(t.i+di,t.j+dj); if(o&&o.type==='ground'&&o.state===2) n++; } if(n>=5&&Math.random()<.08) up=true; }
+    if(t.shade&&Math.random()<(t.state===1?.04:.012)) up=true;
+    if(t.garden&&Math.random()<(t.garden.kind==='growth'?.16:.08)) up=true;
+    if(up){ setTile(t,t.state+1); if(t.state===2){ petalFx(t.i+.5,t.j+.5,.1,2,.8); maybeRare(t,1); } }
+  }
+}
+// ひみつの庭（GDD 13・14）：花畑（と 岩・池・盤面のはしなどの かべ）で 区切られて、外の地面から 切りはなされた 場所。
+// 花でない地面を つながりごとに 分け、いちばん大きい まとまりを「外」とする。それ以外の 小さな まとまりが 庭になる（内側が花で うまっていなくてよい）
+function detectGardens(){
+  S.gardenDirty=false;
+  const pass=t=>t&&t.type==='ground'&&t.state<2, seen=new Uint8Array(COLS*ROWS), comps=[];
+  for(const row of S.tiles) for(const t of row){
+    if(!pass(t)||seen[t.j*COLS+t.i]) continue;
+    const comp=[], st=[t]; seen[t.j*COLS+t.i]=1;
+    while(st.length){ const u=st.pop(); comp.push(u); for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){ const o=tileAt(u.i+di,u.j+dj); if(pass(o)&&!seen[o.j*COLS+o.i]){ seen[o.j*COLS+o.i]=1; st.push(o); } } }
+    comps.push(comp);
+  }
+  if(comps.length<2) return;
+  comps.sort((a,b)=>b.length-a.length);
+  const made=[];
+  for(const comp of comps.slice(1)){   // いちばん大きい まとまり（外）以外
+    if(comp.some(u=>u.garden)) continue;
+    const border=new Set();
+    for(const u of comp) for(const [di,dj] of N8){ const o=tileAt(u.i+di,u.j+dj); if(o&&o.type==='ground'&&o.state===2) border.add(o); }
+    if(border.size>=3&&comp.length<=Math.max(5,S.groundCount*.2)) made.push(makeGarden(comp,[...border]));
+  }
+  if(made.length){   // いちどに いくつ できても、おしらせは 1回
+    const g=made[0]; textFx(g.cx,g.cy,2.6,made.length>1?'ひみつの庭が '+made.length+'つ できた！':'ひみつの庭！ '+GARDEN_INFO[g.kind],'#c2355f',1.35,2.6); Sfx.garden();
+    if(!S.told.garden){ S.told.garden=1; UI.say('ひみつの庭が できた！','花で かこんだ 場所は、花が ふまれず、ひとりでに そだつよ'); }
+  }
+}
+function makeGarden(comp,border){
+  const all=comp.concat(border.filter(t=>!t.garden)), Q=S.queen;
+  const cx=all.reduce((a,t)=>a+t.i+.5,0)/all.length, cy=all.reduce((a,t)=>a+t.j+.5,0)/all.length;
+  let kind='small';   // 庭の種類は 中の花や 属性から 自動で きまる
+  if(Q&&all.some(t=>Math.hypot(t.i-Q.i-.5,t.j-Q.j-.5)<=2.6)) kind='royal';
+  else if(all.some(t=>t.rare)) kind='rainbow';
+  else if(S.bigFlowers.some(b=>all.some(t=>t.i===b.i&&t.j===b.j))) kind='growth';
+  else if(S.butterflies.some(b=>Math.hypot(b.x-cx,b.y-cy)<2.5)) kind='butterfly';   // ちょうちょが いる 庭
+  const g={id:S.gardens.length+1,kind,tiles:all,cx,cy,t:0};
+  for(const t of all) t.garden=g;
+  S.gardens.push(g);
+  petalFx(cx,cy,.5,30,2.2); ringFx(cx,cy,'#ffd34d',2.2); ringFx(cx,cy,'#ffffff',1.4,0,.15);
+  if(kind==='butterfly'&&S.butterflies.length<CFG.MAX_BUTTERFLY+2) S.butterflies.push({x:cx,y:cy,tx:cx,ty:cy,mode:'rest',t:0,tile:null,ph:Math.random()*6,c:S.butterflies.length,dir:1});
+  return g;
+}
+
+/* ---- 蜂と はちみつ（GDD 18.5） ---- */
+const canHoney=()=>!S.honey&&!S.honeyHeld&&S.honeyT<=0&&S.honeyCool<=0;
+function updateBees(dt){
+  if(!S.flags.bees||S.cleared) return;
+  if(!S.bees.length&&S.flowerCount>=4){
+    const n=S.groundCount>=95?2:1;
+    for(let k=0;k<n;k++){ const sx=k?COLS+.5:-.5, sy=ROWS*(.3+.4*Math.random()); S.bees.push({x:sx,y:sy,tx:sx,ty:sy,mode:'pick',t:0,ph:Math.random()*6,dir:1,visits:0,tile:null}); }
+    if(!S.told.bee){ S.told.bee=1; textFx(COLS*.5,ROWS*.5,2.6,'はちが きたよ。花の みつで はちみつを つくるよ','#a07000',1,3); Sfx.buzz(); }
+  }
+  if(S.honeyCool>0&&S.honeyT<=0) S.honeyCool-=dt;
+  for(const b of S.bees){
+    b.ph+=dt;
+    if(b.mode==='pick'){
+      const fl=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.state===2) fl.push(t);
+      if(fl.length){ let best=null,bs=1e9; for(let k=0;k<6;k++){ const t=fl[Math.floor(Math.random()*fl.length)], d=Math.hypot(t.i+.5-b.x,t.j+.5-b.y)+Math.random()*2; if(d<bs){bs=d;best=t;} }
+        b.tile=best; b.tx=best.i+.2+Math.random()*.6; b.ty=best.j+.2+Math.random()*.6; }
+      else { b.tile=null; b.tx=.5+Math.random()*(COLS-1); b.ty=.5+Math.random()*(ROWS-1); }
+      b.mode='go';
+    }else if(b.mode==='go'){
+      const dx=b.tx-b.x, dy=b.ty-b.y, d=Math.hypot(dx,dy), st=1.9*dt;
+      if(dx-dy) b.dir=dx-dy>0?1:-1;
+      if(d<=st){ b.x=b.tx; b.y=b.ty; b.mode='sip'; b.t=0; } else { b.x+=dx/d*st; b.y+=dy/d*st; }
+    }else{
+      b.t+=dt;
+      if(b.t>=1.1){
+        if(b.tile&&b.tile.state===2){ b.visits++; ringFx(b.x,b.y,'#ffd34d',.3,.4);
+          if(b.visits>=CFG.BEE_VISITS&&canHoney()){ spawnHoney(b.tile); b.visits=0; } }
+        b.mode='pick';
+      }
+    }
+  }
+  // はちみつの びんに Hanaが さわると ひろう
+  if(S.honey){ S.honey.t+=dt; const h=S.hana;
+    if(Math.hypot(S.honey.x-h.x,S.honey.y-h.y)<.6){ S.honey=null; S.honeyHeld=true; Sfx.get(); textFx(h.x,h.y,2.1,'はちみつ ゲット！','#b06a00',1.2,2); if(h.goal&&h.goal.honey) h.goal=null; } }
+}
+function spawnHoney(t){
+  let best=null,bd=1e9;
+  for(let j=t.j-2;j<=t.j+2;j++)for(let i=t.i-2;i<=t.i+2;i++){ const o=tileAt(i,j); if(!o||o.type!=='ground'||cubeAt(i,j)||bigAt(i,j)) continue; const d=Math.hypot(i-t.i,j-t.j)+Math.random()*.5; if(d<bd){bd=d;best=o;} }
+  if(!best) return;
+  S.honey={x:best.i+.5,y:best.j+.5,t:0};
+  textFx(S.honey.x,S.honey.y,1.9,'はちみつが できたよ！','#b06a00',1.15,2.4); Sfx.honey();
+}
+function drinkHoney(){
+  if(!S.honeyHeld||!S.started||S.cleared) return false;
+  S.honeyHeld=false; S.honeyT=CFG.HONEY_T; Sfx.drink();
+  const h=S.hana; textFx(h.x,h.y,2.2,'ちからが わいてきた！ Cubeを おせるよ','#b06a00',1.1,2.6); petalFx(h.x,h.y,1,12,1.4); ringFx(h.x,h.y,'#ffd34d',1.2);
+  return true;
+}
+
+/* ---- 風（GDD 31・38）：Cubeは かざしもへ ころがりやすい。風車の丘では むきが かわる ---- */
+const WIND_ORDER=['E','S','W','N'];
+function updateWind(dt){
+  const W=S.wind; if(!W) return;
+  W.t+=dt;
+  if(S.flags.windChange&&W.t>=S.flags.windChange&&!S.cleared){ W.t=0; W.dir=WIND_ORDER[(WIND_ORDER.indexOf(W.dir)+1)%4]; textFx(S.hana.x,S.hana.y,2.3,'かぜの むきが かわった！','#4f7fd6',1.1,2.2); Sfx.wind(); }
+  const d=DIRS[W.dir];
+  if(Math.random()<dt*7&&S.windFx.length<26) S.windFx.push({x:d.dx>0?-.5:d.dx<0?COLS+.5:Math.random()*COLS, y:d.dy>0?-.5:d.dy<0?ROWS+.5:Math.random()*ROWS, z:.3+Math.random()*.9, t:0});
+  for(const f of S.windFx){ f.t+=dt; f.x+=d.dx*3.2*dt; f.y+=d.dy*3.2*dt; }
+  S.windFx=S.windFx.filter(f=>f.t<5&&f.x>-1&&f.y>-1&&f.x<COLS+1&&f.y<ROWS+1);
+}
+
+/* ---- 黒い花粉（GDD 24・42）：花畑に おちると つぼみに よわる。Hanaが さわると はらえる。ひみつの庭は まもられる ---- */
+function updatePollen(dt){
+  const F=S.flags, Q=S.queen;
+  if(!F.pollen||S.cleared||(Q&&Q.pure)){ S.pollen.length=0; return; }
+  S.pollenT-=dt;
+  if(S.pollenT<=0&&S.pollen.length<4){
+    S.pollenT=(Q?[6,8,10][Q.phase-1]:F.pollen)*(.8+Math.random()*.4);
+    const fl=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.state===2&&!t.garden) fl.push(t);
+    if(fl.length){
+      const tg=fl[Math.floor(Math.random()*fl.length)]; let sx,sy;
+      if(Q){ sx=Q.i+1; sy=Q.j+1; } else if(Math.random()<.5){ sx=Math.random()<.5?-.3:COLS+.3; sy=Math.random()*ROWS; } else { sx=Math.random()*COLS; sy=Math.random()<.5?-.3:ROWS+.3; }
+      S.pollen.push({x:sx,y:sy,tx:tg.i+.5,ty:tg.j+.5,mode:'fly',t:0,ph:Math.random()*6});
+      if(!S.told.pollen){ S.told.pollen=1; textFx(clamp(sx,1.5,COLS-1.5),clamp(sy,1.5,ROWS-1.5),2.4,'黒い 花粉！ Hanaで さわって はらおう','#5b3f6e',1.05,3); }
+      Sfx.poof(.5);
+    }else S.pollenT=2;
+  }
+  const h=S.hana;
+  S.pollen=S.pollen.filter(p=>{
+    p.ph+=dt; p.t+=dt;
+    if(Math.hypot(p.x-h.x,p.y-h.y)<.75){ petalFx(p.x,p.y,.5,8,1.2); textFx(p.x,p.y,1.6,'はらった！','#4f7fd6'); Sfx.poof(1); if(h.goal&&h.goal.pollen===p) h.goal=null; return false; }
+    if(p.mode==='fly'){ const dx=p.tx-p.x, dy=p.ty-p.y, d=Math.hypot(dx,dy), st=.85*dt; if(d<=st){ p.mode='settle'; p.t=0; } else { p.x+=dx/d*st; p.y+=dy/d*st; } return true; }
+    if(p.t<1.6) return true;
+    for(let j=Math.floor(p.y)-1;j<=Math.floor(p.y)+1;j++)for(let i=Math.floor(p.x)-1;i<=Math.floor(p.x)+1;i++){
+      const t=tileAt(i,j); if(t&&t.type==='ground'&&t.state===2&&!t.garden&&!bigAt(i,j)&&Math.hypot(i+.5-p.x,j+.5-p.y)<=1.05){ setTile(t,1); wiltFx(i+.5,j+.5); } }
+    Sfx.wilt(); return false;
+  });
+}
+
+/* ---- 花の女王（GDD 24・45）：1 花を まもる → 2 花を ふやす（巨大な花）→ 3 女王を 花で つつむ ---- */
+function queenRing(){ const Q=S.queen; let all=0,done=0; for(let j=Q.j-1;j<=Q.j+2;j++)for(let i=Q.i-1;i<=Q.i+2;i++){ const t=tileAt(i,j); if(!t||t.type!=='ground') continue; all++; if(t.state===2) done++; } return {all,done}; }
+function updateQueen(dt){
+  const Q=S.queen; if(!Q) return; Q.t+=dt;
+  if(Q.pure){ Q.pureT+=dt; return; }
+  if(S.cleared||!S.flags.boss) return;
+  if(Q.phase===1&&S.blooms>=3){ Q.phase=2; S.forceRainbow=true; UI.say('女王 2/3：花を ふやそう','にじいろの Cubeが くるよ。さかせて 巨大な 花を さかせよう'); }
+  else if(Q.phase===2&&S.giantN>=1){ Q.phase=3; UI.say('女王 3/3：女王を つつもう','女王の まわりを ぜんぶ 花畑に して、花率90%に しよう'); }
+  else if(Q.phase===3){ const r=queenRing();
+    if(r.done===r.all&&flowerRate()>=CFG.CLEAR){ Q.pure=true; Q.pureT=0; S.pollen.length=0; dexAdd('queen');
+      petalFx(Q.i+1,Q.j+1,1.5,90,3.5); ringFx(Q.i+1,Q.j+1,'#fff3a8',5); ringFx(Q.i+1,Q.j+1,'#ffd0de',6.5,0,.25);
+      textFx(Q.i+1,Q.j+1,3.8,'女王が 花に もどった！','#c2355f',1.6,3.2); Sfx.queen(); } }
+  if(Q.phase===2&&!S.forceRainbow&&S.giantN<1&&!S.cubes.some(c=>c.color==='rainbow'||c.giant)) S.forceRainbow=true;   // にじいろが いなくなったら また よぶ
+}
+
+/* ---- スキル（GDD 19・20） ---- */
+function doDash(){
+  const h=S.hana; if(!S.flags.dash||S.skill.dash>0||!S.started||S.cleared||S.dash||h.joy) return false;
+  let vx=0,vy=0;
+  if(h.goal){ const p=h.goal.c?cubePos(h.goal.c):h.goal; vx=p.x-h.x; vy=p.y-h.y; }
+  if(Math.hypot(vx,vy)<.2){ const f={right:[1,-1],left:[-1,1],down:[1,1],up:[-1,-1]}[h.face]||[1,1]; vx=f[0]; vy=f[1]; }
+  const l=Math.hypot(vx,vy); let len=CFG.DASH_LEN;
+  if(h.goal) len=Math.min(len,Math.max(0,l-(h.goal.c?1.2:0)));
+  vx/=l; vy/=l;
+  let d=0; while(d+.1<=len&&walkable(h.x+vx*(d+.1),h.y+vy*(d+.1))) d+=.1;
+  if(d<.3){ textFx(h.x,h.y,1.7,'すすめないよ','#7a5a48'); Sfx.miss(); return false; }
+  S.dash={x0:h.x,y0:h.y,x1:h.x+vx*d,y1:h.y+vy*d,t:0,T:CFG.DASH_T*Math.max(.5,d/CFG.DASH_LEN)};
+  S.skill.dash=CFG.DASH_CD; Sfx.dash(); return true;
+}
+function updateDash(dt){
+  const D=S.dash, h=S.hana; D.t+=dt; const u=clamp(D.t/D.T), e=easeOut(u);
+  h.x=lerp(D.x0,D.x1,e); h.y=lerp(D.y0,D.y1,e); h.moving=true; h.walk+=dt*2;
+  const vx=D.x1-D.x0, vy=D.y1-D.y0, sx=vx-vy, sy=(vx+vy)/2; if(Math.abs(sx)>.05) h.sx=sx>0?1:-1;
+  h.face=Math.abs(sx)>Math.abs(sy)?(sx>0?'right':'left'):(sy>0?'down':'up');
+  const t=tileAt(Math.floor(h.x),Math.floor(h.y));
+  if(t&&t.type==='ground'){ if(t.state===0){ setTile(t,1); petalFx(t.i+.5,t.j+.5,.1,2,.6); } else { t.wt=0; t.wd=h.sx; } }   // とおった荒地に つぼみ
+  if(Math.random()<.7) petalFx(h.x,h.y,.3,1,.4);
+  (h.trail=h.trail||[]).push({x:h.x,y:h.y,a:1});
+  if(u>=1) S.dash=null;
+}
+function doBfSkill(){
+  const h=S.hana; if(!S.flags.bfSkill||S.skill.bf>0||!S.started||S.cleared) return false;
+  S.skill.bf=CFG.BFS_CD; Sfx.bfSkill();
+  for(let k=0;k<3;k++){ const a=k*2.1; S.skillBf.push({x:h.x+Math.cos(a)*.3,y:h.y+Math.sin(a)*.3,tx:h.x,ty:h.y,mode:'pick',t:0,life:CFG.BFS_T,ph:Math.random()*6,dir:1,tile:null,cube:null,helped:false}); }
+  textFx(h.x,h.y,2.2,'ちょうちょ、おねがい！','#4f7fd6',1.1); return true;
+}
+function updateSkillBf(dt){
+  const h=S.hana;
+  for(const b of S.skillBf){
+    b.ph+=dt; b.life-=dt;
+    if(b.life<=0&&b.mode!=='leave'){ if(b.tile) b.tile.sbf=null; if(b.cube) b.cube.sbf=null; b.tile=null; b.cube=null; b.mode='leave'; }
+    if(b.mode==='pick'){
+      let best=null,bs=1e9;
+      for(let j=Math.floor(h.y)-4;j<=Math.floor(h.y)+4;j++)for(let i=Math.floor(h.x)-4;i<=Math.floor(h.x)+4;i++){ const t=tileAt(i,j); if(!t||t.type!=='ground'||t.state!==1||t.sbf) continue; const d=Math.hypot(i+.5-b.x,j+.5-b.y); if(d<bs){bs=d;best=t;} }
+      if(best){ best.sbf=b; b.tile=best; b.tx=best.i+.5; b.ty=best.j+.5; }
+      // Cubeを たすけるのは 3匹のうち 1匹だけ
+      else{ const c=(b.helped||S.skillBf.indexOf(b)%3!==0)?null:S.cubes.filter(o=>stampable(o)&&!o.sbf&&Math.hypot(o.i+.5-h.x,o.j+.5-h.y)<=4).sort((p,q)=>Math.hypot(p.i-h.x,p.j-h.y)-Math.hypot(q.i-h.x,q.j-h.y))[0];
+        if(c){ c.sbf=b; b.cube=c; b.tx=c.i+.5; b.ty=c.j+.5; } else { b.tx=h.x+(Math.random()-.5)*2; b.ty=h.y+(Math.random()-.5)*2; } }
+      b.mode='go';
+    }else if(b.mode==='go'||b.mode==='leave'){
+      if(b.mode==='leave'){ b.tx=b.x+b.dir*3; b.ty=b.y-3; }
+      if(b.cube){ const p=cubePos(b.cube); b.tx=p.x; b.ty=p.y; }
+      const dx=b.tx-b.x, dy=b.ty-b.y, d=Math.hypot(dx,dy), st=2.8*dt;
+      if(Math.abs(dx-dy)>.01) b.dir=dx-dy>0?1:-1;
+      if(b.mode==='go'&&d<=st){ b.x=b.tx; b.y=b.ty; b.mode='work'; b.t=0; } else if(d>1e-3){ b.x+=dx/d*Math.min(st,d); b.y+=dy/d*Math.min(st,d); }
+    }else if(b.mode==='work'){
+      b.t+=dt;
+      if(b.t>=.7){
+        if(b.tile){ if(b.tile.state===1){ setTile(b.tile,2); petalFx(b.tile.i+.5,b.tile.j+.5,.2,4,1); maybeRare(b.tile,1); Sfx.tick(Math.floor(Math.random()*8)); } b.tile.sbf=null; b.tile=null; }
+        else if(b.cube){ const c=b.cube; c.sbf=null;
+          if(stampable(c)){ const un=[0,1,2,3,4,5].filter(k=>!c.grown[k]); if(un.length){ growFace(c,un[Math.floor(Math.random()*un.length)],c.giant?3:1);
+            if(grownCount(c)===6){ c.pendingBloom=true; c.chain=1; } const p=cubePos(c); ringFx(p.x,p.y,'#ffd34d',.8,cs(c)); textFx(p.x,p.y,2,'ちょうちょの ちから！','#4f7fd6'); Sfx.perfect(); } }
+          b.cube=null; b.helped=true; }
+        b.mode='pick';
+      }
+    }
+  }
+  S.skillBf=S.skillBf.filter(b=>!(b.mode==='leave'&&b.life<-1.6));
+}
+function updateExtras(dt){
+  if(S.skill.dash>0) S.skill.dash=Math.max(0,S.skill.dash-dt);
+  if(S.skill.bf>0) S.skill.bf=Math.max(0,S.skill.bf-dt);
+  const h=S.hana;
+  if(S.honeyT>0){ S.honeyT-=dt;
+    if(Math.random()<dt*6&&S.fx.petals.length<420) S.fx.petals.push({x:h.x+(Math.random()-.5)*.6,y:h.y+(Math.random()-.5)*.6,z:.2+Math.random()*.8,vx:0,vy:0,vz:.6,life:0,max:.8,c:'#ffd34d',rot:0,vr:0,s:2});
+    if(S.honeyT<=0){ S.honeyT=0; S.honeyCool=CFG.HONEY_COOL; textFx(h.x,h.y,2,'はちみつの ちからが きれた','#7a5a48',1,2); } }
+  if(h.trail){ for(const p of h.trail) p.a-=dt*3.5; h.trail=h.trail.filter(p=>p.a>0); }
+  updateBees(dt); updateWind(dt); updatePollen(dt); updateQueen(dt); updateSkillBf(dt);
+}
+
 /* ---- エフェクト（見た目だけ。判定には影響しない） ---- */
 const PETAL=['#ff8fb1','#ffd34d','#fff6ea','#b594f0','#ff7a5c'];
 function petalFx(x,y,z,n,pow){
@@ -785,9 +1335,9 @@ function wiltFx(x,y){ const P=S.fx.petals; for(let k=0;k<7;k++){ const a=Math.ra
 function dustFx(x,y){ const P=S.fx.petals; if(P.length>420) return; for(let k=0;k<5;k++){ const a=Math.random()*6.283;
   P.push({x,y,z:.05,vx:Math.cos(a)*.55,vy:Math.sin(a)*.55,vz:.7+Math.random()*.5,life:0,max:.45,c:'#d6bc9f',rot:0,vr:0,s:2+Math.random()*1.4}); } }
 function ringFx(x,y,color,rMax,z=0,delay=0){ S.fx.rings.push({x,y,z,color,rMax,t:-delay,max:.7}); }
-function textFx(x,y,z,text,color,scale=1){
+function textFx(x,y,z,text,color,scale=1,life=1.3){
   const T=S.fx.texts; for(const o of T) if(o.text===text&&o.t<.4) return;
-  T.push({x,y,z,text,color,scale,t:0,max:1.3});
+  T.push({x,y,z,text,color,scale,t:0,max:life});
 }
 function updateFx(dt){
   const f=S.fx;
@@ -816,6 +1366,7 @@ const Input={
     if(k.has('ArrowUp')||k.has('KeyW')) y-=1;
     if(k.has('ArrowDown')||k.has('KeyS')) y+=1;
     if(x||y){ const l=Math.hypot(x,y); return {x:x/l,y:y/l}; }
+    if(Pad.vec.x||Pad.vec.y) return Pad.vec;   // ゲームパッドの 左スティック（GDD 48）
     return {x:0,y:0};
   },
   // 画面の点 → 盤面（地面の高さ）の座標
@@ -834,11 +1385,18 @@ const Input={
     }
     return best;
   },
+  // 画面の点と 盤面上の点（高さz）の きょり（見た目の px）
+  scrDist(cx,cy,x,y,z){ const r=canvas.getBoundingClientRect(), q=iso(x,y,z); return Math.hypot(cx-r.left-View.ox-q.x*View.scale,cy-r.top-View.oy-q.y*View.scale)/View.scale; },
   tap(cx,cy){
-    const h=S.hana, c=this.pickCube(cx,cy);
+    const h=S.hana;
+    // はちみつの びん：タップすると 歩いていって ひろう
+    if(S.honey&&this.scrDist(cx,cy,S.honey.x,S.honey.y,.35)<34){ setGoalPoint(S.honey.x,S.honey.y); if(h.goal) h.goal.honey=true; return; }
+    // 黒い花粉：タップすると おいかけて はらう
+    for(const p of S.pollen) if(this.scrDist(cx,cy,p.x,p.y,.6)<36){ setGoalPoint(p.x,p.y); if(h.goal) h.goal.pollen=p; return; }
+    const c=this.pickCube(cx,cy);
     if(c){
       const p=cubePos(c);
-      if(stampable(c)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE){ h.goal=null; tryStamp(c); }   // とどく：すぐスタンプ（Perfectのタイミングも そのまま）
+      if(stampable(c)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE){ h.goal=null; interactCube(c); }   // とどく：すぐスタンプ（Perfectのタイミングも そのまま）。はちみつ中は おす
       else h.goal={c,stuckT:0};                                                                      // とおい：歩いていって スタンプ
       return;
     }
@@ -851,7 +1409,10 @@ const Input={
     window.addEventListener('keydown',e=>{
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(!S.started) UI.start(); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(!S.started) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code==='KeyC'){ if(!e.repeat) doDash(); }
+      else if(e.code==='KeyQ'||e.code==='KeyV'){ if(!e.repeat) doBfSkill(); }
+      else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) drinkHoney(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
     });
@@ -882,6 +1443,21 @@ const Input={
   }
 };
 
+// ゲームパッド（GDD 48）：左スティック／十字キー＝移動、A＝スタンプ、X＝ダッシュ、Y＝ちょうちょ、B＝はちみつ、START＝あそびかた
+const Pad={vec:{x:0,y:0},prev:[],
+  poll(){
+    let gp=null; try{ const L=navigator.getGamepads?navigator.getGamepads():[]; for(const g of L) if(g&&g.connected){ gp=g; break; } }catch(_){}
+    if(!gp){ this.vec={x:0,y:0}; this.prev=[]; return; }
+    const B=k=>!!(gp.buttons[k]&&gp.buttons[k].pressed), edge=k=>B(k)&&!this.prev[k];
+    let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
+    if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
+    const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
+    if(edge(0)){ if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(2)) doDash(); if(edge(3)) doBfSkill(); if(edge(1)) drinkHoney();
+    if(edge(9)) document.getElementById('helpBtn').click();
+    this.prev=gp.buttons.map(b=>b.pressed);
+  }};
+
 /* ================================================================
  * 8. AUDIO  （素材ファイルなし。Web Audioで合成）
  * ================================================================ */
@@ -909,7 +1485,20 @@ const Sfx={
     if(ch>=2) [1047,1319,1568,2093].forEach((f,k)=>this.tone(f*m,.3,{delay:.45+k*.06,vol:.06})); },
   tick(n){ if(!this.ac) return; const now=this.ac.currentTime; if(now-this.lastTick<.05) return; this.lastTick=now;
     const sc=[523,587,659,784,880,1047,1175,1319,1568,1760]; this.tone(sc[n%sc.length],.16,{vol:.04}); },
-  clear(){ [[523,0],[659,.14],[784,.28],[1047,.42],[784,.62],[1047,.76],[1319,.9]].forEach(([f,d])=>{ this.tone(f,.45,{delay:d+.5,vol:.11,type:'triangle'}); this.tone(f/2,.45,{delay:d+.5,vol:.05}); }); }
+  clear(){ [[523,0],[659,.14],[784,.28],[1047,.42],[784,.62],[1047,.76],[1319,.9]].forEach(([f,d])=>{ this.tone(f,.45,{delay:d+.5,vol:.11,type:'triangle'}); this.tone(f/2,.45,{delay:d+.5,vol:.05}); }); },
+  // ひみつの庭の 完成：特別な ファンファーレ（GDD 51）
+  garden(){ [[784,0],[988,.1],[1175,.2],[1568,.32],[1319,.5],[1568,.62],[2093,.78]].forEach(([f,d])=>{ this.tone(f,.4,{delay:d,vol:.09,type:'triangle'}); this.tone(f*1.5,.3,{delay:d+.02,vol:.025}); }); },
+  rare(){ [1319,1760,2349].forEach((f,k)=>this.tone(f,.35,{delay:k*.08,vol:.06})); },
+  honey(){ [880,1109,1319].forEach((f,k)=>this.tone(f,.25,{delay:k*.07,vol:.06,type:'triangle'})); },
+  get(){ [784,1047,1568].forEach((f,k)=>this.tone(f,.18,{delay:k*.06,vol:.09,type:'triangle'})); },
+  drink(){ for(let k=0;k<4;k++) this.tone(300+k*90,.12,{delay:k*.1,to:420+k*90,vol:.07}); this.tone(1568,.5,{delay:.45,vol:.07}); },
+  dash(){ this.tone(300,.25,{to:1200,vol:.07}); this.tone(1800,.12,{delay:.12,vol:.03}); },
+  bfSkill(){ [1047,1319,1568,2093,2637].forEach((f,k)=>this.tone(f,.3,{delay:k*.06,vol:.05})); },
+  flutter(){ for(let k=0;k<3;k++) this.tone(2200+k*150,.05,{delay:k*.05,vol:.015}); },   // ちょうちょの かるい羽音
+  wind(){ this.tone(500,.7,{to:250,vol:.04}); this.tone(700,.6,{delay:.1,to:350,vol:.025}); },
+  poof(v=1){ this.tone(200,.25,{to:90,vol:.06*v,type:'triangle'}); },
+  buzz(){ this.tone(220,.5,{to:240,vol:.03,type:'sawtooth'}); },
+  queen(){ [523,659,784,1047,1319,1568,2093].forEach((f,k)=>{ this.tone(f,.9,{delay:k*.11,vol:.09,type:'triangle'}); this.tone(f/2,.9,{delay:k*.11,vol:.04}); }); }
 };
 
 /* ---- BGM：軽快なオリジナル曲（素材ファイルなし。Web Audioでその場で演奏する16小節のループ） ----
@@ -925,6 +1514,14 @@ const Bgm={
   //        C  G  Am F  C  G  F  C   F  G  Em Am Dm G  C  G
   ROOT:[36,43,45,41,36,43,41,36, 41,43,40,45,38,43,36,43],
   CHORD:{36:[60,64,67],43:[59,62,67],45:[57,60,64],41:[57,60,65],40:[59,64,67],38:[57,62,65]},
+  // ステージごとの雰囲気（GDD 51）：同じ曲を テンポ・調・音色・リズムを かえて 演奏する。queen は短調ふうに
+  THEMES:{meadow:{bpm:128,tr:0,lead:'triangle',clap:1,kick:1},garden:{bpm:120,tr:5,lead:'triangle',bell:1,clap:1,kick:1},
+    forest:{bpm:110,tr:-3,lead:'sine',clap:0,kick:1,bell:1},water:{bpm:116,tr:2,lead:'sine',bell:1,clap:0,kick:1},
+    sky:{bpm:124,tr:7,lead:'triangle',bell:1,clap:1,kick:0},night:{bpm:96,tr:-5,lead:'sine',bell:1,clap:0,kick:0},
+    queen:{bpm:134,tr:-2,lead:'square',clap:1,kick:1,minor:1}},
+  th:null,
+  setTheme(n){ this.th=this.THEMES[n]||this.THEMES.meadow; this.BPM=this.th.bpm; },
+  mod(m){ const th=this.th||this.THEMES.meadow; if(th.minor&&[4,9,11].includes(((m%12)+12)%12)) m-=1; return m+th.tr; },
   mtof:m=>440*Math.pow(2,(m-69)/12),
   start(){
     const ac=Sfx.ac; if(!ac||this.playing) return;
@@ -951,12 +1548,12 @@ const Bgm={
     catch(e){ console.error(e); this.stop(.1); }
   },
   play(step,t){
-    const bar=step>>4, s=step&15, root=this.ROOT[bar];
-    if(!(s&1)){ const m=this.MEL[bar*8+(s>>1)]; if(m) this.lead(m,t); }
+    const th=this.th||this.THEMES.meadow, bar=step>>4, s=step&15, root0=this.ROOT[bar], root=this.mod(root0);
+    if(!(s&1)){ const m=this.MEL[bar*8+(s>>1)]; if(m) this.lead(this.mod(m),t); }
     if(s===0) this.bass(root,t,.22); else if(s===6||s===14) this.bass(root+12,t,.1); else if(s===8) this.bass(root+7,t,.18); else if(s===12) this.bass(root,t,.14);
-    if(s===2||s===6||s===10||s===14) for(const n of this.CHORD[root]) this.osc('sine',this.mtof(n),t,.12,.022);
-    if(s===0||s===8) this.kick(t);
-    if(s===4||s===12) this.hit(t,.11,.07,'bandpass',1600);           // クラップ
+    if(s===2||s===6||s===10||s===14) for(const n of this.CHORD[root0]) this.osc('sine',this.mtof(this.mod(n)),t,.12,.022);
+    if(th.kick&&(s===0||s===8)) this.kick(t);
+    if(th.clap&&(s===4||s===12)) this.hit(t,.11,.07,'bandpass',1600);           // クラップ
     if(!(s&1)) this.hit(t,.035,.022,'highpass',7000);                // ハイハット
     else if(bar>=8) this.hit(t,.03,.011,'highpass',8500);            // 後半はシェイカー
   },
@@ -966,7 +1563,9 @@ const Bgm={
     g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+att); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(g); g.connect(this.gain); o.start(t); o.stop(t+dur+.02); return o;
   },
-  lead(m,t){ const f=this.mtof(m); this.osc('triangle',f,t,.24,.11); this.osc('sine',f*2,t,.16,.03); },
+  lead(m,t){ const th=this.th||this.THEMES.meadow, f=this.mtof(m);
+    this.osc(th.lead,f,t,.24,th.lead==='square'?.045:th.lead==='sine'?.12:.11); this.osc('sine',f*2,t,.16,.03);
+    if(th.bell) this.osc('sine',f*4,t,.3,.012); },
   bass(m,t,d){ this.osc('triangle',this.mtof(m),t,d,.13,.008); },
   kick(t){ const o=this.osc('sine',110,t,.14,.2,.003); o.frequency.exponentialRampToValueAtTime(42,t+.12); },
   hit(t,dur,vol,type,freq){
@@ -1098,6 +1697,18 @@ function drawBoard(time){
       ctx.strokeStyle=`rgba(255,255,255,${.35+.3*k})`; ctx.lineWidth=1.3; ctx.beginPath(); ctx.ellipse(c.x-4,c.y-1,9+3*k,3.2+k,0,0,7); ctx.stroke();
       poly(P); ctx.strokeStyle='#5fa9c2'; ctx.lineWidth=1.5; ctx.stroke(); continue; }
     if(t.type==='rock'){ ctx.fillStyle=alt?'#b7a79a':'#b0a093'; ctx.fill(); continue; }
+    if(t.type==='stone'){ ctx.fillStyle='#8fd3e6'; ctx.fill(); poly(P); ctx.strokeStyle='#5fa9c2'; ctx.lineWidth=1.5; ctx.stroke();   // 池の 飛び石
+      const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(59,47,42,.18)'; ctx.beginPath(); ctx.ellipse(c.x+1,c.y+2,20,9,0,0,7); ctx.fill();
+      ctx.fillStyle='#c9c2b8'; ctx.beginPath(); ctx.ellipse(c.x,c.y,19,8.5,0,0,7); ctx.fill(); ctx.strokeStyle='#8a8079'; ctx.lineWidth=1.2; ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(c.x-5,c.y-2,7,2.5,0,0,7); ctx.fill(); continue; }
+    if(t.type==='cloud'||t.type==='bridge'){   // 雲の すきま（空が見える）と 雲の橋
+      ctx.fillStyle='#d6ecfb'; ctx.fill(); const c=iso(i+.5,j+.5), k=Math.sin(time*.8+i+j)*2;
+      ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(c.x-8+k,c.y+2,12,5,0,0,7); ctx.ellipse(c.x+7-k,c.y-1,10,4.5,0,0,7); ctx.fill();
+      if(t.type==='bridge'){   // 板を わたした 橋（雲が つづく向きと 直角に 板を ならべる）
+        const vert=!!(tileAt(i-1,j)&&tileAt(i-1,j).type==='cloud'); ctx.strokeStyle='#8a5a3c'; ctx.lineWidth=1.2; ctx.fillStyle='#d9b07e';
+        for(let q=0;q<5;q++){ const a=.06+q*.18; poly(vert?[iso(i+.08,j+a),iso(i+.92,j+a),iso(i+.92,j+a+.14),iso(i+.08,j+a+.14)]:[iso(i+a,j+.08),iso(i+a+.14,j+.08),iso(i+a+.14,j+.92),iso(i+a,j+.92)]); ctx.fill(); ctx.stroke(); } }
+      continue; }
+    if(t.type!=='ground'){ ctx.fillStyle=t.type==='glass'?'#dfe9e4':t.type==='queen'?'#6b5a7a':t.type==='mill'?'#c9b48f':'#a9cf8c'; ctx.fill(); continue; }   // 生け垣・木・温室・風車・女王の 足もと
     ctx.fillStyle=GROUND[t.state][alt]; ctx.fill();
     ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1; ctx.stroke();
     if(t.state===0){ // 荒地のひび
@@ -1108,9 +1719,208 @@ function drawBoard(time){
     }else if(t.state===2){ // 草のハイライト
       const c=iso(i+.3+t.crack[0]*.4,j+.3+t.crack[1]*.4); ctx.fillStyle='rgba(255,255,255,.14)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,9,4,0,0,7); ctx.fill();
     }
+    if(t.shade){ const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(40,70,40,.13)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,26,12,0,0,7); ctx.fill(); }   // 木かげ
+    if(t.garden){ poly(P); ctx.fillStyle=t.garden.kind==='royal'?'rgba(255,215,120,.22)':'rgba(255,240,170,.2)'; ctx.fill(); }   // ひみつの庭
     if(t.flash>0){ poly(P); ctx.fillStyle=`rgba(255,255,230,${t.flash*.7})`; ctx.fill(); }
   }
+  drawGardenFences();
   poly([iso(0,0),iso(COLS,0),iso(COLS,ROWS),iso(0,ROWS)]); ctx.strokeStyle='rgba(59,47,42,.55)'; ctx.lineWidth=2; ctx.stroke();
+}
+
+/* ---- GDD v3.6 で ふえた ものの 見た目 ---- */
+const CUBE_PAL={green:[[122,212,170],[150,228,190],[58,128,104]],red:[[242,142,128],[250,172,160],[150,66,58]],
+  blue:[[124,172,236],[158,198,246],[50,88,150]],yellow:[[238,204,92],[248,222,140],[146,112,34]],purple:[[182,148,232],[204,178,242],[98,68,150]]};
+function hslRgb(h,s,l){ const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0)*255,f(8)*255,f(4)*255]; }
+function cubePal(c,time){ if(c.color==='rainbow'){ const h=(time*70+c.id*50)%360; return [hslRgb(h,.62,.7),hslRgb(h,.7,.8),hslRgb(h,.45,.36)]; } return CUBE_PAL[c.color]||CUBE_PAL.green; }
+function windSway(time,ph){ if(!S||!S.wind) return 0; const d=DIRS[S.wind.dir]; return (d.dx-d.dy)*.09*(1+.5*Math.sin(time*2.3+ph)); }
+// 属性面の マーク（おひさま・あめ・ちょうちょ・はっぱ・ほし・にじ）
+function drawAttrIcon(g,a,x,y,r){
+  g.save(); g.translate(x,y); g.lineJoin='round'; g.lineCap='round';
+  g.fillStyle='rgba(255,255,255,.88)'; g.beginPath(); g.arc(0,0,r*1.15,0,7); g.fill();
+  g.lineWidth=r*.18;
+  if(a==='sun'){ g.strokeStyle='#ff9d2e'; for(let k=0;k<8;k++){ const an=k*Math.PI/4; g.beginPath(); g.moveTo(Math.cos(an)*r*.58,Math.sin(an)*r*.58); g.lineTo(Math.cos(an)*r*.98,Math.sin(an)*r*.98); g.stroke(); } g.fillStyle='#ffc93c'; g.beginPath(); g.arc(0,0,r*.45,0,7); g.fill(); }
+  else if(a==='rain'){ g.fillStyle='#4f9be8'; g.beginPath(); g.moveTo(0,-r*.88); g.quadraticCurveTo(r*.72,r*.12,0,r*.78); g.quadraticCurveTo(-r*.72,r*.12,0,-r*.88); g.fill(); }
+  else if(a==='butterfly'){ g.fillStyle='#ff8fb1'; for(const s of [-1,1]){ g.beginPath(); g.ellipse(s*r*.42,-r*.2,r*.4,r*.32,s*.4,0,7); g.fill(); g.beginPath(); g.ellipse(s*r*.32,r*.35,r*.28,r*.24,-s*.3,0,7); g.fill(); } g.fillStyle='#3b2f2a'; g.fillRect(-r*.07,-r*.5,r*.14,r); }
+  else if(a==='leaf'){ g.fillStyle='#57b05a'; g.beginPath(); g.ellipse(0,0,r*.85,r*.44,-.7,0,7); g.fill(); g.strokeStyle='#2f7a3a'; g.beginPath(); g.moveTo(-r*.55,r*.45); g.lineTo(r*.55,-r*.45); g.stroke(); }
+  else if(a==='star'){ g.fillStyle='#ffc93c'; g.strokeStyle='#c98a00'; g.beginPath(); for(let k=0;k<10;k++){ const an=-Math.PI/2+k*Math.PI/5, rr=k%2?r*.42:r*.95; g.lineTo(Math.cos(an)*rr,Math.sin(an)*rr); } g.closePath(); g.fill(); g.lineWidth=r*.08; g.stroke(); }
+  else if(a==='rainbow'){ g.lineWidth=r*.2; ['#ff6b6b','#ffc93c','#5fbf6a','#4f9be8'].forEach((c,k)=>{ g.strokeStyle=c; g.beginPath(); g.arc(0,r*.38,r*(.86-k*.2),Math.PI,0); g.stroke(); }); }
+  g.restore();
+}
+// 巨大Cubeの面の とちゅう：1回め＝め、2回め＝つぼみ（単位正方形の中）
+function drawSprout(g,prog,pop){
+  const k=pop<.35?easeBack(pop/.35):1; g.save(); g.translate(.5,.56); g.scale(k,k);
+  g.strokeStyle='#3f8f45'; g.lineWidth=.05; g.lineCap='round'; g.beginPath(); g.moveTo(0,.14); g.lineTo(0,-.08); g.stroke();
+  g.fillStyle='#63b85f'; g.beginPath(); g.ellipse(-.1,-.05,.11,.05,-.5,0,7); g.fill(); g.beginPath(); g.ellipse(.1,-.07,.11,.05,.5,0,7); g.fill();
+  if(prog>=2){ g.fillStyle='#f7a8c0'; g.strokeStyle='#d9819c'; g.lineWidth=.02; g.beginPath(); g.ellipse(0,-.17,.075,.11,0,0,7); g.fill(); g.stroke(); }
+  g.restore();
+}
+// 箱の形（手前の2面と上の面）
+function isoBox(i,j,inset,h,top,left,right){
+  const a=i+inset,b=j+inset,c=i+1-inset,d=j+1-inset;
+  poly([iso(a,d,0),iso(c,d,0),iso(c,d,h),iso(a,d,h)]); ctx.fillStyle=left; ctx.fill();
+  poly([iso(c,b,0),iso(c,d,0),iso(c,d,h),iso(c,b,h)]); ctx.fillStyle=right; ctx.fill();
+  poly([iso(a,b,h),iso(c,b,h),iso(c,d,h),iso(a,d,h)]); ctx.fillStyle=top; ctx.fill();
+}
+function drawHedge(i,j){
+  const p=iso(i+.5,j+.5); ctx.fillStyle='rgba(40,60,30,.22)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+2,28,12,0,0,7); ctx.fill();
+  isoBox(i,j,.06,.55,'#74c25f','#4f9a43','#5fae50');
+  for(const [u,v] of [[.25,.3],[.7,.3],[.3,.72],[.72,.7],[.5,.5]]){ const q=iso(i+u,j+v,.58); ctx.fillStyle='#86d16f'; ctx.beginPath(); ctx.arc(q.x,q.y,6,0,7); ctx.fill(); }
+  ctx.fillStyle='rgba(255,255,255,.18)'; const q=iso(i+.35,j+.35,.62); ctx.beginPath(); ctx.ellipse(q.x,q.y,7,3,0,0,7); ctx.fill();
+}
+function drawTree(i,j,time){
+  const p=iso(i+.5,j+.5), h=S.hana, behind=Math.hypot(h.x-i-.5,h.y-j-.5)<1.9&&h.x+h.y<i+j+1;
+  ctx.fillStyle='rgba(40,60,30,.25)'; ctx.beginPath(); ctx.ellipse(p.x+3,p.y+2,26,11,0,0,7); ctx.fill();
+  ctx.save(); if(behind) ctx.globalAlpha=.5;   // うしろに Hanaが いると すける
+  ctx.fillStyle='#8a5a3c'; ctx.strokeStyle='#5d3b26'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(p.x-5,p.y); ctx.lineTo(p.x-3.5,p.y-32); ctx.lineTo(p.x+3.5,p.y-32); ctx.lineTo(p.x+5,p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const sw=Math.sin(time*1.1+i*1.7)*1.5+windSway(time,i)*14, B=[[0,-52,20],[-14,-40,15],[14,-41,15],[-6,-63,13],[9,-61,12]];
+  const col=STAGE.theme==='forest'?['#6a9e45','#4c7a33']:['#5aa94d','#3f7a35'];
+  ctx.fillStyle=col[1]; for(const [x,y,r] of B){ ctx.beginPath(); ctx.arc(p.x+x+sw,p.y+y,r+1.6,0,7); ctx.fill(); }
+  ctx.fillStyle=col[0]; for(const [x,y,r] of B){ ctx.beginPath(); ctx.arc(p.x+x+sw,p.y+y,r,0,7); ctx.fill(); }
+  ctx.fillStyle='rgba(255,255,255,.17)'; ctx.beginPath(); ctx.arc(p.x-7+sw,p.y-59,7,0,7); ctx.fill();
+  ctx.restore();
+}
+function drawGlass(i,j){
+  isoBox(i,j,.04,.9,'rgba(225,246,248,.6)','rgba(170,215,225,.55)','rgba(195,230,238,.55)');
+  ctx.strokeStyle='rgba(80,115,115,.85)'; ctx.lineWidth=1.2; const a=i+.04,b=j+.04,c=i+.96,d=j+.96;
+  for(const [x,y] of [[a,d],[c,d],[c,b]]){ const p0=iso(x,y,0),p1=iso(x,y,.9); ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke(); }
+  poly([iso(a,b,.9),iso(c,b,.9),iso(c,d,.9),iso(a,d,.9)]); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.75)'; const s0=iso(c,b+.2,.78),s1=iso(c,b+.45,.36); ctx.beginPath(); ctx.moveTo(s0.x,s0.y); ctx.lineTo(s1.x,s1.y); ctx.stroke();
+}
+function drawMill(i,j,time){
+  const p=iso(i+.5,j+.5);
+  ctx.fillStyle='rgba(59,47,42,.22)'; ctx.beginPath(); ctx.ellipse(p.x+3,p.y+2,24,10,0,0,7); ctx.fill();
+  ctx.fillStyle='#f3e6cf'; ctx.strokeStyle='#6b5040'; ctx.lineWidth=1.6; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(p.x-15,p.y); ctx.lineTo(p.x-9,p.y-58); ctx.lineTo(p.x+9,p.y-58); ctx.lineTo(p.x+15,p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#c0504d'; ctx.beginPath(); ctx.moveTo(p.x-13,p.y-56); ctx.lineTo(p.x,p.y-72); ctx.lineTo(p.x+13,p.y-56); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#8a5a3c'; rrect(ctx,p.x-4,p.y-16,8,16,3); ctx.fill();
+  const hx=p.x, hy=p.y-52, ang=time*2.2;
+  for(let k=0;k<4;k++){ ctx.save(); ctx.translate(hx,hy); ctx.rotate(ang+k*Math.PI/2); ctx.fillStyle='rgba(255,255,255,.93)'; ctx.strokeStyle='#6b5040'; ctx.lineWidth=1.2; ctx.fillRect(3,-4,30,8); ctx.strokeRect(3,-4,30,8); ctx.beginPath(); ctx.moveTo(3,0); ctx.lineTo(33,0); ctx.stroke(); ctx.restore(); }
+  ctx.fillStyle='#6b5040'; ctx.beginPath(); ctx.arc(hx,hy,3.5,0,7); ctx.fill();
+}
+// 花の女王：じょうか前は 黒い花、じょうか後は にじいろの花（原点＝根もと）
+function drawQueenFlower(g,pure,time){
+  g.lineCap='round'; g.lineJoin='round';
+  g.strokeStyle=pure?'#3f8f45':'#3d3346'; g.lineWidth=9; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(6,-40,0,-78); g.stroke();
+  g.fillStyle=pure?'#57b05a':'#4a3d55'; for(const s of [-1,1]){ g.beginPath(); g.ellipse(s*22,-28-(s>0?8:0),24,9,s*.5,0,7); g.fill(); }
+  g.save(); g.translate(0,-86); g.scale(1+(pure?0:.05*Math.sin(time*2)),1);
+  for(let k=0;k<10;k++){ const an=k*Math.PI/5+time*.1;
+    g.fillStyle=pure?`hsl(${(k*36+time*40)%360},80%,78%)`:(k%2?'#2c2236':'#3e2f4c'); g.strokeStyle=pure?'rgba(255,255,255,.85)':'#170f1f'; g.lineWidth=1.5;
+    g.beginPath(); g.ellipse(Math.cos(an)*30,Math.sin(an)*20,22,11,an,0,7); g.fill(); g.stroke(); }
+  g.fillStyle=pure?'#ffd34d':'#7a3b6e'; g.beginPath(); g.arc(0,0,17,0,7); g.fill(); g.strokeStyle='#170f1f'; g.lineWidth=1.5; g.stroke();
+  g.fillStyle='#170f1f'; g.strokeStyle='#170f1f'; g.lineWidth=2;
+  if(pure){ g.beginPath(); g.arc(-6,-1,3.5,Math.PI*1.1,Math.PI*1.9); g.stroke(); g.beginPath(); g.arc(6,-1,3.5,Math.PI*1.1,Math.PI*1.9); g.stroke(); g.beginPath(); g.arc(0,4,5,.2,2.94); g.stroke(); }
+  else { g.beginPath(); g.moveTo(-10,-6); g.lineTo(-3,-3); g.moveTo(10,-6); g.lineTo(3,-3); g.stroke(); g.beginPath(); g.arc(-6,1,2,0,7); g.arc(6,1,2,0,7); g.fill(); g.beginPath(); g.arc(0,11,5,3.6,5.8); g.stroke(); }
+  g.fillStyle='#ffc93c'; g.strokeStyle='#8a6a10'; g.lineWidth=1.2; g.beginPath(); g.moveTo(-12,-15); g.lineTo(-12,-27); g.lineTo(-6,-20); g.lineTo(0,-30); g.lineTo(6,-20); g.lineTo(12,-27); g.lineTo(12,-15); g.closePath(); g.fill(); g.stroke();
+  g.restore();
+}
+function drawQueen(time){
+  const Q=S.queen, p=iso(Q.i+1,Q.j+1), u=Q.pure?clamp(Q.pureT/1.5):0;
+  ctx.fillStyle='rgba(40,20,50,.3)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,56,24,0,0,7); ctx.fill();
+  if(!Q.pure) for(let k=0;k<5;k++){ const a=time*.6+k*1.26; ctx.fillStyle='rgba(60,30,70,.16)'; ctx.beginPath(); ctx.arc(p.x+Math.cos(a)*46,p.y-60+Math.sin(a*1.3)*18,10+4*Math.sin(time*2+k),0,7); ctx.fill(); }
+  ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.sin(time*1.2)*.05); drawQueenFlower(ctx,Q.pure,time); ctx.restore();
+  if(Q.pure&&u<1){ ctx.fillStyle=`rgba(255,255,230,${(1-u)*.8})`; ctx.beginPath(); ctx.arc(p.x,p.y-86,90*(.5+u),0,7); ctx.fill(); }
+}
+// めずらしい花（赤バラ・青バラ・にじいろの花）
+function drawRareFlower(g,kind,x,y,s,rot=0){
+  if(s<=0) return;
+  g.save(); g.translate(x,y); g.rotate(rot); g.scale(s,s); g.lineCap='round';
+  g.fillStyle='rgba(59,47,42,.18)'; g.beginPath(); g.ellipse(1,0,8,3,0,0,7); g.fill();
+  g.strokeStyle='#3f8f45'; g.lineWidth=2.4; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(2,-12,0,-24); g.stroke();
+  g.fillStyle='#57b05a'; g.beginPath(); g.ellipse(-6,-9,6,2.6,-.5,0,7); g.fill(); g.beginPath(); g.ellipse(6,-14,6,2.6,.5,0,7); g.fill();
+  g.translate(0,-28);
+  if(kind==='rainbowflower'){ const C=['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#4dabf7','#b197fc'];
+    for(let k=0;k<6;k++){ const a=k*Math.PI/3; g.fillStyle=C[k]; g.strokeStyle='rgba(59,47,42,.5)'; g.lineWidth=.8; g.beginPath(); g.ellipse(Math.cos(a)*6.5,Math.sin(a)*5.5,5.2,3.6,a,0,7); g.fill(); g.stroke(); }
+    g.fillStyle='#fff6c9'; g.beginPath(); g.arc(0,0,3.6,0,7); g.fill(); }
+  else{ const [o,m,i]=kind==='rose_b'?['#3f6fd1','#6f97ea','#a9c4f7']:['#c8263f','#e64b62','#ff8a9a'];
+    g.strokeStyle='rgba(40,20,20,.55)'; g.lineWidth=.8;
+    g.fillStyle=o; g.beginPath(); g.ellipse(0,1,10,7.5,0,0,7); g.fill(); g.stroke();
+    g.fillStyle=m; g.beginPath(); g.ellipse(0,0,7,5.4,0,0,7); g.fill(); g.stroke();
+    g.fillStyle=i; g.beginPath(); g.ellipse(0,-1,4,3,0,0,7); g.fill(); g.stroke();
+    g.beginPath(); g.arc(0,-1,2,0,4.5); g.stroke(); }
+  g.restore();
+}
+// 巨大な花（原点＝根もと、高さ 約95）
+function drawGiantKind(g,kind,time,sway){
+  g.save(); g.rotate(sway); g.lineCap='round'; g.lineJoin='round';
+  if(kind==='sakura'){
+    g.fillStyle='#8a5a3c'; g.strokeStyle='#5d3b26'; g.lineWidth=1.5; g.beginPath(); g.moveTo(-7,0); g.lineTo(-4,-40); g.lineTo(-14,-58); g.lineTo(-9,-60); g.lineTo(0,-46); g.lineTo(10,-62); g.lineTo(14,-58); g.lineTo(4,-40); g.lineTo(7,0); g.closePath(); g.fill(); g.stroke();
+    for(const [x,y,r] of [[0,-70,26],[-22,-60,18],[22,-60,18],[-12,-84,17],[13,-84,16]]){ g.fillStyle='#f7b6cf'; g.beginPath(); g.arc(x,y,r,0,7); g.fill(); }
+    g.fillStyle='#fff0f6'; for(let k=0;k<14;k++){ const a=k*2.4, r=8+((k*7)%18); g.beginPath(); g.arc(Math.cos(a)*r,-72+Math.sin(a)*r*.7,2.2,0,7); g.fill(); }
+  }else if(kind==='rose'){
+    g.strokeStyle='#3f8f45'; g.lineWidth=6; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(5,-40,0,-70); g.stroke();
+    g.fillStyle='#57b05a'; for(const s of [-1,1]){ g.beginPath(); g.ellipse(s*15,-28-(s>0?10:0),15,6,s*.5,0,7); g.fill(); }
+    g.translate(0,-80); g.strokeStyle='rgba(60,10,20,.6)'; g.lineWidth=1.3;
+    for(const [r,c] of [[30,'#b3203a'],[23,'#d23a55'],[16,'#e8566f'],[9,'#ff8a9a']]){ g.fillStyle=c; g.beginPath(); g.ellipse(0,0,r,r*.78,0,0,7); g.fill(); g.stroke(); }
+    g.beginPath(); g.arc(0,-1,4,0,4.6); g.stroke();
+  }else{   // ひまわり
+    g.strokeStyle='#3f8f45'; g.lineWidth=7; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(5,-42,0,-72); g.stroke();
+    g.fillStyle='#57b05a'; g.strokeStyle='#3f8f45'; g.lineWidth=1.2; for(const s of [-1,1]){ g.beginPath(); g.ellipse(s*18,-26-(s>0?10:0),18,7,s*.5,0,7); g.fill(); g.stroke(); }
+    g.translate(0,-82);
+    for(let k=0;k<16;k++){ const a=k*Math.PI/8+time*.05; g.fillStyle=k%2?'#ffc93c':'#ffb020'; g.strokeStyle='#c98a00'; g.lineWidth=1; g.beginPath(); g.ellipse(Math.cos(a)*24,Math.sin(a)*20,12,6,a,0,7); g.fill(); g.stroke(); }
+    g.fillStyle='#7a4a2e'; g.beginPath(); g.ellipse(0,0,15,13,0,0,7); g.fill(); g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(-5,-2,1.8,0,7); g.arc(5,-2,1.8,0,7); g.fill();
+    g.strokeStyle='#3b2f2a'; g.lineWidth=1.4; g.beginPath(); g.arc(0,2,5,.3,2.84); g.stroke();
+  }
+  g.restore();
+}
+function drawHoneyJar(g,x,y,s,fill=1){
+  g.save(); g.translate(x,y); g.scale(s,s); g.lineJoin='round';
+  g.beginPath(); g.moveTo(-9,-4); g.quadraticCurveTo(-11,-18,-7,-22); g.lineTo(7,-22); g.quadraticCurveTo(11,-18,9,-4); g.quadraticCurveTo(9,0,0,0); g.quadraticCurveTo(-9,0,-9,-4); g.closePath();
+  g.fillStyle='rgba(255,246,220,.92)'; g.fill();
+  g.save(); g.clip(); const top=-2-19*clamp(fill); g.fillStyle='#f5a623'; g.fillRect(-12,top,24,30); g.fillStyle='rgba(255,255,255,.35)'; g.fillRect(-6,top,3,30); g.restore();
+  g.strokeStyle='#6b4a1e'; g.lineWidth=1.6; g.stroke();
+  g.fillStyle='#d9534f'; g.fillRect(-8,-27,16,6); g.strokeRect(-8,-27,16,6);
+  g.fillStyle='#ffc93c'; g.strokeStyle='#3b2f2a'; g.lineWidth=.8; g.beginPath(); g.ellipse(0,-11,4,2.8,0,0,7); g.fill(); g.stroke(); g.fillStyle='#3b2f2a'; g.fillRect(-1.6,-13.6,1,5.2); g.fillRect(.8,-13.6,1,5.2);
+  g.restore();
+}
+function drawHanaAura(time){
+  const h=S.hana, p=iso(h.x,h.y);
+  if(h.trail) for(const q of h.trail){ const r=iso(q.x,q.y); ctx.fillStyle=`rgba(255,170,200,${q.a*.32})`; ctx.beginPath(); ctx.ellipse(r.x,r.y-18,6+6*q.a,10+12*q.a,0,0,7); ctx.fill(); }
+  if(S.honeyT>0){ const k=.5+.5*Math.sin(time*6), low=S.honeyT<5&&Math.sin(time*16)<0?.35:1;   // のこり5秒は 点めつ
+    ctx.fillStyle=`rgba(255,215,90,${(.22+.15*k)*low})`; ctx.beginPath(); ctx.ellipse(p.x,p.y,24+4*k,10+2*k,0,0,7); ctx.fill();
+    ctx.strokeStyle=`rgba(255,196,50,${.75*low})`; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle=`rgba(255,230,140,${.14*low})`; ctx.beginPath(); ctx.ellipse(p.x,p.y-24,20,30,0,0,7); ctx.fill(); }
+}
+function drawBee(b){
+  const z=(b.mode==='sip'?.45:.9)+Math.sin(b.ph*4)*.08, g=iso(b.x,b.y), p=iso(b.x,b.y,z), fl=Math.abs(Math.sin(b.ph*40));
+  ctx.fillStyle='rgba(59,47,42,.14)'; ctx.beginPath(); ctx.ellipse(g.x,g.y,4,1.8,0,0,7); ctx.fill();
+  ctx.save(); ctx.translate(p.x,p.y); ctx.scale(b.dir||1,1);
+  ctx.fillStyle='rgba(235,248,255,.85)'; ctx.strokeStyle='rgba(59,47,42,.6)'; ctx.lineWidth=.8;
+  ctx.beginPath(); ctx.ellipse(-1,-5-fl*1.5,3.6,5,-.4,0,7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(2,-5-fl*1.5,3.2,4.5,.3,0,7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#ffc93c'; ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(0,0,6,4.2,0,0,7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#3b2f2a'; ctx.fillRect(-2.6,-3.8,1.8,7.6); ctx.fillRect(.8,-3.8,1.8,7.6); ctx.beginPath(); ctx.arc(5.2,-.6,1,0,7); ctx.fill();
+  ctx.restore();
+  if(b.visits>0&&b.mode==='sip'){ ctx.fillStyle='#b06a00'; ctx.font=`800 9px ${FONT}`; ctx.textAlign='center'; ctx.fillText(b.visits+'/'+CFG.BEE_VISITS,p.x,p.y-12); }   // あと いくつで はちみつか
+}
+function drawPollen(p,time){
+  const z=p.mode==='fly'?.9+Math.sin(p.ph*2)*.15:.9*(1-clamp(p.t/1.6))+.15, g=iso(p.x,p.y), q=iso(p.x,p.y,z);
+  ctx.fillStyle='rgba(40,20,50,.15)'; ctx.beginPath(); ctx.ellipse(g.x,g.y,16,6,0,0,7); ctx.fill();
+  for(let k=0;k<6;k++){ const a=p.ph*1.3+k*1.05, r=7+3*Math.sin(p.ph*2+k); ctx.fillStyle=k%2?'rgba(70,40,85,.55)':'rgba(40,24,52,.6)'; ctx.beginPath(); ctx.arc(q.x+Math.cos(a)*9,q.y+Math.sin(a)*5,r,0,7); ctx.fill(); }
+  ctx.fillStyle='rgba(190,150,210,.85)'; for(let k=0;k<4;k++){ const a=p.ph*2+k*1.6; ctx.beginPath(); ctx.arc(q.x+Math.cos(a)*12,q.y-4+Math.sin(a)*7,1.4,0,7); ctx.fill(); }
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(q.x-3.5,q.y-1,1.8,0,7); ctx.arc(q.x+3.5,q.y-1,1.8,0,7); ctx.fill();
+  if(p.mode==='settle'){ const k=clamp(p.t/1.6); groundEllipse(p.x,p.y,1.05); ctx.strokeStyle=`rgba(90,50,110,${.3+.5*k})`; ctx.lineWidth=2; ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]); }
+}
+// ひみつの庭の ふち：金色の 点線と 小さな さく（GDD v3.5で保留だった「柵」の演出）
+function drawGardenFences(){
+  const SIDES=[[0,-1,0,0,1,0],[1,0,1,0,1,1],[0,1,1,1,0,1],[-1,0,0,1,0,0]];
+  for(const g of S.gardens){
+    const posts=[];
+    ctx.strokeStyle=g.kind==='royal'?'rgba(214,160,40,.95)':'rgba(255,206,80,.95)'; ctx.lineWidth=2.2; ctx.setLineDash([5,4]);
+    for(const t of g.tiles) for(const [di,dj,ax,ay,bx,by] of SIDES){
+      const o=tileAt(t.i+di,t.j+dj); if(o&&o.garden===g) continue;
+      const a=iso(t.i+ax,t.j+ay), b=iso(t.i+bx,t.j+by); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      posts.push(iso(t.i+(ax+bx)/2,t.j+(ay+by)/2)); }
+    ctx.setLineDash([]);
+    for(const p of posts){ ctx.fillStyle='#c79a66'; ctx.strokeStyle='#6b4a2e'; ctx.lineWidth=1; ctx.fillRect(p.x-1.6,p.y-9,3.2,9); ctx.strokeRect(p.x-1.6,p.y-9,3.2,9); }
+  }
+}
+// 図鑑の アイコン
+function drawDexIcon(g,id,w,time){
+  g.save();
+  if(id[0]==='c'&&id.length===2){ const sp=Assets.flower[+id[1]]; if(sp) drawSprite(g,sp,w/2,w*.92,w/32,0); }
+  else if(id==='rose_r'||id==='rose_b'||id==='rainbowflower') drawRareFlower(g,id,w/2,w*.95,w/40);
+  else if(id.startsWith('g_')){ g.translate(w/2,w*.97); g.scale(w/112,w/112); drawGiantKind(g,id.slice(2),time,0); }
+  else if(id==='queen'){ g.translate(w/2,w*.97); g.scale(w/135,w/135); drawQueenFlower(g,true,time); }
+  g.restore();
 }
 
 function drawRock(i,j){
@@ -1134,7 +1944,7 @@ const LOCAL={ // 単位立方体（中心が原点、底がz=0）
   N:{n:[0,-1,0],p:[[-.5,-.5,1],[.5,-.5,1],[.5,-.5,0],[-.5,-.5,0]]}
 };
 function cubeGeometry(c){
-  const s=CFG.CUBE, h=s/2; let cx=c.i+.5, cy=c.j+.5, z0=0, ori=c.ori, d=null, ang=0, sc=1;
+  const s=cs(c), h=s/2; let cx=c.i+.5, cy=c.j+.5, z0=0, ori=c.ori, d=null, ang=0, sc=1;
   if(c.state==='roll'){ const t=easeInOut(clamp(c.t/CFG.ROLL_T)); d=DIRS[c.dir]; ori=c.prevOri; ang=t*Math.PI/2;
     cx=c.fi+.5+d.dx*(1-s)*t; cy=c.fj+.5+d.dy*(1-s)*t; }
   else if(c.state==='drop'){ const t=clamp(c.t/CFG.DROP_T); z0=(1-t*t)*7; }
@@ -1171,14 +1981,16 @@ function drawFaceMark(g,grown,pop,pulse){ // 単位正方形の中に描く（90
 }
 function drawCube(c,time){
   const G=cubeGeometry(c), last=grownCount(c)===5, pulse=last?.5+.5*Math.sin(time*6):0;
-  const white=c.state==='bloom'?clamp(c.t/CFG.BLOOM_T):0;
+  const white=c.state==='bloom'?clamp(c.t/CFG.BLOOM_T):0, [PB,PI,PE]=cubePal(c,time);
   for(const f of G.faces){
     const [a,b,,d]=f.pts, grown=c.grown[f.id];
     ctx.save(); ctx.transform(b.x-a.x,b.y-a.y,d.x-a.x,d.y-a.y,a.x,a.y);
-    ctx.fillStyle=shade(EDGE,f.br); ctx.fillRect(0,0,1,1);
-    rrect(ctx,.045,.045,.91,.91,.13); ctx.fillStyle=shade(grown?GROWN:BODY,f.br); ctx.fill();
-    rrect(ctx,.15,.15,.7,.7,.12); ctx.fillStyle=shade(grown?GROWN_IN:BODY_IN,f.br); ctx.fill();
-    drawFaceMark(ctx,grown,c.pop[f.id],pulse);
+    ctx.fillStyle=shade(PE,f.br); ctx.fillRect(0,0,1,1);
+    rrect(ctx,.045,.045,.91,.91,.13); ctx.fillStyle=shade(grown?GROWN:PB,f.br); ctx.fill();
+    rrect(ctx,.15,.15,.7,.7,.12); ctx.fillStyle=shade(grown?GROWN_IN:PI,f.br); ctx.fill();
+    if(!grown&&c.giant&&c.prog[f.id]>0) drawSprout(ctx,c.prog[f.id],c.pop[f.id]);   // 巨大Cube：1回め＝め、2回め＝つぼみ
+    else drawFaceMark(ctx,grown,c.pop[f.id],pulse);
+    if(c.attr[f.id]){ ctx.save(); ctx.globalAlpha=.95; drawAttrIcon(ctx,c.attr[f.id],.22,.22,.15); ctx.restore(); }
     if(white>0){ ctx.fillStyle=`rgba(255,255,240,${white*.85})`; ctx.fillRect(0,0,1,1); }
     ctx.restore();
   }
@@ -1200,7 +2012,7 @@ function drawCube(c,time){
 }
 function drawCubeShadow(c){
   const G=cubeGeometry(c), k=c.state==='drop'?clamp(c.t/CFG.DROP_T):1;
-  groundEllipse(G.cx+.05,G.cy+.05,(.3+.26*k)*G.sc); ctx.fillStyle=`rgba(59,47,42,${.1+.16*k})`; ctx.fill();
+  groundEllipse(G.cx+.05,G.cy+.05,(.3+.26*k)*G.sc*cs(c)/CFG.CUBE); ctx.fillStyle=`rgba(59,47,42,${.1+.16*k})`; ctx.fill();
   if(S.target===c&&!S.cleared){ const p=.5+.5*Math.sin(S.time*5); groundEllipse(G.cx,G.cy,.66+.03*p); ctx.strokeStyle=`rgba(255,255,255,${.6+.3*p})`; ctx.lineWidth=2.5; ctx.setLineDash([6,5]); ctx.lineDashOffset=-S.time*14; ctx.stroke(); ctx.setLineDash([]); }
   else if(S.hana.goal&&S.hana.goal.c===c&&!S.cleared){ const p=.5+.5*Math.sin(S.time*7); groundEllipse(G.cx,G.cy,.66+.04*p); ctx.strokeStyle='#ff8fb1'; ctx.lineWidth=3; ctx.setLineDash([6,5]); ctx.lineDashOffset=-S.time*20; ctx.stroke(); ctx.setLineDash([]); }   // えらんだCube：いま 向かっている
 }
@@ -1216,14 +2028,18 @@ function drawNet(g,c,x,y,hw,hh,time,big){
     if(!grown&&last){ const k=.5+.5*Math.sin(time*6); fill=`rgb(255,${Math.round(248-10*k)},${Math.round(234-90*k)})`; }
     g.fillStyle=fill; g.fill();
     g.lineJoin='round'; g.strokeStyle=top?'#e0a400':'#3b2f2a'; g.lineWidth=top?(big?3.2:2):(big?1.6:1); g.stroke();
+    const id=c.ori[slot];
     if(grown){ g.fillStyle='#ff5f8f'; const r=h*.34; for(let k=0;k<5;k++){ const an=k*1.2566-1.57; g.beginPath(); g.arc(cx+Math.cos(an)*r*1.5,cy+Math.sin(an)*r*.95,r*.95,0,7); g.fill(); } g.fillStyle='#ffd34d'; g.beginPath(); g.arc(cx,cy,r*.75,0,7); g.fill(); }
+    else if(c.giant&&c.prog[id]>0){ g.fillStyle=c.prog[id]>=2?'#f7a8c0':'#63b85f'; g.beginPath(); g.ellipse(cx,cy,h*.42,h*.32,0,0,7); g.fill(); }   // 巨大Cube：とちゅう
     else { g.fillStyle='#8a5a3c'; g.beginPath(); g.ellipse(cx,cy,h*.34,h*.26,0,0,7); g.fill(); }
+    if(c.giant&&!grown&&big){ g.fillStyle='#3b2f2a'; for(let k=0;k<3;k++){ g.beginPath(); g.arc(cx-w*.3+k*w*.3,cy+h*.62,1.6,0,7); if(k<c.prog[id]) g.fill(); else { g.lineWidth=1; g.stroke(); } } }
+    if(c.attr[id]) drawAttrIcon(g,c.attr[id],cx+w*.48,cy-h*.42,big?h*.42:h*.55);
   }
 }
 /* ---- Cubeの「手」：うしろの面からニョキっと出て、地面をおして転がる ---- */
 // 回転前のCube内の点（中心が原点・底がz=0・単位は辺の長さ）→ ワールド座標（cubeGeometryと同じ回転）
 function cubeWorldPt(c,lx,ly,lz){
-  const s=CFG.CUBE, h=s/2; let cx=c.i+.5, cy=c.j+.5, x=lx*s, y=ly*s, z=lz*s;
+  const s=cs(c), h=s/2; let cx=c.i+.5, cy=c.j+.5, x=lx*s, y=ly*s, z=lz*s;
   if(c.state==='roll'){
     const t=easeInOut(clamp(c.t/CFG.ROLL_T)), d=DIRS[c.dir], cos=Math.cos(t*Math.PI/2), sin=Math.sin(t*Math.PI/2);
     cx=c.fi+.5+d.dx*(1-s)*t; cy=c.fj+.5+d.dy*(1-s)*t;
@@ -1245,8 +2061,8 @@ function armInfo(c){
     const px=d.dy*sg, py=-d.dx*sg;   // 進行方向に垂直な横向き
     const b=cubeWorldPt(c,px*.5-d.dx*.12,py*.5-d.dy*.12,.3);
     const side=px>0?'E':px<0?'W':py>0?'S':'N';
-    arms.push({B:iso(b.x,b.y,b.z), T:iso(ox+.5+px*(CFG.CUBE*.5+.2)-d.dx*.34, oy+.5+py*(CFG.CUBE*.5+.2)-d.dy*.34, 0), e, press,
-      front:side==='E'||side==='S'});   // 手前を向いた面から出る手は、Cubeより手前に描く
+    arms.push({B:iso(b.x,b.y,b.z), T:iso(ox+.5+px*(cs(c)*.5+.2)-d.dx*.34, oy+.5+py*(cs(c)*.5+.2)-d.dy*.34, 0), e, press,
+      front:side==='E'||side==='S', pal:cubePal(c,S.time)});   // 手前を向いた面から出る手は、Cubeより手前に描く
   }
   return arms;
 }
@@ -1255,10 +2071,11 @@ function drawArm(a){
   const mx=(B.x+T.x)/2, my=(B.y+T.y)/2-7*ep;   // ひじのように少し上へふくらむ
   ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.beginPath(); ctx.moveTo(B.x,B.y); ctx.quadraticCurveTo(mx,my,T.x,T.y);
-  ctx.strokeStyle='#3a8068'; ctx.lineWidth=8.5; ctx.stroke();
-  ctx.strokeStyle='#86d6ad'; ctx.lineWidth=5.5; ctx.stroke();
+  const [bo,bi,ed]=a.pal||CUBE_PAL.green;
+  ctx.strokeStyle=shade(ed,1); ctx.lineWidth=8.5; ctx.stroke();
+  ctx.strokeStyle=shade(bo,.95); ctx.lineWidth=5.5; ctx.stroke();
   const r=3.3+1.5*a.e, wx=a.press?1.45:1.2, wy=a.press?.68:.85;   // 地面をおしている間は手がつぶれる
-  ctx.beginPath(); ctx.ellipse(T.x,T.y,r*wx,r*wy,0,0,7); ctx.fillStyle='#9be0bd'; ctx.fill(); ctx.strokeStyle='#3a8068'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(T.x,T.y,r*wx,r*wy,0,0,7); ctx.fillStyle=shade(bi,1); ctx.fill(); ctx.strokeStyle=shade(ed,1); ctx.lineWidth=1.4; ctx.stroke();
   if(ep>.6){ ctx.lineWidth=1; for(const k of [-1,0,1]){ ctx.beginPath(); ctx.moveTo(T.x+k*r*.5,T.y+r*wy*.1); ctx.lineTo(T.x+k*r*.6,T.y+r*wy*.85); ctx.stroke(); } }
   ctx.restore();
 }
@@ -1274,9 +2091,12 @@ function flowerBend(t,wx,wy){
 
 function drawBigFlower(b,time){
   const p=iso(b.i+.5,b.j+.5), k=easeBack(clamp(b.t/.7)), [pc,po,cc]=FLOWER_COL[b.c];
-  let sway=Math.sin(time*1.4+b.ph)*.05;
+  let sway=Math.sin(time*1.4+b.ph)*.05+windSway(time,b.ph)*.6;
   if(b.wt<3) sway+=b.wd*Math.exp(-2*b.wt)*Math.sin(9*b.wt)*.22;
   { const h=S.hana, dx=b.i+.5-h.x, dy=b.j+.5-h.y, d=Math.hypot(dx,dy); if(d<.7) sway+=(dx-dy>=0?1:-1)*(1-d/.7)*.22; }
+  if(b.kind&&b.kind!=='normal'){   // 巨大な花（ひまわり・桜・バラ）
+    const kk=easeBack(clamp(b.t/1)); ctx.fillStyle='rgba(59,47,42,.22)'; ctx.beginPath(); ctx.ellipse(p.x+3,p.y+2,30*kk,12*kk,0,0,7); ctx.fill();
+    ctx.save(); ctx.translate(p.x,p.y); ctx.scale(kk,kk); drawGiantKind(ctx,b.kind,time,sway*.6); ctx.restore(); return; }
   ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+1,18*k,7*k,0,0,7); ctx.fill();
   ctx.save(); ctx.translate(p.x,p.y); ctx.scale(k,k); ctx.rotate(sway);
   ctx.lineCap='round'; ctx.strokeStyle='#3f8f45'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(3,-22,0,-42); ctx.stroke();
@@ -1290,17 +2110,18 @@ function drawBigFlower(b,time){
   ctx.restore();
 }
 const BF_COL=['#ffb347','#7fb8ff','#ff9ac1'];
-function drawButterfly(b){
-  const z=(b.mode==='work'?.5:.85)+Math.sin(b.ph*3.1)*.1, g=iso(b.x,b.y), p=iso(b.x,b.y,z), fl=.25+.75*Math.abs(Math.sin(b.ph*13));
+function drawButterfly(b,gold){
+  const z=(b.mode==='work'?.5:b.find&&b.mode==='work'?1.4:.85)+Math.sin(b.ph*3.1)*.1+(b.find?.6:0)+(b.mode==='leave'?Math.max(0,-b.life)*1.5:0), g=iso(b.x,b.y), p=iso(b.x,b.y,z), fl=.25+.75*Math.abs(Math.sin(b.ph*13));
   ctx.fillStyle='rgba(59,47,42,.14)'; ctx.beginPath(); ctx.ellipse(g.x,g.y,4.5,2,0,0,7); ctx.fill();
-  ctx.save(); ctx.translate(p.x,p.y); ctx.scale(b.dir,1); ctx.rotate(-.25);
-  ctx.fillStyle=BF_COL[b.c%3]; ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1;
+  if(gold){ ctx.fillStyle='rgba(255,230,120,.35)'; ctx.beginPath(); ctx.arc(p.x,p.y,9,0,7); ctx.fill(); }
+  ctx.save(); ctx.translate(p.x,p.y); ctx.scale(b.dir||1,1); ctx.rotate(-.25);
+  ctx.fillStyle=gold?'#ffd34d':BF_COL[b.c%3]; ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1;
   for(const sgn of [-1,1]){ ctx.save(); ctx.scale(sgn*fl,1);
     ctx.beginPath(); ctx.ellipse(4.6,-3,4.8,4.4,.3,0,7); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.ellipse(3.6,2.6,3.2,2.8,-.3,0,7); ctx.fill(); ctx.stroke(); ctx.restore(); }
   ctx.fillStyle='#3b2f2a'; ctx.beginPath(); ctx.ellipse(0,0,1.2,4.2,0,0,7); ctx.fill();
   ctx.restore();
-  if(b.mode==='work'&&b.tile){ const k=clamp(b.t/CFG.BF_WORK); ctx.strokeStyle='rgba(255,201,60,.9)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(g.x,g.y-4,7,-1.57,-1.57+6.283*k); ctx.stroke(); }
+  if(b.mode==='work'&&b.tile){ const k=clamp(b.t/(gold?.7:CFG.BF_WORK)); ctx.strokeStyle='rgba(255,201,60,.9)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(g.x,g.y-4,7,-1.57,-1.57+6.283*k); ctx.stroke(); }
 }
 function drawHana(time){
   const H=HANA_SPR;
@@ -1387,25 +2208,44 @@ function render(){
   for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
     const t=S.tiles[j][i];
     if(t.type==='rock'){ items.push({d:i+j+1,k:'r',i,j}); continue; }
+    if(t.type==='hedge'||t.type==='tree'||t.type==='glass'||t.type==='mill'){ items.push({d:i+j+1,k:t.type,i,j}); continue; }
     if(t.type!=='ground'||t.state===0) continue;
     const big=bigAt(i,j), n=t.state===1?3:5;
-    for(let q=0;q<n;q++){ const de=t.deco[q]; if(big&&Math.hypot(de.u-.5,de.v-.5)<.3) continue; items.push({d:i+j+de.u+de.v,k:'f',t,de,q}); }
+    for(let q=0;q<n;q++){ const de=t.deco[q]; if((big||t.rare)&&Math.hypot(de.u-.5,de.v-.5)<.3) continue; items.push({d:i+j+de.u+de.v,k:'f',t,de,q}); }
+    if(t.rare&&!big) items.push({d:i+j+1,k:'rare',t});
   }
+  if(S.queen) items.push({d:S.queen.i+S.queen.j+2.6,k:'queen'});
+  if(S.honey) items.push({d:S.honey.x+S.honey.y+.02,k:'honey'});
   for(const b of S.bigFlowers) items.push({d:b.i+b.j+1,k:'b',b});
   for(const c of S.cubes){ const p=cubePos(c); items.push({d:p.x+p.y+.05,k:'c',c}); }
   items.push({d:S.hana.x+S.hana.y,k:'h'});
   items.sort((a,b)=>a.d-b.d);
   const geo=new Map();
   for(const it of items){
-    if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07+flowerBend(t,t.i+de.u,t.j+de.v);
+    if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07+flowerBend(t,t.i+de.u,t.j+de.v)+windSway(time,de.ph);
       if(s<=0) continue;
       ctx.fillStyle='rgba(59,47,42,.16)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y,5*s,2*s,0,0,7); ctx.fill();
       drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*(t.state===1?.95:.9),rot); }
     else if(it.k==='r') drawRock(it.i,it.j);
+    else if(it.k==='hedge') drawHedge(it.i,it.j);
+    else if(it.k==='tree') drawTree(it.i,it.j,time);
+    else if(it.k==='glass') drawGlass(it.i,it.j);
+    else if(it.k==='mill') drawMill(it.i,it.j,time);
+    else if(it.k==='queen') drawQueen(time);
+    else if(it.k==='rare'){ const t=it.t, p=iso(t.i+.5,t.j+.5), s=easeBack(clamp(t.pop*1.4)); drawRareFlower(ctx,t.rare,p.x,p.y,s,Math.sin(time*1.5+t.i)*.05+flowerBend(t,t.i+.5,t.j+.5)*.6+windSway(time,t.j)); }
+    else if(it.k==='honey'){ const p=iso(S.honey.x,S.honey.y), b=Math.abs(Math.sin(S.honey.t*3))*4;
+      ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,10,4,0,0,7); ctx.fill();
+      drawHoneyJar(ctx,p.x,p.y-b,1); const k=.5+.5*Math.sin(S.time*5); ctx.fillStyle=`rgba(255,240,150,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+12,p.y-28-b); }
     else if(it.k==='b') drawBigFlower(it.b,time);
     else if(it.k==='c'){ const A=armInfo(it.c)||[]; for(const a of A) if(!a.front) drawArm(a); geo.set(it.c,drawCube(it.c,time)); for(const a of A) if(a.front) drawArm(a); }
-    else drawHana(time);
+    else { drawHanaAura(time); drawHana(time); }
   }
+  // 蜂・黒い花粉・かぜの すじ・スキルの ちょうちょ
+  for(const b of S.bees) drawBee(b);
+  for(const p of S.pollen) drawPollen(p,time);
+  if(S.wind) for(const f of S.windFx){ const a=iso(f.x,f.y,f.z), d=DIRS[S.wind.dir], b=iso(f.x-d.dx*.7,f.y-d.dy*.7,f.z), al=Math.min(1,f.t*2)*.55;
+    ctx.strokeStyle=`rgba(255,255,255,${al})`; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.quadraticCurveTo((a.x+b.x)/2,(a.y+b.y)/2-3*Math.sin(f.t*6),a.x,a.y); ctx.stroke(); }
+  for(const b of S.skillBf) drawButterfly(b,true);
 
   // 花びら
   for(const p of S.fx.petals){ const q=iso(p.x,p.y,p.z), a=clamp((p.max-p.life)/.4); ctx.save(); ctx.globalAlpha=a; ctx.translate(q.x,q.y); ctx.rotate(p.rot); ctx.fillStyle=p.c; ctx.beginPath(); ctx.ellipse(0,0,p.s,p.s*.55,0,0,7); ctx.fill(); ctx.restore(); }
@@ -1415,13 +2255,14 @@ function render(){
   // Cubeの上の6面インジケーター と スタンプの合図
   for(const c of S.cubes){
     if(c.state==='bloom') continue; const G=geo.get(c); if(!G) continue;
-    const q=iso(G.cx,G.cy,G.z0+CFG.CUBE+.62);
+    const q=iso(G.cx,G.cy,G.z0+cs(c)+.62);
     ctx.globalAlpha=c.state==='drop'?clamp(c.t/CFG.DROP_T):1;
     drawNet(ctx,c,q.x+4,q.y,8.5,4.25,time,false);
-    if(c.curious){ const e=clamp(c.emoteT), by=e>0?Math.abs(Math.sin(time*9))*4:0; ctx.font=`800 ${13+e*4}px ${FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round'; ctx.lineWidth=3.5; ctx.strokeStyle='#fff8ea'; ctx.strokeText('♪',q.x+31,q.y-6-by); ctx.fillStyle=e>0?'#e0569a':'#c98aa6'; ctx.fillText('♪',q.x+31,q.y-6-by); }
+    const PI_=PERS_INFO[c.pers];   // 性格の しるし（♪ ！ ♥ ✿ ×）。その性格らしく 動くときに はずむ
+    if(PI_){ const e=clamp(c.emoteT), by=e>0?Math.abs(Math.sin(time*9))*4:0; ctx.font=`800 ${13+e*4}px ${FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round'; ctx.lineWidth=3.5; ctx.strokeStyle='#fff8ea'; ctx.strokeText(PI_.g,q.x+31,q.y-6-by); ctx.fillStyle=PI_.col; ctx.globalAlpha*=e>0?1:.75; ctx.fillText(PI_.g,q.x+31,q.y-6-by); }
     ctx.globalAlpha=1;
     if(S.target===c&&!c.grown[c.ori.T]&&!S.cleared){
-      const a=iso(G.cx,G.cy,G.z0+CFG.CUBE+.16), bo=Math.abs(Math.sin(time*5))*4;
+      const a=iso(G.cx,G.cy,G.z0+cs(c)+.16), bo=Math.abs(Math.sin(time*5))*4;
       ctx.beginPath(); ctx.moveTo(a.x-6,a.y-9-bo); ctx.lineTo(a.x+6,a.y-9-bo); ctx.lineTo(a.x,a.y-1-bo); ctx.closePath();
       ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.stroke();
     }
@@ -1448,16 +2289,94 @@ const UI={
     $('helpBtn').onclick=()=>{ $('startBtn').textContent=S.started?'つづける':'はじめる'; $('startOv').hidden=false; $('startBtn').focus(); };
     $('soundBtn').onclick=()=>this.toggleSound();
     $('rotBtn').hidden=!canFull; $('rotBtn').onclick=()=>goLandscape();
+    $('itemBtn').onclick=()=>{ Sfx.ensure(); drinkHoney(); };          // もちもの（はちみつ）：タップで のむ
+    $('dashBtn').onclick=()=>{ Sfx.ensure(); doDash(); };
+    $('bfBtn').onclick=()=>{ Sfx.ensure(); doBfSkill(); };
+    $('selBtn').onclick=()=>this.openSelect();
+    $('dexBtn').onclick=()=>this.openDex();
+    $('storyBtn').onclick=()=>this.story(false,null);
+    $('selBack').onclick=()=>this.closeSub('selectOv');
+    $('dexBack').onclick=()=>this.closeSub('dexOv');
+    $('storyNext').onclick=()=>this.storyStep();
+    $('storySkip').onclick=()=>this.storyEnd();
+    Sfx.on=Save.data.sound!==false; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF';
     for(const b of document.querySelectorAll('button')) b.addEventListener('keyup',e=>{ if(e.code==='Space') e.preventDefault(); });
     if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
   },
-  start(){ Sfx.ensure(); goLandscape(); const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
+  start(){
+    Sfx.ensure(); goLandscape();
+    if(!Save.data.story&&!S.started){ Save.data.story=true; Save.save(); this.story(false,()=>this.start()); return; }   // はじめてのときは おはなしから（GDD 3）
+    const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   toastT:0,
-  toast(){ $('stageName').textContent=STAGE.name; $('toastName').textContent=(S.stage+1)+'. '+STAGE.name; $('toastTip').textContent=STAGE.tip; const el=$('toast'); el.hidden=true; void el.offsetWidth; el.hidden=false; clearTimeout(this.toastT); this.toastT=setTimeout(()=>{el.hidden=true;},4200); },
+  toast(){ $('stageName').textContent=STAGE.name; this.say((S.stage+1)+'. '+STAGE.name,STAGE.tip,true); },
+  say(n,t,quiet){ $('toastName').textContent=n; $('toastTip').textContent=t; const el=$('toast'); el.hidden=true; void el.offsetWidth; el.hidden=false; clearTimeout(this.toastT); this.toastT=setTimeout(()=>{el.hidden=true;},4600); if(!quiet) Sfx.rare(); },
   next(){ this.load(S.stage+1>=STAGES.length?0:S.stage+1); },
   restart(){ this.load(S.stage); },
-  load(idx){ const was=S.started; S=newState(idx); S.started=was; fit(); if(was) this.toast(); $('clearOv').hidden=true; this.lastRate=-1; Input.keys.clear(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
-  toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on) Sfx.ensure(); },
+  load(idx){ const was=S.started; S=newState(idx); S.started=was; this.theme(); fit(); if(was) this.toast(); $('clearOv').hidden=true; this.lastRate=-1; this.itemKey=''; Input.keys.clear(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
+  theme(){ document.body.dataset.theme=STAGE.theme||'meadow'; Bgm.setTheme(STAGE.theme); $('stageName').textContent=STAGE.name; },
+  toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on) Sfx.ensure(); Save.data.sound=Sfx.on; Save.save(); },
+  // もちもの（はちみつ）：右上。もっているときは「タップで つかえるよ！」、のんだら 残り時間（びんの中身が へっていく）
+  itemKey:'',
+  updItem(touch){
+    const show=S.honeyHeld||S.honeyT>0, box=$('itemBox');
+    const key=show?(S.honeyT>0?'on'+Math.ceil(S.honeyT*4):'held'+touch):'none';
+    if(key===this.itemKey) return;
+    this.itemKey=key; box.hidden=!show; if(!show) return;
+    const g=$('itemCv').getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,124,124);
+    drawHoneyJar(g,62,114,3.4,S.honeyT>0?S.honeyT/CFG.HONEY_T:1);
+    if(S.honeyT>0){ $('itemTip').textContent=touch?'Cubeを タップで おせるよ':'Cubeを クリックで おせるよ'; $('itemTime').textContent='のこり '+Math.ceil(S.honeyT)+'びょう'; $('itemBtn').classList.remove('ready'); }
+    else { $('itemTip').textContent=touch?'タップで つかえるよ！':'クリックで つかえるよ！'; $('itemTime').textContent='はちみつ'; $('itemBtn').classList.add('ready'); }
+  },
+  updSkills(){
+    const F=S.flags;
+    for(const [id,on,cd,max] of [['dashBtn',F.dash,S.skill.dash,CFG.DASH_CD],['bfBtn',F.bfSkill,S.skill.bf,CFG.BFS_CD]]){
+      const b=$(id); if(b.hidden===!!on) b.hidden=!on; if(!on) continue;
+      const k=cd>0?cd/max:0, key=Math.round(k*60);   // つかえるまでの 時間は 円の かげで 見せる
+      if(b._k!==key){ b._k=key; b.querySelector('i').style.background=k>0?`conic-gradient(rgba(59,47,42,.45) ${k*360}deg, transparent 0)`:'transparent'; b.classList.toggle('cool',k>0); }
+    }
+  },
+  questKey:'',
+  updQuest(){
+    const Q=S.queen, box=$('questBox'); if(!Q||!S.flags.boss){ if(!box.hidden) box.hidden=true; return; }
+    let t,x;
+    if(Q.pure){ t='女王を じょうかした！'; x='花の 女王が もとの すがたに もどったよ'; }
+    else if(Q.phase===1){ t='女王 1/3：花を まもろう'; x='Cubeを さかせよう（'+Math.min(3,S.blooms)+' / 3）。黒い 花粉は Hanaで はらえるよ'; }
+    else if(Q.phase===2){ t='女王 2/3：花を ふやそう'; x='にじいろ か 大きな Cubeを さかせて、巨大な 花を さかせよう'; }
+    else { const r=queenRing(); t='女王 3/3：女王を つつもう'; x='女王の まわり '+r.done+' / '+r.all+'　花率 '+Math.floor(flowerRate()*100)+'%（90%まで）'; }
+    if(t+x!==this.questKey){ this.questKey=t+x; $('questTitle').textContent=t; $('questText').textContent=x; }
+    if(box.hidden) box.hidden=false;
+  },
+  // ステージ選択・図鑑・おはなしを ひらく間は、うしろの説明カードを かくす（半透明のカードが かさならないように）
+  backTo:false,
+  openSub(id){ if(!$('startOv').hidden){ this.backTo=true; $('startOv').hidden=true; } $(id).hidden=false; },
+  closeSub(id){ $(id).hidden=true; if(this.backTo){ this.backTo=false; $('startOv').hidden=false; } },
+  openSelect(){
+    const G=$('selGrid'); G.innerHTML='';
+    STAGES.forEach((st,i)=>{ const b=document.createElement('button'), best=Save.data.best[i];
+      b.innerHTML='<b>'+(i+1)+'</b>'+st.name+(best!=null?'<br>'+(st.boss?'✿':best+'%'):''); b.disabled=i>=Save.data.unlocked; if(best!=null) b.className='done';
+      b.onclick=()=>{ $('selectOv').hidden=true; this.backTo=false; this.load(i); this.start(); };
+      G.appendChild(b); });
+    this.openSub('selectOv');
+  },
+  openDex(){
+    const G=$('dexGrid'); G.innerHTML=''; let n=0;
+    for(const d of DEX){ const got=!!Save.data.dex[d.id]; if(got) n++;
+      const el=document.createElement('div'); el.className='dex'+(got?'':' no');
+      const cv=document.createElement('canvas'); cv.width=112; cv.height=112; const g=cv.getContext('2d');
+      drawDexIcon(g,d.id,112,0);
+      if(!got){ g.globalCompositeOperation='source-atop'; g.fillStyle='#5c4d45'; g.fillRect(0,0,112,112); }   // まだの花は シルエット
+      const b=document.createElement('b'); b.textContent=got?d.name:'？？？';
+      const s=document.createElement('span'); s.textContent=got?d.d:'ヒント：'+d.d;
+      el.append(cv,b,s); G.appendChild(el); }
+    $('dexSub').textContent='みつけた 花：'+n+' / '+DEX.length;
+    this.openSub('dexOv');
+  },
+  // おはなし（GDD 3）：はじめての ときと、さいごの ステージの あと
+  st:null,
+  story(ending,cb){ this.st={pages:ending?STORY_END:STORY_OPEN,k:0,cb,ending}; this.openSub('storyOv'); this.storyShow(); },
+  storyShow(){ const s=this.st; $('storyText').textContent=s.pages[s.k]; $('storyNext').textContent=s.k>=s.pages.length-1?(s.ending?'おしまい':'はじめよう'):'つぎへ'; drawStoryArt($('storyArt').getContext('2d'),s.ending,s.k); },
+  storyStep(){ const s=this.st; if(!s) return; Sfx.ensure(); if(s.k+1>=s.pages.length) return this.storyEnd(); s.k++; this.storyShow(); },
+  storyEnd(){ const s=this.st; this.st=null; if(s&&s.cb){ $('storyOv').hidden=true; this.backTo=false; s.cb(); } else this.closeSub('storyOv'); },
   update(){
     const r=Math.floor(flowerRate()*100+1e-6);
     if(r!==this.lastRate){ this.lastRate=r; $('rateNum').innerHTML=r+'<small>%</small>'; $('barFill').style.width=Math.min(100,r)+'%'; }
@@ -1476,32 +2395,80 @@ const UI={
       else { msg=touch?'いまだ！ Cubeを タップ':'いまだ！ Cubeを クリック'; ok=true; }
     }else{ $('cubeCount').textContent='- / 6'; msg=S.cleared?'おにわが できたよ':'つぎの Cubeが ふってくるよ'; }
     if(msg!==this.lastMsg){ this.lastMsg=msg; const el=$('cubeMsg'); el.textContent=msg; el.className=ok?'ok':''; }
+    const nm=c?(c.giant?'大きな Cube':c.color!=='green'?COLOR_INFO[c.color].n+' Cube':'Cubeの 6つの面'):'Cubeの 6つの面';
+    if(nm!==this.lastName){ this.lastName=nm; $('cubeName').textContent=nm; }
+    this.updItem(touch); this.updSkills(); this.updQuest();
     // クリア表示
     if(S.cleared&&!S.clearShown&&S.time-S.clearAt>2.6&&!S.events.length){   // Hanaのよろこぶ姿を見せてから
       S.clearShown=true; $('stRate').textContent=Math.floor(flowerRate()*100)+'%'; $('stChain').textContent=S.maxChain; $('stPerfect').textContent=S.perfects;
       const lastSt=S.stage+1>=STAGES.length; $('nextBtn').textContent=lastSt?'さいしょの ステージへ':'つぎの ステージへ';
       $('clearSub').textContent=lastSt?'ぜんぶの ステージを 花で いっぱいに したよ。ありがとう！':'「'+STAGE.name+'」が 花で いっぱいに なったよ';
       const s=Math.floor(S.clearAt); $('stTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-      $('clearOv').hidden=false; $('nextBtn').focus();
+      // セーブ：クリアと 花率の 記録、つぎの ステージを 解放
+      Save.data.best[S.stage]=Math.max(Save.data.best[S.stage]||0,Math.floor(flowerRate()*100));
+      Save.data.unlocked=Math.max(Save.data.unlocked,Math.min(STAGES.length,S.stage+2)); Save.save();
+      const show=()=>{ $('clearOv').hidden=false; $('nextBtn').focus(); };
+      if(S.flags.boss) this.story(true,show); else show();   // さいごは エンディング
     }
   }
 };
+
+/* ---- おはなし（GDD 3）の文と さし絵 ---- */
+const STORY_OPEN=[
+  'ある日、空から サイコロのような ふしぎな いきもの「Bloom Cube」が たくさん ふってきました。',
+  'まちの みんなは「しんりゃくしゃだ！」と こわがって、にげてしまいました。',
+  'でも、庭師の 女の子 Hanaだけは 気づきました。「この子たち、花の たねみたい！」',
+  'Hanaは Cubeを そだてて、あれはてた 世界を 花で いっぱいに する 旅に でかけます。'];
+const STORY_END=[
+  '黒い 花の 女王は、あたたかい 花に つつまれて、ほんとうの すがたに もどりました。',
+  '女王は ずっと ひとりぼっちで、さみしかったのです。「ありがとう、Hana」',
+  'Bloom Cubeたちは 世界じゅうに 根づき、どこまでも 花畑が ひろがりました。',
+  '世界は 花で いっぱいに なりました。 ― おしまい ―'];
+function drawStoryArt(g,ending,k){
+  const W=720,H=360, t=k*1.7+(ending?9:0);
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,H);
+  const night=!ending&&k===1, sky=g.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,night?'#9aa6c9':ending&&k===0?'#cdb8e6':'#bfe6f5'); sky.addColorStop(.62,'#e8f4e0'); sky.addColorStop(1,'#cfe6b8'); g.fillStyle=sky; g.fillRect(0,0,W,H);
+  g.fillStyle=(!ending&&k<2)?'#d8bd9f':'#9ed58a'; g.beginPath(); g.ellipse(W/2,H+40,W*.75,150,0,0,7); g.fill();
+  const cube=(x,y,s,col)=>{ const c=col||[122,212,170], e=[58,128,104];
+    g.save(); g.translate(x,y); g.lineJoin='round';
+    g.fillStyle=shade(c,1.05); g.beginPath(); g.moveTo(0,-s); g.lineTo(s,-s/2); g.lineTo(0,0); g.lineTo(-s,-s/2); g.closePath(); g.fill();
+    g.fillStyle=shade(c,.85); g.beginPath(); g.moveTo(-s,-s/2); g.lineTo(0,0); g.lineTo(0,s); g.lineTo(-s,s/2); g.closePath(); g.fill();
+    g.fillStyle=shade(c,.7); g.beginPath(); g.moveTo(s,-s/2); g.lineTo(0,0); g.lineTo(0,s); g.lineTo(s,s/2); g.closePath(); g.fill();
+    g.strokeStyle=shade(e,1); g.lineWidth=2; g.beginPath(); g.moveTo(0,-s); g.lineTo(s,-s/2); g.lineTo(s,s/2); g.lineTo(0,s); g.lineTo(-s,s/2); g.lineTo(-s,-s/2); g.closePath(); g.moveTo(0,0); g.lineTo(0,s); g.moveTo(0,0); g.lineTo(-s,-s/2); g.moveTo(0,0); g.lineTo(s,-s/2); g.stroke();
+    g.fillStyle='#8a5a3c'; g.beginPath(); g.ellipse(0,-s/2,s*.18,s*.1,0,0,7); g.fill(); g.restore(); };
+  const hana=(x,y,s,fr)=>{ const Hs=HANA_SPR; if(Hs.ok&&Hs.img) g.drawImage(Hs.img,(fr||0)*Hs.cw,0,Hs.cw,Hs.ch,x-Hs.ax*s,y-Hs.ay*s,Hs.cw*s,Hs.ch*s); else { g.fillStyle='#f7a531'; g.beginPath(); g.ellipse(x,y-40*s,22*s,40*s,0,0,7); g.fill(); } };
+  const flowers=(n,y0)=>{ for(let q=0;q<n;q++){ const sp=Assets.flower[q%5]; if(sp) drawSprite(g,sp,40+((q*97)%640),y0+((q*53)%60),1.6+(q%3)*.3,0); } };
+  if(!ending){
+    if(k===0){ for(let q=0;q<6;q++){ const x=90+q*110, y=60+((q*67)%120); g.strokeStyle='rgba(255,255,255,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(x-30,y-50); g.lineTo(x-6,y-14); g.stroke(); cube(x,y,22+(q%3)*5); } }
+    else if(k===1){ cube(360,250,46); g.fillStyle='#5b4a6e'; g.font='800 46px '+FONT; g.textAlign='center'; g.fillText('!?',470,150); g.fillText('!',220,160); }
+    else if(k===2){ cube(470,262,40); hana(280,320,1.25,2); g.fillStyle='#ff5f8f'; g.font='800 44px '+FONT; g.textAlign='center'; g.fillText('♡',370,150); }
+    else { flowers(18,240); cube(520,250,34); cube(150,270,28,[242,142,128]); hana(340,330,1.2,0); }
+  }else{
+    if(k===0||k===1){ flowers(10,270); g.save(); g.translate(360,330); g.scale(1.6,1.6); drawQueenFlower(g,true,t); g.restore(); if(k===1){ hana(170,330,1,2); g.fillStyle='#ff5f8f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('♡',260,170); } }
+    else if(k===2){ flowers(30,200); for(let q=0;q<4;q++) cube(130+q*150,250-(q%2)*30,26,[[122,212,170],[242,142,128],[124,172,236],[238,204,92]][q]); }
+    else { flowers(34,190); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
+  }
+}
+const paused=()=>!$('startOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
 /* ================================================================
  * 12. MAIN
  * ================================================================ */
 function update(dt){
-  if(S.started && $('startOv').hidden && !PORTRAIT.matches){   // 縦向きの間は止める
+  Pad.poll();
+  if(S.started && !paused() && !PORTRAIT.matches){   // 縦向き・メニューの間は止める
     S.time+=dt;
     updateHana(dt);
     updateCubes(dt);
     findTargets();
     updateButterflies(dt);
+    updateExtras(dt);
     updateGarden(dt);
     updateFx(dt);
   }
   // BGM：あそんでいる間だけ流す（クリア直後はファンファーレを聞かせるため5秒休む）
-  const want=Sfx.on&&S.started&&$('startOv').hidden&&!PORTRAIT.matches&&!document.hidden&&!(S.cleared&&S.time-S.clearAt<5);
+  const want=Sfx.on&&S.started&&!paused()&&!PORTRAIT.matches&&!document.hidden&&!(S.cleared&&S.time-S.clearAt<5);
   if(want&&!Bgm.playing) Bgm.start(); else if(!want&&Bgm.playing) Bgm.stop();
 }
 let last=0;
@@ -1510,8 +2477,9 @@ function frame(ts){
   try{ update(dt); render(); UI.update(); }catch(e){ console.error(e); }
   requestAnimationFrame(frame);
 }
+Save.load();
 S=newState(0);
-Assets.init(); UI.init(); Input.init(canvas); fit();
+Assets.init(); UI.init(); Input.init(canvas); UI.theme(); fit();
 window.addEventListener('resize',fit);
 window.addEventListener('orientationchange',()=>{ fit(); setTimeout(fit,250); });   // 回転直後はサイズが遅れて変わる端末がある
 document.addEventListener('fullscreenchange',fit);
@@ -1524,7 +2492,8 @@ $('stageName').textContent=STAGE.name;
 requestAnimationFrame(frame);
 
 // 動作確認用（コンソールから TOF.state() などで中身を見られます）
-window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule};
+window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule,
+  ui:UI,save:Save,dash:doDash,bfSkill:doBfSkill,drink:drinkHoney,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX};
 })();
 </script>
 </body>
