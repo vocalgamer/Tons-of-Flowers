@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.7.1</title>
+<title>TONS OF FLOWERS — Prototype v0.7.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.7.1（GDD v3.6準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.7.2（GDD v3.6準拠・2.5D・単一HTML）
+  v0.7.2：つぼみの地面を うすい黄緑に、荒地を ゴツゴツした こげ茶に（花率の 数え方と 見た目を そろえる）。花率80%を こえたら 残りの マスが ときどき 光る。
+          大きな花・巨大な花・女王・木の うしろに キャラが いると すける。ウリ坊は Cubeを すりぬけない（モグラも Cubeの下を通らない）。モグラを ゆっくりに。
+          雲の上の庭は 背景を 雲の 空に。左上の せつめいに タップした Cubeの 絵。
   v0.7.1：ゲーム開始時に 全画面に する（PCも。スマホは さらに よこ向きロック）。右上に 全画面の きりかえボタン（⛶）。
   v0.7  ：ステージの縁を あたたかく（土の層・草のふち・たれさがる つる）。背景を 宇宙（星くず・星雲）に。Cubeの角を まるく、息づかいの ゆれ。
           モグラ（13面〜：地面の下を もこもこ。通り道は土にもどり 花がさかない。先頭にさわると テヘペロして きえる）と
@@ -98,9 +101,12 @@
   #goal::after{content:"90%で クリア";position:absolute;top:15px;right:-12px;white-space:nowrap;font-size:11px;font-weight:800}
 
   /* Cubeの6面パネル */
-  #cubePanel{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 10px 6px;width:200px}
+  #cubePanel{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 10px 6px;width:240px}
   #cubePanel .name{font-weight:700;font-size:13px;display:flex;justify-content:space-between}
-  #cubeInfo{font-size:12.5px;font-weight:700;line-height:1.45;margin:3px 0 4px}
+  #cubeBody{display:flex;gap:6px;align-items:flex-start}
+  #cubeIcon{width:56px;height:56px;flex:none}
+  #cubeIcon[hidden]{display:none}
+  #cubeInfo{font-size:12.5px;font-weight:700;line-height:1.45;margin:3px 0 4px;flex:1;min-width:0}
   #cubeInfo .ln{display:flex;gap:5px;align-items:flex-start}
   #cubeInfo canvas{width:16px;height:16px;flex:none;margin-top:1px}
   #cubeInfo .g{flex:none;width:16px;text-align:center;font-weight:800}
@@ -134,6 +140,16 @@
   body[data-theme=forest]{--neb1:rgba(220,140,90,.18);--neb2:rgba(120,160,90,.12)}
   body[data-theme=water]{--neb1:rgba(80,170,210,.2);--neb2:rgba(110,120,220,.14)}
   body[data-theme=sky]{--neb1:rgba(140,190,240,.2);--neb2:rgba(220,220,255,.1)}
+  /* 雲の上の庭だけは 宇宙ではなく、雲の 空 */
+  body[data-theme=clouds]{background:linear-gradient(180deg,#78bdeb 0%,#b6ddf7 45%,#eaf6ff 100%)}
+  body[data-theme=clouds]::before{opacity:1;background-size:100% 100%;animation:drift 70s ease-in-out infinite alternate;background-image:
+    radial-gradient(ellipse 13% 5% at 14% 22%,rgba(255,255,255,.85),transparent 70%),radial-gradient(ellipse 9% 4% at 20% 19%,rgba(255,255,255,.9),transparent 70%),
+    radial-gradient(ellipse 15% 5% at 80% 13%,rgba(255,255,255,.8),transparent 70%),radial-gradient(ellipse 10% 4% at 73% 11%,rgba(255,255,255,.85),transparent 70%),
+    radial-gradient(ellipse 17% 6% at 64% 86%,rgba(255,255,255,.85),transparent 70%),radial-gradient(ellipse 11% 4% at 55% 83%,rgba(255,255,255,.9),transparent 70%),
+    radial-gradient(ellipse 13% 5% at 22% 74%,rgba(255,255,255,.75),transparent 70%),radial-gradient(ellipse 12% 5% at 92% 55%,rgba(255,255,255,.8),transparent 70%),
+    radial-gradient(ellipse 10% 4% at 6% 50%,rgba(255,255,255,.75),transparent 70%)}
+  body[data-theme=clouds]::after{display:none}
+  @keyframes drift{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
   body[data-theme=night]{--neb1:rgba(120,90,210,.24);--neb2:rgba(60,80,180,.18)}
   body[data-theme=garden]{--neb1:rgba(110,190,140,.18);--neb2:rgba(230,190,120,.12)}
   body[data-theme=queen]{--neb1:rgba(200,80,170,.24);--neb2:rgba(110,60,150,.2)}
@@ -253,9 +269,10 @@
   /* よこ向きのスマホ（高さが小さい画面）：HUDを小さくまとめ、盤面の場所を広げる */
   @media (max-height:520px){
     #hint{display:none}
-    #cubePanel{width:170px;padding:3px 7px 4px;border-radius:12px}
+    #cubePanel{width:205px;padding:3px 7px 4px;border-radius:12px}
     #cubePanel .name{font-size:11.5px}
     #cubeInfo{font-size:11px;line-height:1.35;margin:2px 0}
+    #cubeIcon{width:44px;height:44px}
     #cubeMsg{font-size:11px;min-height:14px}
     .btn{padding:5px 9px;font-size:12px;border-radius:10px}
     #rate{top:calc(max(8px,env(safe-area-inset-top)) + 38px);width:min(196px,28vw);padding:4px 10px 20px;border-radius:12px}
@@ -292,7 +309,7 @@
 
 <div id="cubePanel" class="panel">
   <div class="name"><span id="cubeName">Cubeの 6つの面</span><span id="cubeCount">0 / 6</span></div>
-  <div id="cubeInfo"></div>
+  <div id="cubeBody"><canvas id="cubeIcon" width="128" height="128" hidden></canvas><div id="cubeInfo"></div></div>
   <div id="cubeMsg"></div>
 </div>
 
@@ -337,7 +354,7 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.7.1</p>
+    <p class="sub">Prototype v0.7.2</p>
     <ol class="how">
       <li><span><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが そばまで あるくよ。そばで もういちど <span class="sp">タップ</span><span class="pc">クリック</span>すると「上の面」に スタンプ。たねの面が 花の面に なるよ。</span></li>
       <li>Cubeは じぶんで ころころ ころがるよ。Cubeの 上の 図で、どの面が まだ たねか たしかめよう。Cubeを タップすると、ひだり上に その Cubeの せいかくや とくちょうが でるよ。</li>
@@ -470,7 +487,7 @@ const CFG = {
   CAN_T:12, CAN_FIRST:15, CAN_COOL:25,
   SCOOP_T:15, SCOOP_FIRST:8, SCOOP_COOL:20,   // スコップ：使える秒数（歩いている間だけ へる）／最初に出るまで／使いおわってから次まで
   DIG_T:.45,
-  MOLE_STEP:1.9, MOLE_FIRST:18, MOLE_COOL:30, MOLE_MAX:14,   // モグラ：1マス すすむ秒数（Cubeと 同じくらい）／最初に出るまで／つぎまで／さいだい マス数
+  MOLE_STEP:2.8, MOLE_FIRST:18, MOLE_COOL:30, MOLE_MAX:14,   // モグラ：1マス すすむ秒数（v0.7.2で 1.9→2.8 ゆっくりに）／最初に出るまで／つぎまで／さいだい マス数
   URI_SPEED:2.4, URI_FIRST:22, URI_COOL:40, URI_STAY:32,     // ウリ坊：はしる速さ／最初に出るまで／つぎまで／いる時間                  // 荒地 1マスを たがやすのに かかる秒数   // じょうろ（GDD 18.6）：水が出る秒数／ステージ開始から最初に出るまで／使いおわってから次まで（秒）
   GIANT:1.3,                  // 巨大Cubeの大きさ（ふつうの何倍）／1つの面に 3回 スタンプ
   RARE:.012                   // 花畑に なったとき めずらしい花が うまれる もとの かくりつ
@@ -525,7 +542,7 @@ const STAGES = [
     map:['...........','.....R.....','...........','.W.......W.','...........','..H..C.....','...........','.W.......W.','...........','.....R.....','...........']},
   { name:'巨大ひまわりの庭', theme:'meadow', giantP:.3, rainbow:.15, tip:'大きな Cubeや にじいろの Cubeが さくと、巨大な 花が さくよ',
     map:['............','............','..R......R..','............','............','....C.......','.......H....','............','............','..R......R..','............','............']},
-  { name:'雲の上の庭', theme:'sky', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
+  { name:'雲の上の庭', theme:'clouds', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
     map:['.....xx.....','.....xx.....','.....==.....','.....xx.....','..H..xx..C..','.....xx.....','xx=xxxxxx=xx','.....xx.....','.....xx.....','.....==.....','.....xx.....','.....xx.....']},
   { name:'黒い花粉の森', theme:'forest', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
     map:['...........','.T.......T.','...........','....T......','...........','..H...C....','...........','......T....','.T.........','.......T...','...........']},
@@ -670,7 +687,7 @@ function restTime(c){
 const grownCount=c=>c.grown.reduce((n,g)=>n+(g?1:0),0);
 const cubeAt=(i,j,except)=>S.cubes.find(c=>c!==except&&c.i===i&&c.j===j);
 const bigAt=(i,j)=>S.bigFlowers.find(b=>b.i===i&&b.j===j);
-function cubeFree(i,j,c){ const t=tileAt(i,j); return !!t&&t.type==='ground'&&!cubeAt(i,j,c); }
+function cubeFree(i,j,c){ const t=tileAt(i,j), u=S.uribo; return !!t&&t.type==='ground'&&!cubeAt(i,j,c)&&!(u&&u.mode!=='leave'&&Math.floor(u.x)===i&&Math.floor(u.y)===j); }   // ウリ坊の いる マスにも ころがらない
 const hanaOn=(i,j)=>Math.floor(S.hana.x)===i&&Math.floor(S.hana.y)===j;
 function cubeCanEnter(i,j,c){ return cubeFree(i,j,c)&&!hanaOn(i,j); }
 // Cubeの転がる方向は基本ランダム。軽い傾向として、たねの面が上に来る方向・花のない場所を少し選びやすい。
@@ -1304,7 +1321,7 @@ function drinkHoney(){
  *      モグラが いる間、通り道（もこもこ）は 開花しても 花が さかない。悪役ではない：さきっぽに Hanaが さわると
  *      かおを だして テヘペロ → もぐって きえる。通り道は ふつうの 土に もどる ---- */
 const moleHead=()=>{ const m=S.mole, u=clamp(m.t/CFG.MOLE_STEP); return {x:lerp(m.fi,m.i,u)+.5,y:lerp(m.fj,m.j,u)+.5}; };
-function moleOK(t){ return !!t&&t.type==='ground'&&!t.garden&&!bigAt(t.i,t.j)&&!t.mole; }
+function moleOK(t){ return !!t&&t.type==='ground'&&!t.garden&&!bigAt(t.i,t.j)&&!t.mole&&!cubeAt(t.i,t.j); }   // Cubeの 下も とおらない
 function moleMark(t){ t.mole=true; if(t.state>0){ setTile(t,0); wiltFx(t.i+.5,t.j+.5); } t.wt=0; }
 function moleEnd(){ const m=S.mole; if(!m) return; for(const t of m.trail) t.mole=false; S.gardenDirty=true; S.mole=null; S.moleCool=CFG.MOLE_COOL; }
 function spawnMole(){
@@ -1339,10 +1356,16 @@ function updateMole(dt){
 
 /* ---- ウリ坊（GDD 18.9）：地面の 上を トコトコ はしり、立ちどまって 鼻で 地面を ほりかえす。
  *      荒地を ほると 土に なる（たすかる）。花畑を ほると つぼみに なる（こまる）。Hanaが さわると よろこんで かえっていく ---- */
+function uriPathFree(ax,ay,bx,by){   // とちゅうに Cubeが いない
+  const n=Math.ceil(Math.hypot(bx-ax,by-ay)/.2);
+  for(let k=1;k<=n;k++){ const x=ax+(bx-ax)*k/n, y=ay+(by-ay)*k/n; for(const c of S.cubes){ if(c.state==='gone') continue; const p=cubePos(c); if(Math.hypot(p.x-x,p.y-y)<.7) return false; } }
+  return true;
+}
+const uriBlocked=(x,y)=>S.cubes.some(c=>{ if(c.state==='gone') return false; const p=cubePos(c); return Math.hypot(p.x-x,p.y-y)<.62; });
 function uriTarget(u){
   const cand=[];
   for(const row of S.tiles) for(const t of row){ if(t.type!=='ground'||cubeAt(t.i,t.j)) continue; const d=Math.hypot(t.i+.5-u.x,t.j+.5-u.y); if(d<1.2||d>4.5) continue;
-    if(!lineClear(u.x,u.y,t.i+.5,t.j+.5)) continue; cand.push({t,w:(t.hard?4:1)*(t.state===2?1.3:1)}); }   // 荒地の においが すき
+    if(!lineClear(u.x,u.y,t.i+.5,t.j+.5)||!uriPathFree(u.x,u.y,t.i+.5,t.j+.5)) continue; cand.push({t,w:(t.hard?4:1)*(t.state===2?1.3:1)}); }   // 荒地の においが すき
   if(!cand.length) return null;
   let r=Math.random()*cand.reduce((a,c)=>a+c.w,0); for(const c of cand){ r-=c.w; if(r<=0) return c.t; } return cand[0].t;
 }
@@ -1362,7 +1385,10 @@ function updateUribo(dt){
   if(u.mode==='happy'){ if(u.t>=1.6){ u.mode='leave'; const ex=u.x<COLS/2?-1.2:COLS+1.2; u.tx=ex; u.ty=u.y; } return; }
   if(Math.hypot(u.x-h.x,u.y-h.y)<.65){ u.mode='happy'; u.t=0; Sfx.oink(); textFx(u.x,u.y,1.8,'ぷぎっ♪','#e0569a',1.3,1.8); petalFx(u.x,u.y,.6,6,.8); if(h.goal&&h.goal.uribo) h.goal=null; return; }
   if(u.life>=CFG.URI_STAY){ u.mode='leave'; u.tx=u.x<COLS/2?-1.2:COLS+1.2; u.ty=u.y; return; }
-  if(u.mode==='run'){ if(move(CFG.URI_SPEED)){ u.mode='root'; u.t=0; u.tile=tileAt(Math.floor(u.x),Math.floor(u.y)); } }
+  if(u.mode==='run'){
+    { const dx=u.tx-u.x, dy=u.ty-u.y, d=Math.hypot(dx,dy)||1, nx=u.x+dx/d*.35, ny=u.y+dy/d*.35;   // 目の前に Cubeが いたら ぶつからずに 止まって、べつの 場所を さがす
+      if(uriBlocked(nx,ny)){ const nt=uriTarget(u); if(nt){ u.tx=nt.i+.5; u.ty=nt.j+.5; } else { u.mode='root'; u.t=1.2; u.tile=null; } return; } }
+    if(move(CFG.URI_SPEED)){ u.mode='root'; u.t=0; u.tile=tileAt(Math.floor(u.x),Math.floor(u.y)); } }
   else if(u.mode==='root'){   // 鼻で ほりほり
     if(Math.random()<dt*8) dustFx(u.x+u.dir*.25,u.y);
     if(u.t>=1.8){ const t=u.tile;
@@ -1731,7 +1757,7 @@ const Bgm={
   // ステージごとの雰囲気（GDD 51）：同じ曲を テンポ・調・音色・リズムを かえて 演奏する。queen は短調ふうに
   THEMES:{meadow:{bpm:128,tr:0,lead:'triangle',clap:1,kick:1},garden:{bpm:120,tr:5,lead:'triangle',bell:1,clap:1,kick:1},
     forest:{bpm:110,tr:-3,lead:'sine',clap:0,kick:1,bell:1},water:{bpm:116,tr:2,lead:'sine',bell:1,clap:0,kick:1},
-    sky:{bpm:124,tr:7,lead:'triangle',bell:1,clap:1,kick:0},night:{bpm:96,tr:-5,lead:'sine',bell:1,clap:0,kick:0},
+    sky:{bpm:124,tr:7,lead:'triangle',bell:1,clap:1,kick:0},clouds:{bpm:124,tr:7,lead:'triangle',bell:1,clap:1,kick:0},night:{bpm:96,tr:-5,lead:'sine',bell:1,clap:0,kick:0},
     queen:{bpm:134,tr:-2,lead:'square',clap:1,kick:1,minor:1}},
   th:null,
   setTheme(n){ this.th=this.THEMES[n]||this.THEMES.meadow; this.BPM=this.th.bpm; },
@@ -1886,7 +1912,7 @@ function goLandscape(){
   }catch(_){}
 }
 const FONT='"Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic UI","Meiryo",sans-serif';
-const GROUND=[['#cdaa91','#c6a189'],['#bcd486','#b4cd7d'],['#86cf72','#7cc869']];
+const GROUND=[['#cdaa91','#c6a189'],['#e2e6a4','#dbe09a'],['#86cf72','#7cc869']];   // 土／つぼみ（まだ途中の うすい黄緑）／花畑（濃い緑）
 const BODY=[122,212,170], BODY_IN=[150,228,190], GROWN=[255,226,214], GROWN_IN=[255,240,226], EDGE=[58,128,104];
 const LIGHT=(()=>{const v=[-.2,.45,1],l=Math.hypot(...v);return v.map(a=>a/l);})();
 
@@ -1895,6 +1921,7 @@ function groundEllipse(x,y,r,z=0){ const p=iso(x,y,z); ctx.beginPath(); ctx.elli
 function rrect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
 
 function drawBoard(time){
+  const hint=(!S.cleared&&S.started&&flowerRate()>=.8)?Math.pow(Math.max(0,Math.sin(time*2.1)),4):0;   // 約3秒ごとに ふわっと
   // 島の影と側面
   drawIslandSides(time);
 
@@ -1920,8 +1947,11 @@ function drawBoard(time){
       continue; }
     if(t.type!=='ground'){ ctx.fillStyle=t.type==='glass'?'#dfe9e4':t.type==='queen'?'#6b5a7a':t.type==='mill'?'#c9b48f':'#a9cf8c'; ctx.fill(); continue; }   // 生け垣・木・温室・風車・女王の 足もと
     if(t.hard){   // 荒地：石ころまじりの かたい土（スコップや ウリ坊で たがやすと 土に なる）
-      ctx.fillStyle=alt?'#9b8b7d':'#958577'; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1; ctx.stroke();
-      for(let q=0;q<4;q++){ const c=iso(i+.18+((t.crack[q]*7.3+q*.27)%1)*.64,j+.18+((t.crack[(q+1)%4]*5.1+q*.31)%1)*.64); ctx.fillStyle=q%2?'#7c6f66':'#b1a49a'; ctx.beginPath(); ctx.ellipse(c.x,c.y,3.2+q%2,1.9,0,0,7); ctx.fill(); }
+      ctx.fillStyle=alt?'#8a6b52':'#83654d'; ctx.fill(); ctx.strokeStyle='rgba(255,230,200,.14)'; ctx.lineWidth=1; ctx.stroke();
+      ctx.strokeStyle='rgba(60,40,28,.55)'; ctx.lineWidth=1.3; ctx.lineCap='round';   // ゴツゴツの ひび
+      { const a=iso(i+.15+t.crack[1]*.2,j+.5), b=iso(i+.45,j+.35+t.crack[2]*.2), c=iso(i+.8,j+.45+t.crack[3]*.2); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(c.x,c.y); ctx.stroke(); }
+      for(let q=0;q<5;q++){ const c=iso(i+.16+((t.crack[q%4]*7.3+q*.27)%1)*.68,j+.16+((t.crack[(q+1)%4]*5.1+q*.31)%1)*.68), r=2.6+(q%3)*.9;   // かたい 石ころ
+        ctx.fillStyle='#5f4a3a'; ctx.beginPath(); ctx.ellipse(c.x+.8,c.y+.8,r,r*.6,0,0,7); ctx.fill(); ctx.fillStyle=q%2?'#a88a70':'#94775e'; ctx.beginPath(); ctx.ellipse(c.x,c.y,r,r*.6,0,0,7); ctx.fill(); }
       if(t.dig>0){ poly(P); ctx.fillStyle=`rgba(205,160,110,${clamp(t.dig/CFG.DIG_T)*.6})`; ctx.fill(); }
     }else{
     ctx.fillStyle=GROUND[t.state][alt]; ctx.fill();
@@ -1938,6 +1968,7 @@ function drawBoard(time){
     if(t.shade){ const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(40,70,40,.13)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,26,12,0,0,7); ctx.fill(); }   // 木かげ
     if(t.wet>0){ poly(P); ctx.fillStyle=`rgba(70,50,40,${Math.min(.2,t.wet*.14)})`; ctx.fill(); }   // じょうろで ぬれた 地面
     if(t.garden){ poly(P); ctx.fillStyle=t.garden.kind==='royal'?'rgba(255,215,120,.22)':'rgba(255,240,170,.2)'; ctx.fill(); }   // ひみつの庭
+    if(hint>0&&t.type==='ground'&&t.state<2){ poly(P); ctx.fillStyle=`rgba(255,250,190,${hint*.5})`; ctx.fill(); }
     if(t.flash>0){ poly(P); ctx.fillStyle=`rgba(255,255,230,${t.flash*.7})`; ctx.fill(); }
   }
   drawGardenFences();
@@ -1985,9 +2016,9 @@ function drawHedge(i,j){
   ctx.fillStyle='rgba(255,255,255,.18)'; const q=iso(i+.35,j+.35,.62); ctx.beginPath(); ctx.ellipse(q.x,q.y,7,3,0,0,7); ctx.fill();
 }
 function drawTree(i,j,time){
-  const p=iso(i+.5,j+.5), h=S.hana, behind=Math.hypot(h.x-i-.5,h.y-j-.5)<1.9&&h.x+h.y<i+j+1;
+  const p=iso(i+.5,j+.5), behind=hidesChar(i+.5,j+.5,2.6,1.5);
   ctx.fillStyle='rgba(40,60,30,.25)'; ctx.beginPath(); ctx.ellipse(p.x+3,p.y+2,26,11,0,0,7); ctx.fill();
-  ctx.save(); if(behind) ctx.globalAlpha=.5;   // うしろに Hanaが いると すける
+  ctx.save(); if(behind) ctx.globalAlpha=.28;   // うしろに キャラが いると すける（よく 見えるように うすく）
   ctx.fillStyle='#8a5a3c'; ctx.strokeStyle='#5d3b26'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(p.x-5,p.y); ctx.lineTo(p.x-3.5,p.y-32); ctx.lineTo(p.x+3.5,p.y-32); ctx.lineTo(p.x+5,p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
   const sw=Math.sin(time*1.1+i*1.7)*1.5+windSway(time,i)*14, B=[[0,-52,20],[-14,-40,15],[14,-41,15],[-6,-63,13],[9,-61,12]];
   const col=STAGE.theme==='forest'?['#6a9e45','#4c7a33']:['#5aa94d','#3f7a35'];
@@ -2312,14 +2343,32 @@ function drawFaceMark(g,grown,pop,pulse){ // 単位正方形の中に描く（90
   }
 }
 // 点の あつまりの 外がわ（凸包）を、角を まるめた 形で えがく
-function roundHull(pts,r){
+function roundHull(pts,r,g=ctx){
   const P=pts.map(p=>({x:p.x,y:p.y})).sort((a,b)=>a.x-b.x||a.y-b.y), cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x), lo=[], up=[];
   for(const p of P){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
   for(let k=P.length-1;k>=0;k--){ const p=P[k]; while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0) up.pop(); up.push(p); }
   const H=lo.slice(0,-1).concat(up.slice(0,-1)), n=H.length; if(n<3) return;
-  ctx.beginPath(); const m0={x:(H[n-1].x+H[0].x)/2,y:(H[n-1].y+H[0].y)/2}; ctx.moveTo(m0.x,m0.y);
-  for(let k=0;k<n;k++){ const a=H[k], b=H[(k+1)%n], rr=Math.min(r,Math.hypot(b.x-a.x,b.y-a.y)/2); ctx.arcTo(a.x,a.y,(a.x+b.x)/2,(a.y+b.y)/2,rr); }
-  ctx.closePath();
+  g.beginPath(); const m0={x:(H[n-1].x+H[0].x)/2,y:(H[n-1].y+H[0].y)/2}; g.moveTo(m0.x,m0.y);
+  for(let k=0;k<n;k++){ const a=H[k], b=H[(k+1)%n], rr=Math.min(r,Math.hypot(b.x-a.x,b.y-a.y)/2); g.arcTo(a.x,a.y,(a.x+b.x)/2,(a.y+b.y)/2,rr); }
+  g.closePath();
+}
+// 左上パネル用：Cubeを 小さく えがく（上・右・左の 3面。いまの 向き・色・マーク・巨大Cubeの とちゅうも）
+function drawCubeIcon(g,c,time){
+  const W=128, k=40, cx=W/2, cy=W*.78, P=(x,y,z)=>({x:cx+(x-y)*k,y:cy+(x+y)*k*.5-z*k*1.19});
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,W);
+  const [PB,PI,PE]=cubePal(c,time), faces=[];
+  for(const slot of ['T','E','S']){ const L=LOCAL[slot]; faces.push({id:c.ori[slot],pts:L.p.map(q=>P(q[0],q[1],q[2])),br:.64+.36*Math.max(0,L.n[0]*LIGHT[0]+L.n[1]*LIGHT[1]+L.n[2]*LIGHT[2])}); }
+  g.fillStyle='rgba(59,47,42,.18)'; g.beginPath(); g.ellipse(cx,cy+2,k*.95,k*.42,0,0,7); g.fill();
+  roundHull(faces.flatMap(f=>f.pts),8,g); g.fillStyle=shade(PE,.95); g.fill();
+  const pulse=grownCount(c)===5?.5+.5*Math.sin(time*6):0;
+  for(const f of faces){ const [a,b,,d]=f.pts, grown=c.grown[f.id];
+    g.save(); g.transform(b.x-a.x,b.y-a.y,d.x-a.x,d.y-a.y,a.x,a.y);
+    rrect(g,.05,.05,.9,.9,.26); g.fillStyle=shade(grown?GROWN:PB,f.br); g.fill();
+    rrect(g,.16,.16,.68,.68,.22); g.fillStyle=shade(grown?GROWN_IN:PI,f.br); g.fill();
+    if(!grown&&c.giant&&c.prog[f.id]>0) drawSprout(g,c.prog[f.id],9); else drawFaceMark(g,grown,9,pulse);
+    if(c.attr[f.id]) drawAttrIcon(g,c.attr[f.id],.22,.22,.15);
+    g.restore(); }
+  const top=faces[0]; g.beginPath(); g.moveTo(top.pts[0].x,top.pts[0].y); for(const q of top.pts.slice(1)) g.lineTo(q.x,q.y); g.closePath(); g.strokeStyle='#e0a400'; g.lineWidth=2.5; g.stroke();   // 上の面（スタンプする面）は 金色
 }
 function drawCube(c,time){
   const G=cubeGeometry(c), last=grownCount(c)===5, pulse=last?.5+.5*Math.sin(time*6):0;
@@ -2440,7 +2489,18 @@ function flowerBend(t,wx,wy){
   return r;
 }
 
+// 大きな もの（花・木・女王）の うしろに キャラ（Hana・Cube・ウリ坊・モグラ・じぶん）が いるか
+function hidesChar(x,y,depth,wide){
+  const L=[S.hana]; for(const c of S.cubes) L.push(cubePos(c)); if(S.uribo) L.push(S.uribo); if(Photo.me) L.push(Photo.me);
+  if(S.mole&&S.mole.mode==='pop') L.push({x:S.mole.px,y:S.mole.py});
+  for(const q of L){ const dd=(x+y)-(q.x+q.y); if(dd>-.05&&dd<depth&&Math.abs((x-y)-(q.x-q.y))<wide) return true; }
+  return false;
+}
 function drawBigFlower(b,time){
+  const giant=b.kind&&b.kind!=='normal', see=hidesChar(b.i+.5,b.j+.5,giant?3.4:2.2,giant?1.5:1.05);
+  if(see){ ctx.save(); ctx.globalAlpha=.38; drawBigFlower0(b,time); ctx.restore(); } else drawBigFlower0(b,time);
+}
+function drawBigFlower0(b,time){
   const p=iso(b.i+.5,b.j+.5), k=easeBack(clamp(b.t/.7)), [pc,po,cc]=FLOWER_COL[b.c];
   let sway=Math.sin(time*1.4+b.ph)*.05+windSway(time,b.ph)*.6;
   if(b.wt<3) sway+=b.wd*Math.exp(-2*b.wt)*Math.sin(9*b.wt)*.22;
@@ -2587,7 +2647,7 @@ function render(){
     else if(it.k==='tree') drawTree(it.i,it.j,time);
     else if(it.k==='glass') drawGlass(it.i,it.j);
     else if(it.k==='mill') drawMill(it.i,it.j,time);
-    else if(it.k==='queen') drawQueen(time);
+    else if(it.k==='queen'){ const Q=S.queen, see=hidesChar(Q.i+1,Q.j+1,3.6,1.8); if(see){ ctx.save(); ctx.globalAlpha=.4; drawQueen(time); ctx.restore(); } else drawQueen(time); }
     else if(it.k==='rare'){ const t=it.t, p=iso(t.i+.5,t.j+.5), s=easeBack(clamp(t.pop*1.4)); drawRareFlower(ctx,t.rare,p.x,p.y,s,Math.sin(time*1.5+t.i)*.05+flowerBend(t,t.i+.5,t.j+.5)*.6+windSway(time,t.j)); }
     else if(it.k==='honey'){ const p=iso(S.honey.x,S.honey.y), b=Math.abs(Math.sin(S.honey.t*3))*4;
       ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,10,4,0,0,7); ctx.fill();
@@ -2774,6 +2834,7 @@ const UI={
     else msg=S.cubes.length?'Cubeを '+T+'してね':'つぎの Cubeが ふってくるよ';
     if(msg!==this.lastMsg){ this.lastMsg=msg; const el=$('cubeMsg'); el.textContent=msg; el.className=ok?'ok':''; }
     $('cubeCount').textContent=c?'さいた面 '+grownCount(c)+'/6':'';
+    $('cubeIcon').hidden=!c; if(c) drawCubeIcon($('cubeIcon').getContext('2d'),c,S.time);   // えらんだ Cubeの 絵（いまの 向きで）
     const key=c?c.id+'|'+touch:'none'+touch;
     if(key!==this.infoKey){ this.infoKey=key; this.cubeInfo(c,T); }
     this.updItem(touch); this.updQuest();    this.updItem(touch); this.updQuest();
