@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.7.2</title>
+<title>TONS OF FLOWERS — Prototype v0.7.5</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.7.2（GDD v3.6準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.7.5（GDD v3.6準拠・2.5D・単一HTML）
+  v0.7.5：左上の せつめいの Cubeの 絵を、画面の 上の Cubeと 同じ 大きさに。
+  v0.7.4：開花の範囲を 以前と v0.7の 中間に（花畑 半径2.4・1段階成長 3.2）。クリアまでの 時間を 短く。
+  v0.7.3：クリアの よろこびは、木や 大きな花の うしろなら 見える所へ 出てから ジャンプ。クリア画面に「ステージ ○ クリア！」。
+          荒地には Cubeが 入れない（荒地に 大きな花が 根づく 不具合を 修正）。スコップは ジャンプして ザクッ！と つきさして 1マスずつ たがやす（音・土・うね）。
+          ウリ坊は 花畑→つぼみ→土 と 1段ずつ ほりつづける（早く おいはらうほど 被害が すくない）。
   v0.7.2：つぼみの地面を うすい黄緑に、荒地を ゴツゴツした こげ茶に（花率の 数え方と 見た目を そろえる）。花率80%を こえたら 残りの マスが ときどき 光る。
           大きな花・巨大な花・女王・木の うしろに キャラが いると すける。ウリ坊は Cubeを すりぬけない（モグラも Cubeの下を通らない）。モグラを ゆっくりに。
           雲の上の庭は 背景を 雲の 空に。左上の せつめいに タップした Cubeの 絵。
@@ -101,12 +106,12 @@
   #goal::after{content:"90%で クリア";position:absolute;top:15px;right:-12px;white-space:nowrap;font-size:11px;font-weight:800}
 
   /* Cubeの6面パネル */
-  #cubePanel{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 10px 6px;width:240px}
+  #cubePanel{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 10px 6px;width:max-content;min-width:220px;max-width:min(400px,46vw)}
   #cubePanel .name{font-weight:700;font-size:13px;display:flex;justify-content:space-between}
   #cubeBody{display:flex;gap:6px;align-items:flex-start}
-  #cubeIcon{width:56px;height:56px;flex:none}
+  #cubeIcon{flex:none}   /* 大きさは 画面の Cubeに あわせて スクリプトで きめる */
   #cubeIcon[hidden]{display:none}
-  #cubeInfo{font-size:12.5px;font-weight:700;line-height:1.45;margin:3px 0 4px;flex:1;min-width:0}
+  #cubeInfo{font-size:12.5px;font-weight:700;line-height:1.45;margin:3px 0 4px;flex:1;min-width:150px;max-width:190px}
   #cubeInfo .ln{display:flex;gap:5px;align-items:flex-start}
   #cubeInfo canvas{width:16px;height:16px;flex:none;margin-top:1px}
   #cubeInfo .g{flex:none;width:16px;text-align:center;font-weight:800}
@@ -269,10 +274,9 @@
   /* よこ向きのスマホ（高さが小さい画面）：HUDを小さくまとめ、盤面の場所を広げる */
   @media (max-height:520px){
     #hint{display:none}
-    #cubePanel{width:205px;padding:3px 7px 4px;border-radius:12px}
+    #cubePanel{min-width:190px;padding:3px 7px 4px;border-radius:12px}
     #cubePanel .name{font-size:11.5px}
     #cubeInfo{font-size:11px;line-height:1.35;margin:2px 0}
-    #cubeIcon{width:44px;height:44px}
     #cubeMsg{font-size:11px;min-height:14px}
     .btn{padding:5px 9px;font-size:12px;border-radius:10px}
     #rate{top:calc(max(8px,env(safe-area-inset-top)) + 38px);width:min(196px,28vw);padding:4px 10px 20px;border-radius:12px}
@@ -354,7 +358,7 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.7.2</p>
+    <p class="sub">Prototype v0.7.5</p>
     <ol class="how">
       <li><span><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが そばまで あるくよ。そばで もういちど <span class="sp">タップ</span><span class="pc">クリック</span>すると「上の面」に スタンプ。たねの面が 花の面に なるよ。</span></li>
       <li>Cubeは じぶんで ころころ ころがるよ。Cubeの 上の 図で、どの面が まだ たねか たしかめよう。Cubeを タップすると、ひだり上に その Cubeの せいかくや とくちょうが でるよ。</li>
@@ -439,7 +443,7 @@
 
 <div class="overlay" id="clearOv" hidden>
   <div class="card">
-    <h1>ステージ クリア！</h1>
+    <h1 id="clearTitle">ステージ クリア！</h1>
     <p class="sub" id="clearSub">あれた草原が 花で いっぱいに なったよ</p>
     <div class="stats">
       <div><b id="stRate">0%</b>花率</div>
@@ -471,8 +475,8 @@ const CFG = {
   DROP_T:0.75, BLOOM_T:0.55,
   STAMP_RANGE:1.7,            // スタンプできる距離（タイル）
   HANA_SPEED:3.4,
-  R_FLOWER:1.9,               // 開花で一気に花畑になる半径（v0.7で 2.9→1.9）
-  R_BUD:2.7,                  // 開花で1段階育つ半径（v0.7で 3.7→2.7）
+  R_FLOWER:2.4,               // 開花で一気に花畑になる半径（v0.7で 2.9→1.9、v0.7.4で 中間の 2.4）
+  R_BUD:3.2,                  // 開花で1段階育つ半径（v0.7で 3.7→2.7、v0.7.4で 中間の 3.2）
   CLEAR:0.9,
   MAX_CUBES:3,
   SPAWN_DELAY:1.3,
@@ -486,7 +490,7 @@ const CFG = {
   HONEY_COOL:12,              // こうかが きれてから つぎの はちみつが できるまで（秒）
   CAN_T:12, CAN_FIRST:15, CAN_COOL:25,
   SCOOP_T:15, SCOOP_FIRST:8, SCOOP_COOL:20,   // スコップ：使える秒数（歩いている間だけ へる）／最初に出るまで／使いおわってから次まで
-  DIG_T:.45,
+  DIG_T:.5,
   MOLE_STEP:2.8, MOLE_FIRST:18, MOLE_COOL:30, MOLE_MAX:14,   // モグラ：1マス すすむ秒数（v0.7.2で 1.9→2.8 ゆっくりに）／最初に出るまで／つぎまで／さいだい マス数
   URI_SPEED:2.4, URI_FIRST:22, URI_COOL:40, URI_STAY:32,     // ウリ坊：はしる速さ／最初に出るまで／つぎまで／いる時間                  // 荒地 1マスを たがやすのに かかる秒数   // じょうろ（GDD 18.6）：水が出る秒数／ステージ開始から最初に出るまで／使いおわってから次まで（秒）
   GIANT:1.3,                  // 巨大Cubeの大きさ（ふつうの何倍）／1つの面に 3回 スタンプ
@@ -617,7 +621,7 @@ function newState(idx){
     gardens:[], gardenDirty:false, gardenT:0, growT:0, rareN:0, giantN:0, told:{},
     honey:null, honeyT:0, honeyCool:4, bees:[],
     can:null, waterT:0, canCool:CFG.CAN_FIRST, wateredN:0,
-    scoop:null, digT:0, scoopCool:CFG.SCOOP_FIRST, tilledN:0,
+    scoop:null, digT:0, dig:null, scoopCool:CFG.SCOOP_FIRST, tilledN:0,
     mole:null, moleCool:CFG.MOLE_FIRST, moleN:0, uribo:null, uriCool:CFG.URI_FIRST, uriN:0,
     wind:flags.wind?{dir:flags.wind,t:0}:null, windFx:[],
     pollen:[], pollenT:flags.pollen?flags.pollen*.7:0,
@@ -687,7 +691,7 @@ function restTime(c){
 const grownCount=c=>c.grown.reduce((n,g)=>n+(g?1:0),0);
 const cubeAt=(i,j,except)=>S.cubes.find(c=>c!==except&&c.i===i&&c.j===j);
 const bigAt=(i,j)=>S.bigFlowers.find(b=>b.i===i&&b.j===j);
-function cubeFree(i,j,c){ const t=tileAt(i,j), u=S.uribo; return !!t&&t.type==='ground'&&!cubeAt(i,j,c)&&!(u&&u.mode!=='leave'&&Math.floor(u.x)===i&&Math.floor(u.y)===j); }   // ウリ坊の いる マスにも ころがらない
+function cubeFree(i,j,c){ const t=tileAt(i,j), u=S.uribo; return !!t&&t.type==='ground'&&!t.hard&&!cubeAt(i,j,c)&&!(u&&u.mode!=='leave'&&Math.floor(u.x)===i&&Math.floor(u.y)===j); }   // ウリ坊の いる マスにも ころがらない
 const hanaOn=(i,j)=>Math.floor(S.hana.x)===i&&Math.floor(S.hana.y)===j;
 function cubeCanEnter(i,j,c){ return cubeFree(i,j,c)&&!hanaOn(i,j); }
 // Cubeの転がる方向は基本ランダム。軽い傾向として、たねの面が上に来る方向・花のない場所を少し選びやすい。
@@ -982,8 +986,8 @@ function updateGarden(dt){
   if(!S.cleared){ S.growT+=dt; if(S.growT>=1){ S.growT-=1; slowGrowth(); } }
   if(S.flags.garden&&S.gardenDirty&&(S.gardenT+=dt)>=.4){ S.gardenT=0; detectGardens(); }
   const goalOk=S.flags.boss?(S.queen&&S.queen.pure&&S.queen.pureT>2.2):flowerRate()>=CFG.CLEAR;   // 女王戦は 女王を じょうかしたら クリア
-  if(!S.cleared && goalOk){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); S.honey=null; S.honeyT=0; S.can=null; S.waterT=0; S.scoop=null; S.digT=0;   // 落ちている アイテムと こうかは おわり。もっている ものは つぎへ もちこす
-    const h=S.hana; h.joy=true; h.joyT=0; h.joyN=-1; }   // Hanaが ぴょんぴょん跳ねて よろこぶ
+  if(!S.cleared && goalOk){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); S.honey=null; S.honeyT=0; S.can=null; S.waterT=0; S.scoop=null; S.digT=0; S.dig=null;   // 落ちている アイテムと こうかは おわり。もっている ものは つぎへ もちこす
+    startJoy(); }   // Hanaが ぴょんぴょん跳ねて よろこぶ
 }
 const flowerRate=()=>S.groundCount?S.flowerCount/S.groundCount:0;
 
@@ -1075,12 +1079,31 @@ function goalStep(h,dt){   // 目的地へ すすむ向き（グリッド上）�
   const dx=w.x-h.x, dy=w.y-h.y, d=Math.hypot(dx,dy);
   return {x:dx,y:dy,m:Math.min(1,d/(CFG.HANA_SPEED*dt+1e-9))};
 }
+// 木・大きな花・巨大な花・女王の うしろに かくれて しまう 場所か
+function hiddenAt(x,y){
+  const O=[]; for(const row of S.tiles) for(const t of row) if(t.type==='tree') O.push([t.i+.5,t.j+.5,2.6,1.5]);
+  for(const b of S.bigFlowers){ const g=b.kind&&b.kind!=='normal'; O.push([b.i+.5,b.j+.5,g?3.4:2.2,g?1.5:1.05]); }
+  if(S.queen) O.push([S.queen.i+1,S.queen.j+1,3.6,1.8]);
+  return O.some(([ox,oy,dep,w])=>{ const dd=(ox+oy)-(x+y); return dd>-.05&&dd<dep&&Math.abs((ox-oy)-(x-y))<w; });
+}
+function startJoy(){
+  const h=S.hana; h.goal=null; h.joyWait=false;
+  if(hiddenAt(h.x,h.y)){   // かくれていたら、いちばん近い 見える マス（なるべく 手前）へ 歩いてから
+    const reach=walkMap(Math.floor(h.x),Math.floor(h.y)); let best=null,bd=1e9;
+    for(const k of reach.keys()){ const x=k%COLS+.5, y=Math.floor(k/COLS)+.5; if(!walkable(x,y)||hiddenAt(x,y)) continue;
+      const d=Math.hypot(x-h.x,y-h.y)-((x+y)-(h.x+h.y))*.3; if(d<bd){ bd=d; best={x,y}; } }
+    if(best){ h.goal={x:best.x,y:best.y,stuckT:0}; h.joyWait=true; return; }
+  }
+  h.joy=true; h.joyT=0; h.joyN=-1;
+}
 const JOY={P:.52, LOCK:1.5};   // よろこびジャンプ：1回の周期（秒）／最初にかならず見せる秒数
 function updateHana(dt){
   const h=S.hana, v=Input.vector();
   if(h.stampT>0) h.stampT-=dt;
   h.moving=false;
   if(v.x||v.y) h.goal=null;   // キーボードで うごかしたら、タップの目的地は やめる
+  if(h.joyWait&&!h.goal){ h.joyWait=false; h.joy=true; h.joyT=0; h.joyN=-1; }   // 見える ところに ついたら よろこぶ
+  if(S.dig&&S.dig.t<CFG.DIG_T){ h.moving=false; return; }   // スコップで ザクッと ほっている 間は 立ちどまる
   // ステージクリア：正面を向いて ぴょんぴょん跳ねて よろこぶ。動かすと おしまい（最初の1.5秒は止めない）
   if(h.joy){
     if((v.x||v.y||h.goal)&&h.joyT>JOY.LOCK) h.joy=false;
@@ -1391,12 +1414,14 @@ function updateUribo(dt){
     if(move(CFG.URI_SPEED)){ u.mode='root'; u.t=0; u.tile=tileAt(Math.floor(u.x),Math.floor(u.y)); } }
   else if(u.mode==='root'){   // 鼻で ほりほり
     if(Math.random()<dt*8) dustFx(u.x+u.dir*.25,u.y);
-    if(u.t>=1.8){ const t=u.tile;
+    if(u.t>=1.6){ const t=u.tile; let stay=false; u.t=0;
       if(t&&t.type==='ground'){
-        if(t.hard){ t.hard=false; t.pop=0; t.flash=1; S.tilledN++; ringFx(t.i+.5,t.j+.5,'#e8cfa8',.5); if((S.told.uriTill|0)<2){ S.told.uriTill=(S.told.uriTill|0)+1; textFx(t.i+.5,t.j+.5,1.8,'ほりほり♪ 荒地が 土に なった','#8a5a3c',1,2.2); } }
-        else if(t.state===2&&!t.garden&&!bigAt(t.i,t.j)){ setTile(t,1); wiltFx(t.i+.5,t.j+.5); if((S.told.uriDig|0)<2){ S.told.uriDig=(S.told.uriDig|0)+1; textFx(t.i+.5,t.j+.5,1.8,'あっ、花畑を ほっちゃった','#7a5a48',1,2.2); } }
+        if(t.hard){ t.hard=false; t.tilled=S.time; t.pop=0; t.flash=1; S.tilledN++; ringFx(t.i+.5,t.j+.5,'#e8cfa8',.5); if((S.told.uriTill|0)<2){ S.told.uriTill=(S.told.uriTill|0)+1; textFx(t.i+.5,t.j+.5,1.8,'ほりほり♪ 荒地が 土に なった','#8a5a3c',1,2.2); } }
+        else if(t.state>0&&!t.garden&&!bigAt(t.i,t.j)){   // 花畑 → つぼみ → 土 と 1段ずつ。土に なるまで その場で ほりつづける
+          setTile(t,t.state-1); wiltFx(t.i+.5,t.j+.5); stay=t.state>0;
+          if((S.told.uriDig|0)<2){ S.told.uriDig=(S.told.uriDig|0)+1; textFx(t.i+.5,t.j+.5,1.8,t.state===1?'あっ、花畑を ほっちゃった':'つぼみも ほっちゃった… 土に もどった','#7a5a48',1,2.2); } }
       }
-      const nt=uriTarget(u); if(nt){ u.tx=nt.i+.5; u.ty=nt.j+.5; u.mode='run'; u.t=0; } else u.t=0;
+      if(!stay){ const nt=uriTarget(u); if(nt){ u.tx=nt.i+.5; u.ty=nt.j+.5; u.mode='run'; } }
     }
   }
 }
@@ -1460,16 +1485,23 @@ function updateScoop(dt){
   if(!S.scoop&&!INV.scoop&&S.digT<=0&&hardLeft){ S.scoopCool-=dt; if(S.scoopCool<=0){ S.scoopCool=CFG.SCOOP_COOL; spawnScoop(); } }
   if(S.scoop){ S.scoop.t+=dt;
     if(Math.hypot(S.scoop.x-h.x,S.scoop.y-h.y)<.6){ S.scoop=null; invSet('scoop',true); Sfx.get(); textFx(h.x,h.y,2.1,'スコップ ゲット！','#8a5a3c',1.2,2); if(h.goal&&h.goal.scoop) h.goal=null; } }
-  if(S.digT>0&&h.moving){
-    S.digT-=dt;
-    for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){
-      const t=tileAt(i,j); if(!t||!t.hard||Math.hypot(i+.5-h.x,j+.5-h.y)>.8) continue;
-      t.dig=(t.dig||0)+dt;
-      if(Math.random()<dt*14) dustFx(i+.5,j+.5);
-      if(t.dig>=CFG.DIG_T){ t.hard=false; t.dig=0; t.pop=0; t.flash=1; S.tilledN++; Sfx.dig(); ringFx(i+.5,j+.5,'#e8cfa8',.5);
-        if(!S.told.till){ S.told.till=1; textFx(i+.5,j+.5,1.9,'たがやした！ これで 花が そだつよ','#8a5a3c',1.05,2.4); } }
+  if(S.dig){   // ジャンプ（前半）→ ザクッと つきさす（なかほど）→ ほりかえす
+    const D=S.dig; D.t+=dt;
+    if(!D.hit&&D.t>=CFG.DIG_T*.55){ D.hit=true; const t=D.tile;
+      t.hard=false; t.dig=0; t.pop=0; t.flash=1; t.tilled=S.time; S.tilledN++; Sfx.zak(); ringFx(t.i+.5,t.j+.5,'#e8cfa8',.6);
+      for(let k=0;k<10&&S.fx.petals.length<420;k++){ const a=Math.random()*6.283, sp=.6+Math.random()*1.1;   // 土の かたまりが とびちる
+        S.fx.petals.push({x:t.i+.5,y:t.j+.5,z:.05,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,vz:2+Math.random()*1.8,life:0,max:.7,c:k%3?'#7a5136':'#a8754e',rot:Math.random()*6,vr:(Math.random()-.5)*10,s:2.6+Math.random()*1.8}); }
+      textFx(t.i+.5,t.j+.5,1.2,'ザクッ！','#8a5a3c',1.15,.8);
+      if(!S.told.till){ S.told.till=1; textFx(t.i+.5,t.j+.5,2.1,'たがやした！ これで 花が そだつよ','#8a5a3c',1.05,2.4); } }
+    if(D.t>=CFG.DIG_T){ S.dig=null; }
+  }
+  if(S.digT>0){
+    if(h.moving||S.dig) S.digT-=dt;   // 歩いている間と ほっている 間だけ へる
+    if(!S.dig){   // 足もとの 荒地を みつけたら、そこを ザクッ
+      let best=null,bd=.75; for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){ const t=tileAt(i,j); if(!t||!t.hard) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
+      if(best){ S.dig={tile:best,t:0,hit:false}; const vx=best.i+.5-h.x, vy=best.j+.5-h.y, sx=vx-vy; if(Math.abs(sx)>.05) h.sx=sx>0?1:-1; }
     }
-    if(S.digT<=0){ S.digT=0; S.scoopCool=CFG.SCOOP_COOL; textFx(h.x,h.y,2,'スコップを しまったよ','#7a5a48',1,2); }
+    if(S.digT<=0&&!S.dig){ S.digT=0; S.scoopCool=CFG.SCOOP_COOL; textFx(h.x,h.y,2,'スコップを しまったよ','#7a5a48',1,2); }
   }
 }
 function spawnScoop(){
@@ -1731,6 +1763,14 @@ const Sfx={
   pop(){ [660,880,1320].forEach((f,k)=>this.tone(f,.12,{delay:k*.07,vol:.07,type:'triangle'})); },
   oink(){ this.tone(330,.12,{to:260,vol:.06,type:'square'}); this.tone(300,.1,{delay:.13,to:230,vol:.05,type:'square'}); },
   shutter(){ this.tone(2400,.04,{vol:.08,type:'square'}); this.tone(1200,.08,{delay:.05,vol:.06,type:'square'}); },
+  nz:null,
+  noise(dur,vol,f0,f1,delay=0,q=1.2){ if(!this.on||!this.ac) return; try{ const ac=this.ac;
+    if(!this.nz){ const b=ac.createBuffer(1,ac.sampleRate*.5,ac.sampleRate), d=b.getChannelData(0); for(let k=0;k<d.length;k++) d[k]=Math.random()*2-1; this.nz=b; }
+    const t=ac.currentTime+delay, src=ac.createBufferSource(), f=ac.createBiquadFilter(), g=ac.createGain();
+    src.buffer=this.nz; f.type='bandpass'; f.Q.value=q; f.frequency.setValueAtTime(f0,t); f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(f); f.connect(g); g.connect(ac.destination); src.start(t,Math.random()*.3); src.stop(t+dur+.02); }catch(_){} },
+  zak(){ this.noise(.09,.55,2600,700,0,1.4); this.tone(120,.09,{to:55,vol:.16,type:'triangle'}); this.noise(.07,.32,1800,500,.1,1.6); this.tone(95,.06,{delay:.1,to:50,vol:.08,type:'triangle'}); },   // ザク…ッ
   dig(){ this.tone(160,.12,{to:90,vol:.09,type:'triangle'}); this.tone(900,.06,{delay:.05,vol:.03}); },
   water(){ for(let k=0;k<6;k++) this.tone(1400+Math.random()*900,.08,{delay:k*.05,to:900,vol:.03}); this.tone(520,.3,{to:700,vol:.05,type:'triangle'}); },
   drink(){ for(let k=0;k<4;k++) this.tone(300+k*90,.12,{delay:k*.1,to:420+k*90,vol:.07}); this.tone(1568,.5,{delay:.45,vol:.07}); },
@@ -1956,7 +1996,11 @@ function drawBoard(time){
     }else{
     ctx.fillStyle=GROUND[t.state][alt]; ctx.fill();
     ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1; ctx.stroke();
-    if(t.state===0){ // 荒地のひび
+    if(t.state===0&&t.tilled){   // スコップで たがやした ふかふかの 土（うねの すじ）
+      ctx.strokeStyle='rgba(95,60,38,.6)'; ctx.lineWidth=2.2; ctx.lineCap='round';
+      for(const v of [.28,.5,.72]){ const a=iso(i+.15,j+v), b=iso(i+.85,j+v); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+      ctx.strokeStyle='rgba(255,230,200,.35)'; ctx.lineWidth=1; for(const v of [.22,.44,.66]){ const a=iso(i+.18,j+v), b=iso(i+.82,j+v); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    }else if(t.state===0){ // 土のひび
       ctx.strokeStyle='rgba(120,84,62,.5)'; ctx.lineWidth=1.1; ctx.lineCap='round';
       const a=iso(i+.2+t.crack[0]*.3,j+.25+t.crack[1]*.3), b=iso(i+.5+t.crack[2]*.2,j+.5), c=iso(i+.6+t.crack[3]*.25,j+.8-t.crack[0]*.3);
       ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(c.x,c.y); ctx.stroke();
@@ -2201,9 +2245,16 @@ function drawHanaCan(time){
   ctx.restore();
 }
 function drawHanaScoop(time){
-  if(!(S.digT>0)) return;
-  const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, dig=h.moving?Math.sin(time*14)*.35:0;
-  ctx.save(); ctx.translate(p.x+sd*12,p.y-4); ctx.scale(sd,1); drawScoop(ctx,0,0,.62,(h.moving?.7:-.2)+dig); ctx.restore();
+  if(!(S.digT>0)&&!S.dig) return;
+  const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1;
+  if(S.dig){   // ふりあげて（ジャンプ中）→ ザクッと 地面に つきさす → 土を ほりかえす
+    const u=S.dig.t/CFG.DIG_T, t=S.dig.tile, q=iso(t.i+.5,t.j+.5);
+    let x,y,a,sc=.75;
+    if(u<.55){ const k=u/.55, hop=Math.sin(k*Math.PI)*13; x=p.x+sd*10; y=p.y-18-hop-8*k; a=-1.1+.3*k; }
+    else { const k=(u-.55)/.45; x=lerp(q.x,q.x+sd*4,k); y=q.y+2-4*k; a=.15-.6*k; }
+    ctx.save(); ctx.translate(x,y); ctx.scale(sd,1); drawScoop(ctx,0,0,sc,a); ctx.restore(); return;
+  }
+  ctx.save(); ctx.translate(p.x+sd*12,p.y-4); ctx.scale(sd,1); drawScoop(ctx,0,0,.62,h.moving?.5+Math.sin(time*10)*.15:-.2); ctx.restore();
 }
 function drawHanaAura(time){
   const h=S.hana, p=iso(h.x,h.y);
@@ -2354,12 +2405,12 @@ function roundHull(pts,r,g=ctx){
 }
 // 左上パネル用：Cubeを 小さく えがく（上・右・左の 3面。いまの 向き・色・マーク・巨大Cubeの とちゅうも）
 function drawCubeIcon(g,c,time){
-  const W=128, k=40, cx=W/2, cy=W*.78, P=(x,y,z)=>({x:cx+(x-y)*k,y:cy+(x+y)*k*.5-z*k*1.19});
+  const W=g.canvas.width, u=W/128, k=W*.3125, cx=W/2, cy=W*.78, P=(x,y,z)=>({x:cx+(x-y)*k,y:cy+(x+y)*k*.5-z*k*1.19});   // キャンバスの 大きさに あわせて えがく
   g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,W);
   const [PB,PI,PE]=cubePal(c,time), faces=[];
   for(const slot of ['T','E','S']){ const L=LOCAL[slot]; faces.push({id:c.ori[slot],pts:L.p.map(q=>P(q[0],q[1],q[2])),br:.64+.36*Math.max(0,L.n[0]*LIGHT[0]+L.n[1]*LIGHT[1]+L.n[2]*LIGHT[2])}); }
   g.fillStyle='rgba(59,47,42,.18)'; g.beginPath(); g.ellipse(cx,cy+2,k*.95,k*.42,0,0,7); g.fill();
-  roundHull(faces.flatMap(f=>f.pts),8,g); g.fillStyle=shade(PE,.95); g.fill();
+  roundHull(faces.flatMap(f=>f.pts),8*u,g); g.fillStyle=shade(PE,.95); g.fill();
   const pulse=grownCount(c)===5?.5+.5*Math.sin(time*6):0;
   for(const f of faces){ const [a,b,,d]=f.pts, grown=c.grown[f.id];
     g.save(); g.transform(b.x-a.x,b.y-a.y,d.x-a.x,d.y-a.y,a.x,a.y);
@@ -2368,7 +2419,7 @@ function drawCubeIcon(g,c,time){
     if(!grown&&c.giant&&c.prog[f.id]>0) drawSprout(g,c.prog[f.id],9); else drawFaceMark(g,grown,9,pulse);
     if(c.attr[f.id]) drawAttrIcon(g,c.attr[f.id],.22,.22,.15);
     g.restore(); }
-  const top=faces[0]; g.beginPath(); g.moveTo(top.pts[0].x,top.pts[0].y); for(const q of top.pts.slice(1)) g.lineTo(q.x,q.y); g.closePath(); g.strokeStyle='#e0a400'; g.lineWidth=2.5; g.stroke();   // 上の面（スタンプする面）は 金色
+  const top=faces[0]; g.beginPath(); g.moveTo(top.pts[0].x,top.pts[0].y); for(const q of top.pts.slice(1)) g.lineTo(q.x,q.y); g.closePath(); g.strokeStyle='#e0a400'; g.lineWidth=2.5*u; g.stroke();   // 上の面（スタンプする面）は 金色
 }
 function drawCube(c,time){
   const G=cubeGeometry(c), last=grownCount(c)===5, pulse=last?.5+.5*Math.sin(time*6):0;
@@ -2539,6 +2590,7 @@ function drawHana(time){
   if(!H.ok||!H.img) return drawHanaVector(time);   // 画像が使えないときは従来の描画
   const h=S.hana, p=iso(h.x,h.y);
   let hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;   // スタンプ時の小さなジャンプ
+  if(S.dig){ const u=S.dig.t/CFG.DIG_T; hop=Math.max(hop,u<.55?Math.sin(u/.55*Math.PI)*13:0); }   // スコップ：ぴょんと とんで つきさす
   let row=H.rows[(h.moving?'walk_':'idle_')+h.face]|0;
   let fr=h.moving?Math.floor(h.walk*H.walkFps)%H.frames:H.idleSeq[Math.floor(time*H.idleFps)%H.idleSeq.length];
   let kx=1, ky=1, tilt=0;
@@ -2758,7 +2810,6 @@ const UI={
       const g=b.querySelector('canvas').getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,112,112);
       const f=has?1:act[k]/MAX[k];
       if(k==='honey') drawHoneyJar(g,56,104,3.1,f); else if(k==='can') drawCan(g,46,98,2.5,f); else drawScoop(g,56,104,2.6,-.5);
-      if(k==='scoop'&&!has){ g.fillStyle='rgba(59,47,42,.18)'; g.fillRect(0,104-96*f,112,96*f); }
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
@@ -2834,12 +2885,17 @@ const UI={
     else msg=S.cubes.length?'Cubeを '+T+'してね':'つぎの Cubeが ふってくるよ';
     if(msg!==this.lastMsg){ this.lastMsg=msg; const el=$('cubeMsg'); el.textContent=msg; el.className=ok?'ok':''; }
     $('cubeCount').textContent=c?'さいた面 '+grownCount(c)+'/6':'';
-    $('cubeIcon').hidden=!c; if(c) drawCubeIcon($('cubeIcon').getContext('2d'),c,S.time);   // えらんだ Cubeの 絵（いまの 向きで）
+    $('cubeIcon').hidden=!c;
+    if(c){   // えらんだ Cubeの 絵（いまの 向きで）。大きさは 画面の 上の Cubeと 同じ
+      const cv=$('cubeIcon'), css=Math.round(clamp(77.8*View.scale*cs(c)/CFG.CUBE,40,220)), px=Math.round(css*Math.min(window.devicePixelRatio||1,2.5));
+      if(cv.width!==px){ cv.width=cv.height=px; cv.style.width=cv.style.height=css+'px'; }
+      drawCubeIcon(cv.getContext('2d'),c,S.time); }
     const key=c?c.id+'|'+touch:'none'+touch;
     if(key!==this.infoKey){ this.infoKey=key; this.cubeInfo(c,T); }
     this.updItem(touch); this.updQuest();    this.updItem(touch); this.updQuest();
     // クリア表示
-    if(S.cleared&&!S.clearShown&&S.time-S.clearAt>2.6&&!S.events.length){   // Hanaのよろこぶ姿を見せてから
+    if(S.cleared&&!S.clearShown&&S.time-S.clearAt>2.6&&!S.events.length&&!S.hana.joyWait&&(!S.hana.joy||S.hana.joyT>1.4)){   // Hanaのよろこぶ姿を見せてから
+      $('clearTitle').textContent='ステージ '+(S.stage+1)+' クリア！';
       S.clearShown=true; $('stRate').textContent=Math.floor(flowerRate()*100)+'%'; $('stChain').textContent=S.maxChain; $('stPerfect').textContent=S.perfects;
       const lastSt=S.stage+1>=STAGES.length; $('nextBtn').textContent=lastSt?'さいしょの ステージへ':'つぎの ステージへ';
       $('clearSub').textContent=lastSt?'ぜんぶの ステージを 花で いっぱいに したよ。ありがとう！':'「'+STAGE.name+'」が 花で いっぱいに なったよ';
