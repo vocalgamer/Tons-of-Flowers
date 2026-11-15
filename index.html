@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.7</title>
+<title>TONS OF FLOWERS — Prototype v0.7.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.7（GDD v3.6準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.7.1（GDD v3.6準拠・2.5D・単一HTML）
+  v0.7.1：ゲーム開始時に 全画面に する（PCも。スマホは さらに よこ向きロック）。右上に 全画面の きりかえボタン（⛶）。
   v0.7  ：ステージの縁を あたたかく（土の層・草のふち・たれさがる つる）。背景を 宇宙（星くず・星雲）に。Cubeの角を まるく、息づかいの ゆれ。
           モグラ（13面〜：地面の下を もこもこ。通り道は土にもどり 花がさかない。先頭にさわると テヘペロして きえる）と
           ウリ坊（14面〜：地上を はしり 鼻で ほりかえす。荒地→土、花畑→つぼみ。さわると よろこんで かえる）。
@@ -301,6 +302,7 @@
 </div>
 
 <div id="btns">
+  <button class="btn" id="fullBtn" aria-label="全画面に する">⛶</button>
   <button class="btn" id="helpBtn" aria-label="あそびかた">？</button>
   <button class="btn" id="soundBtn" aria-label="おとの きりかえ">おと ON</button>
   <button class="btn" id="restartBtn">やりなおす</button>
@@ -335,7 +337,7 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.7</p>
+    <p class="sub">Prototype v0.7.1</p>
     <ol class="how">
       <li><span><span class="sp">Bloom Cube を タップ</span><span class="pc">Bloom Cube を クリック</span>すると、Hanaが そばまで あるくよ。そばで もういちど <span class="sp">タップ</span><span class="pc">クリック</span>すると「上の面」に スタンプ。たねの面が 花の面に なるよ。</span></li>
       <li>Cubeは じぶんで ころころ ころがるよ。Cubeの 上の 図で、どの面が まだ たねか たしかめよう。Cubeを タップすると、ひだり上に その Cubeの せいかくや とくちょうが でるよ。</li>
@@ -1872,10 +1874,12 @@ window.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&['Equal','Minu
 // スマホ：全画面にして よこ向きにロック（Android Chrome等。iPhoneは非対応なので案内画面のみ）
 const PORTRAIT=window.matchMedia?window.matchMedia('(orientation:portrait) and (pointer:coarse)'):{matches:false};
 const canFull=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+// ゲーム開始時は 全画面に する（PCも スマホも。ブラウザの きまりで、ボタンを おしたときにしか 全画面に できない）
+// スマホは さらに よこ向きに ロック（Android Chrome等。iPhoneは 全画面に 非対応の ブラウザが おおい）
 function goLandscape(){
-  if(!document.body.classList.contains('touch')&&!PORTRAIT.matches) return;
   try{
-    const el=document.documentElement, lock=()=>{ try{ const p=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape'); if(p&&p.catch) p.catch(()=>{}); }catch(_){} };
+    const touch=document.body.classList.contains('touch')||PORTRAIT.matches;
+    const el=document.documentElement, lock=()=>{ if(!touch) return; try{ const p=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape'); if(p&&p.catch) p.catch(()=>{}); }catch(_){} };
     if(document.fullscreenElement||document.webkitFullscreenElement){ lock(); return; }
     const p=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen?el.webkitRequestFullscreen():null;
     if(p&&p.then) p.then(lock).catch(()=>{}); else lock();
@@ -2658,7 +2662,10 @@ const UI={
     $('selBtn').onclick=()=>this.openSelect();
     $('dexBtn').onclick=()=>this.openDex();
     $('storyBtn').onclick=()=>this.story(false,null);
-    $('stGo').onclick=()=>{ Sfx.ensure(); $('stageOv').hidden=true; document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); };
+    $('fullBtn').hidden=!canFull; $('fullBtn').onclick=()=>{ if(document.fullscreenElement||document.webkitFullscreenElement){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} } else goLandscape(); };
+    const fsMark=()=>{ const on=!!(document.fullscreenElement||document.webkitFullscreenElement); $('fullBtn').textContent=on?'⤡':'⛶'; $('fullBtn').setAttribute('aria-label',on?'全画面を やめる':'全画面に する'); };
+    document.addEventListener('fullscreenchange',fsMark); document.addEventListener('webkitfullscreenchange',fsMark);
+    $('stGo').onclick=()=>{ Sfx.ensure(); goLandscape(); $('stageOv').hidden=true; document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); };
     $('selBack').onclick=()=>this.closeSub('selectOv');
     $('dexBack').onclick=()=>this.closeSub('dexOv');
     $('storyNext').onclick=()=>this.storyStep();
