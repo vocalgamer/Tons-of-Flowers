@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.8</title>
+<title>TONS OF FLOWERS — Prototype v0.8.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.8（GDD v3.6準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.8.1（GDD v3.6準拠・2.5D・単一HTML）
+  v0.8.1：オープニング（Op）。「タップしてね」→ 花で かざった 木の かんばんが おちてきて、花が さくと 1文字ずつ「Tons of Flowers」。
+          専用の 軽快な 伴奏（BPM132・4小節）＋ 文字ごとの ポコッ（のぼる メロディ）＋ フィナーレ。とばす／メニューの「オープニング」で もう一度。
   v0.8  ：左上の せつめいは 大きさ固定（スマホでは せまく）・Cubeの絵の 余白を へらす。風の エフェクトを うねる 光の すじ＋舞う 葉っぱに。
           雲の上の庭は 雲の すきまが 透明で うしろの 雲の 空が 見える。最初の 説明を 2項目＋かじょうがきに。スコップは 荒地が ないと ブブー。
           地面の しつかんを リアルに。荒地は 3回 ほって 土に。まれに 温泉が わいて おサルさんが つかる。池で 魚が はねる。
@@ -229,6 +231,10 @@
   @media (max-height:520px){ #camWrap{width:140px;height:140px} }
   /* エンディング */
   #endOv{position:fixed;inset:0;z-index:40;background:#141633}
+  #opOv{position:fixed;inset:0;z-index:25;background:#8fd3f2;cursor:pointer}
+  #opOv[hidden]{display:none}
+  #opCv{position:absolute;inset:0;width:100%;height:100%}
+  #opSkip{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
   #endOv[hidden]{display:none}
   #endCv{position:absolute;inset:0;width:100%;height:100%}
   #endSkip{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
@@ -370,7 +376,7 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.8</p>
+    <p class="sub">Prototype v0.8.1</p>
     <ol class="how">
       <li><span>Cubeを <span class="sp">タップ</span><span class="pc">クリック</span>して、そばで もういちど <span class="sp">タップ</span><span class="pc">クリック</span>。「上の面」に 花の スタンプ！</span></li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
@@ -388,6 +394,7 @@
       <button class="btn" id="selBtn">ステージを えらぶ</button>
       <button class="btn" id="dexBtn">はなずかん</button>
       <button class="btn" id="storyBtn">おはなし</button>
+      <button class="btn" id="opBtn">オープニング</button>
     </div>
   </div>
 </div>
@@ -436,6 +443,11 @@
     <button class="big" id="camShot">とる</button>
     <button class="link" id="camCancel">やめる</button>
   </div>
+</div>
+
+<div id="opOv" hidden>
+  <canvas id="opCv" aria-label="オープニング"></canvas>
+  <button class="btn" id="opSkip" hidden>とばす</button>
 </div>
 
 <div id="endOv" hidden>
@@ -1786,7 +1798,7 @@ const Input={
     window.addEventListener('keydown',e=>{
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(!S.started) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
@@ -1830,7 +1842,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -3005,6 +3017,9 @@ const UI={
     $('camShot').onclick=()=>Photo.camShot();
     $('camCancel').onclick=()=>Photo.camStop();
     $('endSkip').onclick=()=>Ending.stop();
+    $('opCv').addEventListener('pointerdown',e=>{ e.preventDefault(); Op.tap(); });
+    $('opSkip').onclick=e=>{ e.stopPropagation(); Op.finish(); };
+    $('opBtn').onclick=()=>{ $('startOv').hidden=true; Op.show(()=>{ $('startOv').hidden=false; },true); };
     $('endDone').onclick=()=>Ending.stop();
     $('helpBtn').onclick=()=>{ $('startBtn').textContent=S.started?'つづける':'はじめる'; $('startOv').hidden=false; $('startBtn').focus(); };
     $('soundBtn').onclick=()=>this.toggleSound();
@@ -3026,7 +3041,7 @@ const UI={
     if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
   },
   start(){
-    Sfx.ensure(); goLandscape();
+    Op.kill(); Sfx.ensure(); goLandscape();
     if(!Save.data.story&&!S.started){ Save.data.story=true; Save.save(); this.story(false,()=>this.start()); return; }   // はじめてのときは おはなしから（GDD 3）
     const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   toastT:0,
@@ -3299,6 +3314,168 @@ const Ending={on:false,t:0,last:0,cb:null,
 };
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
+// オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
+// 音は さわらないと 鳴らせないので、さいしょに「タップしてね」の 画面を はさむ
+const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null,
+  TXT:'Tons of Flowers', E:60/132/2, T0:.9,
+  COL:[[255,111,155],[255,190,60],[178,128,240],[255,128,92],[96,196,140],[255,150,190],[120,170,240]],
+  show(cb,now){ for(const k of Object.keys(this)) if(/^(l\d+|landed|fx)$/.test(k)) delete this[k]; this.cb=cb||null; this.on=true; this.go=false; this.t=0; this.last=0; this.parts=[]; this.fadeT=0; $('opOv').hidden=false; $('opOv').style.opacity=1; $('opSkip').hidden=true; this.fit(); requestAnimationFrame(ts=>this.loop(ts)); if(now) this.tap(); },
+  fit(){ const c=$('opCv'), d=Math.min(window.devicePixelRatio||1,2); c.width=Math.round(window.innerWidth*d); c.height=Math.round(window.innerHeight*d); this.dpr=d; },
+  slot(i){ return this.T0+8*this.E+i*this.E; },          // 文字 i が さく 時こく（2小節目から 8分音符ごと）
+  get fin(){ return this.T0+3*8*this.E; },                // フィナーレ（4小節目）
+  get end(){ return this.T0+4*8*this.E+.6; },
+  tap(){
+    if(!this.on||this.fadeT) return;
+    if(!this.go){ Sfx.ensure(); goLandscape(); this.go=true; this.t=0; $('opSkip').hidden=false; this.music(); return; }
+    if(this.t>=this.fin) this.finish();
+  },
+  finish(){ if(!this.on||this.fadeT) return; this.fadeT=.001; $('opSkip').hidden=true;
+    try{ if(this.out){ const t=this.ac.currentTime; this.out.gain.cancelScheduledValues(t); this.out.gain.setValueAtTime(this.out.gain.value,t); this.out.gain.linearRampToValueAtTime(0,t+.35); } }catch(_){} },
+  kill(){ if(!this.on) return; this.on=false; $('opOv').hidden=true; try{ if(this.out) this.out.gain.value=0; }catch(_){} },
+  loop(ts){
+    if(!this.on) return;
+    const dt=Math.min(.05,(ts-this.last)/1000||0); this.last=ts;
+    if(this.go) this.t+=dt;
+    if(this.fadeT){ this.fadeT+=dt; $('opOv').style.opacity=Math.max(0,1-this.fadeT/.45);
+      if(this.fadeT>=.45){ this.kill(); const cb=this.cb; this.cb=null; if(cb) cb(); return; } }
+    else if(this.go&&this.t>=this.end) this.finish();
+    this.step(dt); this.draw();
+    requestAnimationFrame(t=>this.loop(t));
+  },
+  // ---- 音（自分専用の音量つまみに つなぐ → とばしたら すぐ 消せる）----
+  music(){
+    const ac=Sfx.ac; if(!Sfx.on||!ac) return; this.ac=ac;
+    try{
+      this.out=ac.createGain(); this.out.gain.value=.9; this.out.connect(ac.destination);
+      if(!this.nz){ const b=ac.createBuffer(1,ac.sampleRate*.6,ac.sampleRate), d=b.getChannelData(0); for(let k=0;k<d.length;k++) d[k]=Math.random()*2-1; this.nz=b; }
+      const A=ac.currentTime+.05, E=this.E, mf=m=>440*Math.pow(2,(m-69)/12);
+      const o=(type,f,t,dur,vol,to)=>{ const os=ac.createOscillator(), g=ac.createGain(); os.type=type; os.frequency.setValueAtTime(f,A+t); if(to) os.frequency.exponentialRampToValueAtTime(to,A+t+dur);
+        g.gain.setValueAtTime(.0001,A+t); g.gain.exponentialRampToValueAtTime(vol,A+t+.01); g.gain.exponentialRampToValueAtTime(.0001,A+t+dur); os.connect(g); g.connect(this.out); os.start(A+t); os.stop(A+t+dur+.03); };
+      const n=(t,dur,vol,f0,f1,type='bandpass',q=1)=>{ const s=ac.createBufferSource(), f=ac.createBiquadFilter(), g=ac.createGain(); s.buffer=this.nz; f.type=type; f.Q.value=q;
+        f.frequency.setValueAtTime(f0,A+t); f.frequency.exponentialRampToValueAtTime(f1,A+t+dur); g.gain.setValueAtTime(vol,A+t); g.gain.exponentialRampToValueAtTime(.0001,A+t+dur);
+        s.connect(f); f.connect(g); g.connect(this.out); s.start(A+t,Math.random()*.2); s.stop(A+t+dur+.02); };
+      // かんばんが ひゅーっと おちて ドスン
+      n(0,.8,.18,3000,400,'bandpass',.8); o('sine',1400,0,.75,.03,500);
+      o('triangle',130,.86,.3,.3,48); n(.86,.25,.35,900,150,'lowpass',.7); o('square',660,1.0,.08,.03,880);
+      // まわりの 花が ぽぽぽっと さく
+      [84,88,91,96,91,96,100].forEach((m,k)=>o('sine',mf(m),this.T0+.15+k*.1,.16,.05,mf(m)*1.2));
+      // 伴奏（BPM132・4小節）：C → F → G → C。ベース＋うら拍コード＋キック・クラップ・ハット
+      const R=[36,41,43,36], CH={36:[60,64,67],41:[60,65,69],43:[59,62,67]};
+      for(let b=0;b<4;b++){ const t0=this.T0+b*8*E, r=R[b];
+        for(let e=0;e<8;e++){ const t=t0+e*E;
+          if(e%2===0){ o('triangle',mf(r+(e===4?7:e===6?12:0)),t,E*1.6,.2); o('sine',150,t,.13,.32,45); }   // ベース＋キック
+          else { for(const m of CH[r]) o('triangle',mf(m),t,E*.7,.03); }                                    // うら拍の コード
+          if(e===2||e===6) n(t,.11,.22,1700,1100,'bandpass',1.1);                                          // クラップ
+          n(t,.04,.08,8000,7000,'highpass',.7);                                                            // ハット
+        } }
+      // 1文字ずつ ポコッ（のぼっていく メロディ）
+      const MEL=[72,76,79,84,0,81,79,0,76,79,81,84,86,88,0];
+      MEL.forEach((m,k)=>{ if(!m) return; const t=this.slot(k); o('sine',mf(m)*.5,t,.09,.12,mf(m)*1.1); o('triangle',mf(m),t+.03,.28,.13); o('sine',mf(m+12),t+.05,.18,.04); });
+      // フィナーレ：シャララーン＋和音
+      const F=this.fin; n(F,1.2,.12,9000,3000,'highpass',.5);
+      [72,76,79,84,88,91,96].forEach((m,k)=>o('triangle',mf(m),F+k*.05,.9,.08));
+      for(const m of [48,60,64,67,72]) o('triangle',mf(m),F+.35,1.6,.06);
+      [96,100,103,108].forEach((m,k)=>o('sine',mf(m),F+.6+k*.08,.25,.03));
+      // しめの ジャン！
+      const Z=this.T0+4*8*E; for(const m of [36,48,60,64,67,72]) o('triangle',mf(m),Z,.6,.07); n(Z,.4,.15,6000,2000,'highpass',.6);
+    }catch(e){ console.error(e); }
+  },
+  // ---- 花びらの つぶ ----
+  burst(x,y,n,sp,cols){ for(let k=0;k<n;k++){ const a=Math.random()*6.283, v=sp*(.4+Math.random()*.8); this.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-sp*.4,r:Math.random()*6,vr:(Math.random()-.5)*10,c:cols[k%cols.length],life:1.2+Math.random()*.8,age:0,s:.7+Math.random()*.7}); } },
+  step(dt){ const L=this.parts; for(let k=L.length-1;k>=0;k--){ const p=L[k]; p.age+=dt; if(p.age>=p.life){ L.splice(k,1); continue; } p.vy+=160*dt*(this.u||1); p.vx*=1-1.5*dt; p.vy*=1-1.2*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=p.vr*dt; } },
+  // ---- 絵 ----
+  flower(g,x,y,r,col,k,rot){   // k：0＝つぼみ → 1＝まんかい
+    if(k<=0) return; g.save(); g.translate(x,y); g.rotate(rot||0);
+    if(k<.35){ const s=k/.35; g.fillStyle='#5aa647'; g.beginPath(); g.ellipse(0,0,r*.35*s,r*.55*s,0,0,7); g.fill(); g.fillStyle=shade(col,1); g.beginPath(); g.ellipse(0,-r*.2*s,r*.22*s,r*.32*s,0,0,7); g.fill(); g.restore(); return; }
+    const s=easeBack((k-.35)/.65);
+    g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.72); g.lineWidth=Math.max(1,r*.08);
+    for(let q=0;q<5;q++){ g.save(); g.rotate(q*1.2566); g.beginPath(); g.ellipse(0,-r*.55*s,r*.38*s,r*.55*s,0,0,7); g.fill(); g.stroke(); g.restore(); }
+    g.fillStyle='#ffd24a'; g.strokeStyle='#d99a1e'; g.beginPath(); g.arc(0,0,r*.3*s,0,7); g.fill(); g.stroke();
+    g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.arc(-r*.1*s,-r*.1*s,r*.09*s,0,7); g.fill();
+    g.restore(); },
+  leaf(g,x,y,r,rot){ g.save(); g.translate(x,y); g.rotate(rot); g.fillStyle='#4f9a43'; g.strokeStyle='#2f6b2a'; g.lineWidth=1; g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(r*.5,-r*.45,r,0); g.quadraticCurveTo(r*.5,r*.45,0,0); g.fill(); g.stroke(); g.restore(); },
+  draw(){
+    const c=$('opCv'), g=c.getContext('2d'), d=this.dpr||1, W=c.width/d, H=c.height/d, t=this.t, u=this.u=Math.min(W/900,H/520);
+    if(W<40||H<40) return;   // 画面サイズが まだ きまっていない（0だと くりかえしが おわらない）
+    g.setTransform(d,0,0,d,0,0);
+    // 空・雲・丘
+    const sky=g.createLinearGradient(0,0,0,H); sky.addColorStop(0,'#8fd3f2'); sky.addColorStop(.6,'#d8f0f2'); sky.addColorStop(1,'#f4f1d8'); g.fillStyle=sky; g.fillRect(0,0,W,H);
+    const sun=g.createRadialGradient(W*.12,H*.1,0,W*.12,H*.1,260*u); sun.addColorStop(0,'rgba(255,250,215,.9)'); sun.addColorStop(1,'rgba(255,250,215,0)'); g.fillStyle=sun; g.fillRect(0,0,W,H);
+    const T=performance.now()/1000;
+    g.fillStyle='rgba(255,255,255,.85)';
+    for(let k=0;k<4;k++){ const x=((hash(k*3)*W+T*(8+k*3)*u)%(W+300*u))-150*u, y=H*(.08+hash(k*7)*.25), s=(60+hash(k)*50)*u; g.beginPath(); g.ellipse(x,y,s,s*.32,0,0,7); g.ellipse(x-s*.45,y+s*.06,s*.5,s*.26,0,0,7); g.ellipse(x+s*.4,y-s*.08,s*.45,s*.3,0,0,7); g.fill(); }
+    const gy=H*.8;
+    g.fillStyle='#a6dc8a'; g.beginPath(); g.moveTo(0,gy-30*u); for(let x=0;x<=W;x+=20) g.lineTo(x,gy-30*u-Math.sin(x/W*6.283*1.3+1)*22*u); g.lineTo(W,H); g.lineTo(0,H); g.fill();
+    g.fillStyle='#86cf72'; g.beginPath(); g.moveTo(0,gy); for(let x=0;x<=W;x+=20) g.lineTo(x,gy-Math.sin(x/W*6.283+.4)*14*u); g.lineTo(W,H); g.lineTo(0,H); g.fill();
+    for(let k=0;k<46;k++){ const x=hash(k*11)*W, y=gy+8*u+hash(k*17)*(H-gy-10*u), r=(5+hash(k*5)*4)*u*(.6+(y-gy)/(H-gy)); this.flower(g,x,y,r,this.COL[k%this.COL.length],1,Math.sin(T*1.5+k)*.15); }
+    // まだ タップ前
+    if(!this.go){
+      const p=.5+.5*Math.sin(T*4); g.textAlign='center'; g.textBaseline='middle';
+      this.flower(g,W/2,H*.4,(58+p*8)*u,this.COL[0],1,T*.4);
+      g.font=`900 ${Math.max(18,30*u)}px ${FONT}`; g.lineWidth=6*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
+      const msg=document.body.classList.contains('touch')?'タップしてね':'クリックしてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
+      this.partsDraw(g); return;
+    }
+    // かんばん（ひゅーっと おちて、ぽよんと はずむ）
+    const bw=740*u, bh=310*u, cx=W/2, cy0=H*.42, dk=clamp(t/.86);
+    let cy=cy0; if(t<.86) cy=lerp(-bh,cy0,dk*dk); else if(t<1.5){ const q=(t-.86)/.64; cy=cy0-Math.abs(Math.sin(q*Math.PI*2))*(1-q)*26*u; }
+    const sq=t>.86&&t<1.06?1-.06*Math.sin((t-.86)/.2*Math.PI):1;
+    if(t>=.86&&!this.landed){ this.landed=true; this.burst(cx-bw*.4,gy,10,180*u,['#d8c3a0','#c9b28a']); this.burst(cx+bw*.4,gy,10,180*u,['#d8c3a0','#c9b28a']); }
+    // 柱（地面に うまっている）
+    for(const sx of [-1,1]){ const px=cx+sx*bw*.36, pw=30*u; const gr=g.createLinearGradient(px-pw/2,0,px+pw/2,0); gr.addColorStop(0,'#8a5630'); gr.addColorStop(.5,'#b07443'); gr.addColorStop(1,'#7a4a26');
+      g.fillStyle=gr; g.fillRect(px-pw/2,cy0,pw,gy+6*u-cy0); g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(px,gy+6*u,pw*.9,6*u,0,0,7); g.fill();
+      for(let k=0;k<3;k++) this.leaf(g,px+(k%2?pw*.4:-pw*.4),gy-(30+k*40)*u,16*u,k%2?-.6:3.7); }
+    g.save(); g.translate(cx,cy); g.scale(1/sq*.5+.5,sq);
+    // 板（3まい）
+    g.fillStyle='rgba(60,30,10,.25)'; g.beginPath(); g.roundRect?g.roundRect(-bw/2+8*u,-bh/2+10*u,bw,bh,22*u):g.rect(-bw/2+8*u,-bh/2+10*u,bw,bh); g.fill();
+    g.fillStyle='#6e4021'; g.beginPath(); g.roundRect?g.roundRect(-bw/2,-bh/2,bw,bh,22*u):g.rect(-bw/2,-bh/2,bw,bh); g.fill();
+    const iw=bw-28*u, ih=bh-28*u, ph=ih/3;
+    for(let k=0;k<3;k++){ const y=-ih/2+k*ph, gr=g.createLinearGradient(0,y,0,y+ph); gr.addColorStop(0,['#d9a066','#cf955a','#d59c62'][k]); gr.addColorStop(1,['#b97a42','#b0723c','#b67841'][k]);
+      g.fillStyle=gr; g.fillRect(-iw/2,y+1.5*u,iw,ph-3*u);
+      g.save(); g.beginPath(); g.rect(-iw/2,y+1.5*u,iw,ph-3*u); g.clip(); g.strokeStyle='rgba(110,64,33,.28)'; g.lineWidth=1.3*u;   // 木目
+      for(let q=0;q<6;q++){ const yy=y+ph*(.15+q*.14), a=(hash(k*9+q)-.5)*8*u; g.beginPath(); g.moveTo(-iw/2,yy); for(let x=-iw/2;x<=iw/2;x+=24*u) g.lineTo(x,yy+Math.sin(x/(60*u)+q+k)*a); g.stroke(); }
+      const kx=(hash(k*5)-.5)*iw*.8, ky=y+ph*.5; g.strokeStyle='rgba(110,64,33,.45)'; g.beginPath(); g.ellipse(kx,ky,10*u,5*u,0,0,7); g.stroke(); g.beginPath(); g.ellipse(kx,ky,4*u,2*u,0,0,7); g.stroke();
+      g.restore();
+      g.fillStyle='rgba(255,235,200,.25)'; g.fillRect(-iw/2,y+1.5*u,iw,2*u); }
+    for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const x=sx*(bw/2-16*u), y=sy*(bh/2-16*u); g.fillStyle='#8c8c8c'; g.beginPath(); g.arc(x,y,5*u,0,7); g.fill(); g.fillStyle='#d6d6d6'; g.beginPath(); g.arc(x-1.4*u,y-1.4*u,2*u,0,7); g.fill(); }
+    // 花の かざり（上の へり・四すみ）。着地のあと ぽぽぽっと さく
+    const deco=[]; for(let k=0;k<13;k++) deco.push([-bw/2+bw*k/12,-bh/2+(k%2?-4:6)*u,(k%3===1?26:20)*u]);
+    deco.push([-bw/2-6*u,bh/2-10*u,28*u],[bw/2+6*u,bh/2-10*u,28*u],[-bw/2+30*u,bh/2+4*u,18*u],[bw/2-30*u,bh/2+4*u,18*u]);
+    deco.forEach(([x,y,r],k)=>{ this.leaf(g,x-r*.2,y+r*.2,r*.9,2.4+k); this.leaf(g,x+r*.2,y+r*.15,r*.9,.6-k*.3); });
+    deco.forEach(([x,y,r],k)=>{ const kk=clamp((t-this.T0-.1-k*.06)/.35); this.flower(g,x,y,r,this.COL[k%this.COL.length],kk,Math.sin(T*1.8+k)*.12); });
+    // もじ
+    const fs=96*u, lines=[['Tons of',-ph*.62],['Flowers',ph*.72]]; let idx=0;
+    g.font=`900 ${fs}px "Arial Rounded MT Bold","Hiragino Maru Gothic ProN",${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.lineJoin='round';
+    for(const [s,ly] of lines){ const ws=[...s].map(ch=>g.measureText(ch).width+(ch===' '?0:2*u)), tw=ws.reduce((a,b)=>a+b,0); let x=-tw/2;
+      [...s].forEach((ch,k)=>{ const x0=x+ws[k]/2; x+=ws[k]; const i=idx++; if(ch===' ') return;
+        const st=this.slot(i), bk=clamp((t-st+.12)/.18), lk=clamp((t-st)/.32), fin=t>=this.fin?clamp((t-this.fin)/.5):0;
+        if(t>=st&&!this['l'+i]){ this['l'+i]=1; this.burst(cx+x0*(1/sq*.5+.5),cy+ly,14,260*u,[shade(this.COL[i%7],1),'#fff6ea','#ffd34d']); }
+        if(lk<=0){ this.flower(g,x0,ly,30*u,this.COL[i%7],bk,0); return; }
+        const s2=easeBack(lk), bob=Math.sin(T*3+i*.7)*3*u-(fin>0&&fin<1?Math.sin(fin*Math.PI)*14*u:0), rot=Math.sin(i*2.3)*.07;
+        g.save(); g.translate(x0,ly+bob); g.rotate(rot); g.scale(s2,s2);
+        g.lineWidth=11*u; g.strokeStyle='#5a3218'; g.strokeText(ch,0,0);
+        g.lineWidth=5*u; g.strokeStyle='#fff6ea'; g.strokeText(ch,0,0);
+        const col=this.COL[i%7], lg=g.createLinearGradient(0,-fs*.4,0,fs*.4); lg.addColorStop(0,shade(col,1.18)); lg.addColorStop(1,shade(col,.88)); g.fillStyle=lg; g.fillText(ch,0,0);
+        if(fin>0){ g.globalAlpha=Math.sin(clamp(fin)*Math.PI)*.7; g.fillStyle='#fff'; g.fillText(ch,0,0); g.globalAlpha=1; }   // キラッ
+        if(i%2===0){ g.rotate(-rot); this.flower(g,ws[k]*.32,-fs*.42,11*u,this.COL[(i+3)%7],1,T+i); }   // ちいさな 花が のっている
+        g.restore(); }); }
+    g.restore();
+    // フィナーレ：花ふぶき＋Hanaと Cubeが よろこぶ
+    if(t>=this.fin&&!this.fx){ this.fx=1; for(let k=0;k<6;k++) this.burst(cx+(k-2.5)*bw*.18,cy-bh*.3,16,420*u,PETAL); }
+    if(t>=this.fin-.4){ const a=clamp((t-this.fin+.4)/.4), hop=Math.abs(Math.sin(T*6))*16*u, hx=cx-bw*.5-10*u;
+      g.globalAlpha=a;
+      if(H2ok()){ const Hs=HANA_SPR, s=Math.min(.75*u+.1,(gy-cy0)*1.4/Hs.ch); g.drawImage(Hs.img,2*Hs.cw,0,Hs.cw,Hs.ch,hx-Hs.ax*s,gy+18*u-Hs.ay*s-hop,Hs.cw*s,Hs.ch*s); }
+      [[122,212,170],[242,142,128],[238,204,92]].forEach((col,k)=>{ const x=cx+bw*.5-20*u+k*42*u, s=17*u, y=gy+14*u-Math.abs(Math.sin(T*6+k*1.3))*20*u;
+        g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.5); g.lineWidth=2; g.beginPath(); g.roundRect?g.roundRect(x-s,y-2*s,2*s,2*s,s*.45):g.rect(x-s,y-2*s,2*s,2*s); g.fill(); g.stroke();
+        g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(x-s*.35,y-s*1.15,2,0,7); g.arc(x+s*.35,y-s*1.15,2,0,7); g.fill(); g.strokeStyle='#3b2f2a'; g.lineWidth=1.5; g.beginPath(); g.arc(x,y-s*.95,3.5,.2,2.9); g.stroke(); });
+      g.globalAlpha=1; }
+    this.partsDraw(g);
+    if(t>=this.fin+.4&&!this.fadeT){ const p=.55+.45*Math.sin(T*5); g.globalAlpha=p; g.textAlign='center'; g.textBaseline='middle'; g.font=`900 ${Math.max(15,24*u)}px ${FONT}`; g.lineWidth=5*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
+      const msg=document.body.classList.contains('touch')?'タップで スタート':'クリックで スタート'; g.strokeText(msg,cx,H-26*u); g.fillText(msg,cx,H-26*u); g.globalAlpha=1; }
+  },
+  partsDraw(g){ for(const p of this.parts){ g.globalAlpha=clamp((p.life-p.age)/.4); g.fillStyle=p.c; g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.beginPath(); g.ellipse(0,0,5*p.s*(this.u||1),2.8*p.s*(this.u||1),0,0,7); g.fill(); g.restore(); } g.globalAlpha=1; }
+};
+
 /* ---- おはなし（GDD 3）の文と さし絵 ---- */
 const STORY_OPEN=[
   'ある日、空から サイコロのような ふしぎな いきもの「Bloom Cube」が たくさん ふってきました。',
@@ -3336,7 +3513,7 @@ function drawStoryArt(g,ending,k){
     else { flowers(34,190); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
   }
 }
-const paused=()=>Ending.on||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
+const paused=()=>Op.on||Ending.on||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
 /* ================================================================
  * 12. MAIN
@@ -3368,7 +3545,8 @@ function frame(ts){
 Bgm.init(); Save.load(); Save.data.inv={};   // ページを ひらきなおしたら あたらしく はじめる（もちものは もちこさない）
 S=newState(0);
 Assets.init(); UI.init(); Input.init(canvas); UI.theme(); fit();
-window.addEventListener('resize',()=>{ fit(); if(Ending.on) Ending.fit(); });
+$('startOv').hidden=true; Op.show(()=>{ $('startOv').hidden=false; $('startBtn').focus(); });   // さいしょは オープニング
+window.addEventListener('resize',()=>{ fit(); if(Ending.on) Ending.fit(); if(Op.on) Op.fit(); });
 window.addEventListener('orientationchange',()=>{ fit(); setTimeout(fit,250); });   // 回転直後はサイズが遅れて変わる端末がある
 document.addEventListener('fullscreenchange',fit);
 document.addEventListener('webkitfullscreenchange',fit);
@@ -3382,7 +3560,7 @@ requestAnimationFrame(frame);
 
 // 動作確認用（コンソールから TOF.state() などで中身を見られます）
 window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule,
-  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX};
+  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX,op:Op};
 })();
 </script>
 </body>
