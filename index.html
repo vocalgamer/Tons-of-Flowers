@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.10.5</title>
+<title>TONS OF FLOWERS — Prototype v0.12.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.10.5（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.12.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.12.1：Cubeの 上の 展開図を スマホでは 大きく（画面上で 1マス 約12px 以上。さいだい 2.6倍。PC・タブレットは ほぼ そのまま）。
+  v0.12.0：風に いみを：「なぎ→よこく→とっぷう」を くりかえし、むきは ランダム。とっぷうで ぽつんと さいた 花が 2〜4マス つぼみに もどり、花びらが かざしもの 土に たねを まく。かぜよけの かげ・かたまりの 花は まもられる。風車は とっぷうで 水を まく。
+  v0.11.0：しゃしん アルバム（見開きの 本に ポラロイド風。ブラウザの 中に 60まい まで）。とった あと・アルバムから シェア／X／LINE／ほぞん。写真の 下に #TonsOfFlowers。自動ダウンロードは やめた。
   v0.10.5：転がっている 間と 着地して 0.15秒は スタンプしない（つぎに 上に 来る 見えない 面に 押せていた）。面の 強調と 矢印も 止まってから。
   v0.10.4：ウィンドウの わくを 木の 板に つると 葉っぱが まきついた 絵に。Cubeの せつめいの まど（左上）は なし。
   v0.10.3：Perfect（タイミングスタンプ）を 廃止。自動で 育つ 面（あか・なかま・連鎖・おひさま）は マークの 面を えらばない。クリア画面の Perfect回数 → さいた Cubeの 数。
@@ -363,6 +366,58 @@
     #itemBox{top:calc(max(8px,env(safe-area-inset-top)) + 118px)}
     #questBox{top:max(8px,env(safe-area-inset-top));width:176px;padding:1px 4px}
   }
+  /* ===== v0.11.0：しゃしんアルバム（見開きの 本に ポラロイド風の 写真を テープで はる）＋ シェア ===== */
+  .btn.albumBtn{position:relative;padding-left:36px;color:#fff8ea;border-color:#2c3f22;text-shadow:0 1px 0 rgba(0,0,0,.35);
+    background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.22),transparent 55%),linear-gradient(135deg,#6f9e5b,#3f6b35)}
+  .btn.albumBtn::before{content:"";position:absolute;left:10px;top:50%;width:18px;height:22px;margin-top:-11px;border-radius:2px 5px 5px 2px;
+    background:linear-gradient(90deg,#b98a3a 0 3px,#7fb06a 3px);box-shadow:inset 0 0 0 1.5px #f0cf72,0 1px 0 rgba(0,0,0,.3)}
+  .btn.albumBtn::after{content:"✿";position:absolute;left:16px;top:50%;margin-top:-9px;font-size:12px;line-height:18px;color:#ffe08a}
+  #albumOv,#pvOv{z-index:20;background:rgba(30,20,14,.45)}
+  #pvOv{z-index:21}
+  .book{position:relative;width:min(940px,96vw);height:min(600px,92vh);border-radius:18px;padding:16px;
+    background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.12),transparent 50%),linear-gradient(135deg,#7a5235,#563521);
+    box-shadow:0 10px 0 rgba(20,12,8,.5),inset 0 0 0 3px #3e2616,inset 0 0 0 6px rgba(240,207,114,.55)}
+  .book::before,.book::after{content:"";position:absolute;width:34px;height:34px;border:4px solid #e8c45e;border-radius:4px;z-index:3;pointer-events:none}
+  .book::before{left:6px;top:6px;border-right:none;border-bottom:none}
+  .book::after{right:6px;bottom:6px;border-left:none;border-top:none}
+  .pages{position:absolute;inset:16px;display:grid;grid-template-columns:1fr 1fr;border-radius:8px;overflow:hidden;
+    background:radial-gradient(circle,rgba(160,120,80,.10) 1px,transparent 1.5px) 0 0/14px 14px,
+      linear-gradient(90deg,#efe2c4 0,#fbf3e2 6%,#fbf3e2 46%,#d8c7a4 49.6%,#b9a47e 50%,#d8c7a4 50.4%,#fbf3e2 54%,#fbf3e2 94%,#efe2c4 100%)}
+  .page{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px 14px;padding:52px 26px 50px;min-height:0}
+  .ph{position:relative;border:none;background:#fff;padding:7px 7px 24px;box-shadow:0 3px 8px rgba(60,40,20,.3);transform:rotate(var(--r,0deg));
+    align-self:center;justify-self:center;width:100%;max-width:230px;transition:transform .15s,box-shadow .15s}
+  .ph:hover,.ph:focus-visible{transform:rotate(0) scale(1.05);box-shadow:0 6px 14px rgba(60,40,20,.35);z-index:2;outline:none}
+  .ph img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#e9e1d0}
+  .ph::before{content:"";position:absolute;left:50%;top:-9px;width:60px;height:18px;margin-left:-30px;background:var(--tape,rgba(255,170,195,.75));transform:rotate(-5deg);
+    box-shadow:0 1px 2px rgba(0,0,0,.12);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 4px,transparent 4px 8px)}
+  .ph b{position:absolute;left:4px;right:4px;bottom:4px;font-size:11px;font-weight:800;color:#7a5236;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .albumTitle{position:absolute;top:2px;left:50%;transform:translateX(-50%);z-index:4;white-space:nowrap;font-size:17px;font-weight:900;letter-spacing:.08em;color:#fff;
+    padding:7px 30px 9px;background:linear-gradient(#e2507d,#c2355f);clip-path:polygon(0 0,100% 0,95% 50%,100% 100%,0 100%,5% 50%);text-shadow:0 1px 0 rgba(0,0,0,.25)}
+  .albumNav{position:absolute;left:0;right:0;bottom:24px;display:flex;justify-content:center;align-items:center;gap:14px;z-index:4;font-weight:800;color:#7a5236}
+  .albumNav .nav{width:40px;height:40px;border-radius:50%;border:2px solid #7a5236;background:#fff8ea;color:#7a5236;font-size:15px;box-shadow:0 3px 0 rgba(90,60,30,.3)}
+  .albumNav .nav:disabled{opacity:.35}
+  .albumNav .cnt{font-size:12px;opacity:.8}
+  #albClose{position:absolute;right:26px;top:26px;z-index:4}
+  .albumEmpty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;margin:0;font-size:17px;font-weight:800;line-height:1.8;color:#7a5236}
+  .albumEmpty[hidden]{display:none}
+  .viewer{position:relative;background:#fff;padding:12px 12px 14px;max-width:min(880px,94vw);max-height:94vh;box-shadow:0 10px 26px rgba(0,0,0,.45);transform:rotate(-.6deg);text-align:center;display:flex;flex-direction:column;align-items:center}
+  .viewer::before{content:"";position:absolute;left:50%;top:-12px;width:90px;height:24px;margin-left:-45px;background:rgba(255,215,120,.8);transform:rotate(3deg);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.3) 0 5px,transparent 5px 10px)}
+  #pvImg{display:block;max-width:100%;max-height:58vh;min-height:0;object-fit:contain;background:#eee}
+  #pvCap{margin:8px 0 10px;font-weight:800;color:#7a5236;font-size:14px}
+  .shareRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .sbtn{border:2px solid var(--ink);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:900;color:#fff;box-shadow:0 3px 0 rgba(59,47,42,.3);text-shadow:0 1px 0 rgba(0,0,0,.25)}
+  .sbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(59,47,42,.3)}
+  .s-share{background:linear-gradient(135deg,#ff8fb1,#e2507d)} .s-x{background:#1a1a1a} .s-line{background:#06c755} .s-save{background:#a0703f} .s-album{background:linear-gradient(135deg,#6f9e5b,#3f6b35)}
+  #pvMsg{min-height:18px;margin:8px 0 0;font-size:12.5px;font-weight:800;color:#c2355f}
+  .pvFoot{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:6px}
+  .pvFoot .link{width:auto;margin:0;color:#8d7f77}
+  #photoSaved .psTop{display:flex;align-items:center;gap:10px;justify-content:center}
+  #photoSaved img{width:120px;margin:0;border-radius:4px}
+  #photoSaved .shareRow{margin-top:6px} #photoSaved .sbtn{padding:6px 12px;font-size:12.5px}
+  @media (max-height:520px){
+    .page{padding:40px 16px 42px;gap:8px 10px} .ph{padding:5px 5px 18px} .ph b{font-size:9.5px} .albumNav{bottom:18px} .albumNav .nav{width:32px;height:32px}
+    .albumTitle{font-size:14px;padding:5px 24px 7px} #pvImg{max-height:50vh} .sbtn{padding:6px 12px;font-size:12.5px}
+  }
 </style>
 </head>
 <body>
@@ -433,6 +488,7 @@
       <button class="btn" id="dexBtn">はなずかん</button>
       <button class="btn" id="storyBtn">おはなし</button>
       <button class="btn" id="opBtn">オープニング</button>
+      <button class="btn albumBtn" id="albumBtn">アルバム</button>
     </div>
   </div>
 </div>
@@ -480,6 +536,31 @@
     <div id="camWrap"><video id="camVid" playsinline autoplay muted></video></div>
     <button class="big" id="camShot">とる</button>
     <button class="link" id="camCancel">やめる</button>
+  </div>
+</div>
+
+<div class="overlay" id="albumOv" hidden>
+  <div class="book">
+    <div class="albumTitle">✿ しゃしん アルバム ✿</div>
+    <button class="btn" id="albClose">とじる</button>
+    <div class="pages"><div class="page" id="albL"></div><div class="page" id="albR"></div>
+      <p class="albumEmpty" id="albEmpty">まだ しゃしんが ないよ。<br>ステージを クリアしたら 📷 しゃしんを とってみよう！</p></div>
+    <div class="albumNav"><button class="nav" id="albPrev" aria-label="まえの ページ">◀</button><span id="albPage">1 / 1</span><span class="cnt" id="albCount"></span><button class="nav" id="albNext" aria-label="つぎの ページ">▶</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="pvOv" hidden>
+  <div class="viewer">
+    <img id="pvImg" alt="しゃしん">
+    <p id="pvCap"></p>
+    <div class="shareRow">
+      <button class="sbtn s-share" id="pvShare">シェア</button>
+      <button class="sbtn s-x" id="pvX">X で ポスト</button>
+      <button class="sbtn s-line" id="pvLine">LINE で おくる</button>
+      <button class="sbtn s-save" id="pvSave">ほぞん</button>
+    </div>
+    <p id="pvMsg"></p>
+    <div class="pvFoot"><button class="link" id="pvDel">すてる</button><button class="btn" id="pvBack">もどる</button></div>
   </div>
 </div>
 
@@ -589,7 +670,7 @@ const STAGES = [
     map:['..........','.RRR......','.R.R..RRR.','.R.R..R.R.','......R...','...H...C..','..........','.RR...RRR.','.R.....R..','..........']},
   { name:'大きな種の広場', theme:'meadow', giantFirst:true, giantP:.2, tip:'大きな Cubeは 1つの面に 3回 スタンプ。さくと 巨大な ひまわりに なるよ',
     map:['..........','..........','..R....R..','..........','....C.....','..........','..H.......','.......W..','..R....W..','..........']},
-  { name:'そよ風の高原', theme:'sky', wind:'E', tip:'かぜが ふくと、Cubeは かざしもへ ころがりやすいよ。じょうろを ひろって つかうと、水を かけた 土が つぼみに なるよ',
+  { name:'そよ風の高原', theme:'sky', wind:'E', tip:'ときどき つよい かぜが ふくよ。ぽつんと さいた 花は つぼみに もどるけど、花びらが かざしもに たねを まくよ。岩の かげや かたまりの 花は だいじょうぶ',
     map:['..........','.R........','..........','.....R....','..H....C..','..........','....W.....','....W...R.','..........','..........']},
   { name:'しずくの谷', theme:'water', attrs:['rain','sun','leaf'], tip:'Cubeの 面の マーク（おひさま・あめ・はっぱ）は、その 面を さいごに スタンプして さかせると とくべつな ちからを だすよ',
     map:['.....W....','.....W....','....WW....','....W.....','..H....C..','....W.....','...WW.....','...W......','..........','...W....R.']},
@@ -603,7 +684,7 @@ const STAGES = [
     map:['...........','.T...T...T.','...........','...T.......','.......T...','..H....C...','.T.........','.....T...T.','...........','..T....T...','...........']},
   { name:'眠れる花畑', theme:'night', tip:'たねの面を 下にした Cubeが 花を ふむと、つぼみに もどっちゃう。×の Cubeは 花が きらい',
     map:['...........','.R....b....','...bb......','..bb...WW..','.......W...','..H..C.....','.....R..bb.','.WW.....b..','..W...R....','......b....','...........']},
-  { name:'風車の丘', theme:'sky', wind:'E', windChange:15, tip:'風車が まわって、かぜの むきが ときどき かわるよ。もこもこ もぐる モグラは、さきっぽに Hanaが さわると でてくるよ',
+  { name:'風車の丘', theme:'sky', wind:'E', tip:'つよい かぜが ふくと 風車が まわって、まわりの 土に 水を まくよ。もこもこ もぐる モグラは、さきっぽに Hanaが さわると でてくるよ',
     map:['...........','...........','..R.....R..','...........','.....M.....','...........','..H.....C..','...........','..R..W..R..','.....W.....','...........']},
   { name:'星降る原っぱ', theme:'night', attrs:['star','star','rain','sun','butterfly'], rareMul:2, tip:'星の マークが さくと、めずらしい 花が うまれるよ。ウリ坊は 荒地を ほりかえして 土に してくれる。でも 花畑を ほると つぼみに なっちゃう',
     map:['...........','.....R.....','...........','.W.......W.','...........','..H..C.....','...........','.W.......W.','...........','.....R.....','...........']},
@@ -686,7 +767,7 @@ function newState(idx){
     can:null, waterT:0, canCool:CFG.CAN_FIRST, wateredN:0,
     scoop:null, digT:0, dig:null, scoopCool:CFG.SCOOP_FIRST, tilledN:0,
     mole:null, moleCool:CFG.MOLE_FIRST, moleN:0, uribo:null, uriCool:CFG.URI_FIRST, uriN:0,
-    wind:flags.wind?{dir:flags.wind,t:0}:null, windFx:[],
+    wind:flags.wind?{dir:flags.wind,t:0,phase:'calm',pt:0,dur:WIND.FIRST,mill:0,scat:false}:null, windFx:[], millAng:0,
     pollen:[], pollenT:flags.pollen?flags.pollen*.7:0,
     forceRainbow:false,
     queen:queen?{i:queen.i,j:queen.j,phase:1,pure:false,pureT:0,t:0}:null,
@@ -778,7 +859,7 @@ function chooseRoll(c){
     else if(c.pers==='herd'){ const o=nearestCube(c); if(o){ const e0=Math.hypot(c.i-o.i,c.j-o.j), e1=Math.hypot(ni-o.i,nj-o.j); if(e0>1.5&&e1<e0){ w*=3; near=true; } } }
     else if(c.pers==='flowerlove'){ if(ts===2){ w*=4; near=true; } }
     else if(c.pers==='flowerhate'){ if(ts===2) w*=.2; else if(ts===0){ w*=1.8; near=true; } }
-    if(S.wind){ if(d===S.wind.dir) w*=2.6; else if(d===DIRS[S.wind.dir].opp) w*=.45; }   // かぜ：かざしもへ ころがりやすい
+    { const wp=S.wind&&S.wind.phase; if(wp==='gust'||wp==='warn'){ if(d===S.wind.dir) w*=wp==='gust'?3.5:2.6; else if(d===DIRS[S.wind.dir].opp) w*=.4; } }   // かぜ：ふいている 間は かざしもへ ころがりやすい（とっぷうは もっと）
     for(const p of S.pollen) if(Math.hypot(ni+.5-p.x,nj+.5-p.y)<1.3) w*=.25;           // 黒い花粉は こわい
     const Q=S.queen; if(Q&&!Q.pure){ const q0=Math.hypot(c.i-Q.i-.5,c.j-Q.j-.5), q1=Math.hypot(ni-Q.i-.5,nj-Q.j-.5); if(q0<3.4&&q1<q0) w*=.4; }   // 女王も こわい
     opts.push({d,w,near}); sum+=w;
@@ -902,7 +983,7 @@ function findTargets(){
 function stampable(c){ return c&&S.cubes.includes(c)&&c.state!=='drop'&&c.state!=='bloom'&&c.state!=='gone'&&!c.pendingBloom; }
 const stampReady=c=>stampable(c)&&c.state!=='roll'&&c.landT>=CFG.SETTLE;   // 転がっている 間と 着地の 直後は まだ 押せない（見えない 面に 押さない）
 function tryStamp(pick){   // pick：タップ／クリックで えらんだCube（なければ いちばん近いCube）
-  if(!S.started||!document.getElementById("startOv").hidden) return;
+  if(!S.started||!document.getElementById("startOv").hidden||!document.getElementById('albumOv').hidden||!document.getElementById('pvOv').hidden) return;
   Sfx.ensure();
   const h=S.hana; h.stampT=.28;
   if(S.cleared) return;
@@ -1036,6 +1117,8 @@ function updateGarden(dt){
     for(const e of S.events){
       if(e.at>S.time){ rest.push(e); continue; }
       if(e.cube){ chainTouch(e); continue; }
+      if(e.seedAt){ const t=tileAt(e.seedAt.i,e.seedAt.j); if(t&&t.type==='ground'&&t.state===0&&!t.hard&&!t.mole){ setTile(t,1); ringFx(t.i+.5,t.j+.5,'#ffd0de',.45);
+          if(!S.told.windSeed){ S.told.windSeed=1; textFx(t.i+.5,t.j+.5,2,'花びらが はこんで つぼみが できたよ','#c2355f',1,2.2); } } continue; }   // かぜが はこんだ たね
       if(e.rareAt){ const t=tileAt(e.rareAt.i,e.rareAt.j); if(t&&t.state===2&&!t.rare) makeRare(t); continue; }
       const t=S.tiles[e.j][e.i], ns=Math.min(2,t.state+e.add);
       if(ns!==t.state){
@@ -1671,16 +1754,55 @@ function useScoop(){
   return true;
 }
 
-/* ---- 風（GDD 31・38）：Cubeは かざしもへ ころがりやすい。風車の丘では むきが かわる ---- */
+/* ---- 風（GDD 31・38、v0.12.0）：「なぎ → よこく → とっぷう」の くりかえし。むきは 毎回 ランダム ----
+   とっぷう：ぽつんと さいた 花（まわりの 花が すくない）が 2〜4マス つぼみに もどり、花びらが かざしもへ とんで 土に たねを まく（つぼみ）。
+   まもられる 花：木・生け垣・岩・Cube・大きな花の すぐ かざしも／かたまって さいた 花（まわり8マスの うち 5マス 以上が 花）／ひみつの庭／めずらしい花。
+   風車：とっぷうで いきおいよく まわり、まわり 2マスの 土に 水を まく（つぼみ）。Cubeは ふいている 間 かざしもへ ころがりやすい */
+const WIND={FIRST:8, CALM:[12,18], WARN:2, GUST:3, SCAT:[2,4], MILL_R:2, MILL_EVERY:.45};
 const WIND_ORDER=['E','S','W','N'];
+const BLOCK_WIND=t=>t&&(t.type==='tree'||t.type==='hedge'||t.type==='rock'||t.type==='glass'||t.type==='mill'||t.type==='queen');
+function windSafe(t,d){
+  if(t.garden||t.rare||bigAt(t.i,t.j)) return true;
+  const up=tileAt(t.i-d.dx,t.j-d.dy); if(BLOCK_WIND(up)||cubeAt(t.i-d.dx,t.j-d.dy)||bigAt(t.i-d.dx,t.j-d.dy)) return true;   // かぜよけの かげ
+  let n=0; for(const [a,b] of N8){ const o=tileAt(t.i+a,t.j+b); if(o&&o.type==='ground'&&o.state===2) n++; } return n>=5;   // かたまりの 花
+}
+function gustScatter(){
+  const W=S.wind, d=DIRS[W.dir], cand=[];
+  for(const row of S.tiles) for(const t of row){ if(t.type!=='ground'||t.state!==2||windSafe(t,d)) continue;
+    let n=0; for(const [a,b] of N8){ const o=tileAt(t.i+a,t.j+b); if(o&&o.type==='ground'&&o.state===2) n++; } cand.push({t,w:5-n}); }
+  let k=WIND.SCAT[0]+Math.floor(Math.random()*(WIND.SCAT[1]-WIND.SCAT[0]+1)), lost=0, seeded=0;
+  while(k-->0&&cand.length){ let sum=cand.reduce((a,c)=>a+c.w,0), r=Math.random()*sum, idx=0; for(;idx<cand.length-1;idx++){ r-=cand[idx].w; if(r<=0) break; }
+    const t=cand.splice(idx,1)[0].t; setTile(t,1); lost++;
+    for(let q=0;q<9;q++) S.fx.petals.push({x:t.i+.5,y:t.j+.5,z:.4,vx:d.dx*(2+Math.random()*1.5)+(Math.random()-.5)*.6,vy:d.dy*(2+Math.random()*1.5)+(Math.random()-.5)*.6,vz:1.2+Math.random()*1.4,life:0,max:1.4,c:PETAL[q%PETAL.length],rot:Math.random()*6,vr:(Math.random()-.5)*12,s:2+Math.random()});
+    for(let st=2;st<=4;st++){ const o=tileAt(t.i+d.dx*st,t.j+d.dy*st); if(o&&o.type==='ground'&&o.state===0&&!o.hard&&!o.mole&&!cubeAt(o.i,o.j)){   // かざしもの 土に たね
+        S.events.push({at:S.time+.5+st*.18,seedAt:{i:o.i,j:o.j}}); seeded++; break; } } }
+  if(lost&&(S.told.gust|0)<2){ S.told.gust=(S.told.gust|0)+1; textFx(S.hana.x,S.hana.y,2.4,'かぜで 花びらが とんだ！ かげや かたまりの 花は だいじょうぶ','#4f7fd6',1.05,2.6); }
+  return {lost,seeded};
+}
 function updateWind(dt){
-  const W=S.wind; if(!W) return;
-  W.t+=dt;
-  if(S.flags.windChange&&W.t>=S.flags.windChange&&!S.cleared){ W.t=0; W.dir=WIND_ORDER[(WIND_ORDER.indexOf(W.dir)+1)%4]; textFx(S.hana.x,S.hana.y,2.3,'かぜの むきが かわった！','#4f7fd6',1.1,2.2); Sfx.wind(); }
-  const d=DIRS[W.dir];
-  if(Math.random()<dt*5&&S.windFx.length<22) S.windFx.push({x:d.dx>0?-.5:d.dx<0?COLS+.5:Math.random()*COLS, y:d.dy>0?-.5:d.dy<0?ROWS+.5:Math.random()*ROWS, z:.25+Math.random()*1.1, t:0, leaf:Math.random()<.35, sp:2.4+Math.random()*1.6, ph:Math.random()*6, c:Math.floor(Math.random()*5)});
-  for(const f of S.windFx){ f.t+=dt; f.x+=d.dx*f.sp*dt; f.y+=d.dy*f.sp*dt; }
+  const W=S.wind; if(!W){ S.millAng+=dt*2.2; return; }
+  W.t+=dt; W.pt+=dt;
+  if(S.cleared&&W.phase!=='calm'){ W.phase='calm'; W.pt=0; W.dur=99; }
+  if(W.phase==='calm'&&W.pt>=W.dur&&!S.cleared){   // よこく：むきを きめて、はっぱが まいはじめる
+    W.phase='warn'; W.pt=0; W.dur=WIND.WARN; W.dir=WIND_ORDER[Math.floor(Math.random()*4)]; W.scat=false; Sfx.wind();
+    if((S.told.windWarn|0)<2){ S.told.windWarn=(S.told.windWarn|0)+1; textFx(S.hana.x,S.hana.y,2.3,'かぜが くるよ！','#4f7fd6',1.1,1.8); } }
+  else if(W.phase==='warn'&&W.pt>=W.dur){ W.phase='gust'; W.pt=0; W.dur=WIND.GUST; W.mill=0; Sfx.wind(); setTimeout(()=>{ try{ Sfx.wind(); }catch(_){} },180); }
+  else if(W.phase==='gust'){
+    if(!W.scat&&W.pt>=.6){ W.scat=true; gustScatter(); }
+    W.mill+=dt; if(W.mill>=WIND.MILL_EVERY){ W.mill=0; millWater(); }
+    if(W.pt>=W.dur){ W.phase='calm'; W.pt=0; W.dur=WIND.CALM[0]+Math.random()*(WIND.CALM[1]-WIND.CALM[0]); } }
+  S.millAng+=dt*(W.phase==='gust'?11:W.phase==='warn'?4.5:1.2);
+  const d=DIRS[W.dir], rate=W.phase==='gust'?11:W.phase==='warn'?3.5:0;
+  if(Math.random()<dt*rate&&S.windFx.length<(W.phase==='gust'?34:18)) S.windFx.push({x:d.dx>0?-.5:d.dx<0?COLS+.5:Math.random()*COLS, y:d.dy>0?-.5:d.dy<0?ROWS+.5:Math.random()*ROWS, z:.25+Math.random()*1.1, t:0, leaf:Math.random()<.35, sp:(W.phase==='gust'?4:2.4)+Math.random()*1.6, ph:Math.random()*6, c:Math.floor(Math.random()*5), dx:d.dx, dy:d.dy});
+  for(const f of S.windFx){ f.t+=dt; f.x+=f.dx*f.sp*dt; f.y+=f.dy*f.sp*dt; }
   S.windFx=S.windFx.filter(f=>f.t<5&&f.x>-1&&f.y>-1&&f.x<COLS+1&&f.y<ROWS+1);
+}
+// 風車：とっぷうの 間、まわりの 土に 水を まく（1回に 1マス）
+function millWater(){
+  const L=[]; for(const row of S.tiles) for(const m of row){ if(m.type!=='mill') continue;
+    for(let j=m.j-WIND.MILL_R;j<=m.j+WIND.MILL_R;j++)for(let i=m.i-WIND.MILL_R;i<=m.i+WIND.MILL_R;i++){ const t=tileAt(i,j); if(t&&t.type==='ground'&&t.state===0&&!t.hard&&!t.mole) L.push(t); } }
+  if(!L.length) return; const t=L[Math.floor(Math.random()*L.length)]; t.wet=1.6; setTile(t,1); ringFx(t.i+.5,t.j+.5,'#bfe6ff',.45);
+  if(!S.told.millWater){ S.told.millWater=1; textFx(t.i+.5,t.j+.5,2.2,'風車が まわって 水を まいたよ！','#2f7fbf',1.05,2.2); }
 }
 
 /* ---- 黒い花粉（GDD 24・42）：花畑に おちると つぼみに よわる。Hanaが さわると はらえる。ひみつの庭は まもられる ---- */
@@ -2295,7 +2417,7 @@ const CUBE_PAL={green:[[122,212,170],[150,228,190],[58,128,104]],red:[[242,142,1
   blue:[[124,172,236],[158,198,246],[50,88,150]],yellow:[[238,204,92],[248,222,140],[146,112,34]],purple:[[182,148,232],[204,178,242],[98,68,150]]};
 function hslRgb(h,s,l){ const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0)*255,f(8)*255,f(4)*255]; }
 function cubePal(c,time){ if(c.color==='rainbow'){ const h=(time*70+c.id*50)%360; return [hslRgb(h,.62,.7),hslRgb(h,.7,.8),hslRgb(h,.45,.36)]; } return CUBE_PAL[c.color]||CUBE_PAL.green; }
-function windSway(time,ph){ if(!S||!S.wind) return 0; const d=DIRS[S.wind.dir]; return (d.dx-d.dy)*.09*(1+.5*Math.sin(time*2.3+ph)); }
+function windSway(time,ph){ if(!S||!S.wind) return 0; const W=S.wind, k=W.phase==='gust'?1.5:W.phase==='warn'?.5:0; if(!k) return 0; const d=DIRS[W.dir]; return (d.dx-d.dy)*.09*k*(1+.5*Math.sin(time*(W.phase==='gust'?4:2.3)+ph)); }
 // 属性面の マーク（おひさま・あめ・ちょうちょ・はっぱ・ほし・にじ）
 function drawAttrIcon(g,a,x,y,r,noDisc){
   g.save(); g.translate(x,y); g.lineJoin='round'; g.lineCap='round';
@@ -2356,7 +2478,7 @@ function drawMill(i,j,time){
   ctx.beginPath(); ctx.moveTo(p.x-15,p.y); ctx.lineTo(p.x-9,p.y-58); ctx.lineTo(p.x+9,p.y-58); ctx.lineTo(p.x+15,p.y); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#c0504d'; ctx.beginPath(); ctx.moveTo(p.x-13,p.y-56); ctx.lineTo(p.x,p.y-72); ctx.lineTo(p.x+13,p.y-56); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle='#8a5a3c'; rrect(ctx,p.x-4,p.y-16,8,16,3); ctx.fill();
-  const hx=p.x, hy=p.y-52, ang=time*2.2;
+  const hx=p.x, hy=p.y-52, ang=S.millAng||time*2.2;   // とっぷうで いきおいよく まわる
   for(let k=0;k<4;k++){ ctx.save(); ctx.translate(hx,hy); ctx.rotate(ang+k*Math.PI/2); ctx.fillStyle='rgba(255,255,255,.93)'; ctx.strokeStyle='#6b5040'; ctx.lineWidth=1.2; ctx.fillRect(3,-4,30,8); ctx.strokeRect(3,-4,30,8); ctx.beginPath(); ctx.moveTo(3,0); ctx.lineTo(33,0); ctx.stroke(); ctx.restore(); }
   ctx.fillStyle='#6b5040'; ctx.beginPath(); ctx.arc(hx,hy,3.5,0,7); ctx.fill();
 }
@@ -2791,6 +2913,8 @@ function drawCubeShadow(c){
 }
 /* Cubeの上に浮かぶ「6面の展開図」。見えない面の状態もここで分かる */
 const NET={T:[0,0],E:[1,0],S:[0,1],W:[-1,0],N:[0,-1],B:[-2,0]};
+const NET_PX=12;   // 展開図の 1マス（半はば）の 画面上の 大きさの さいてい（px）
+const netScale=()=>clamp(NET_PX/(8.5*(View.scale||1)),1,2.6);
 function drawNet(g,c,x,y,hw,hh,time,big){
   const last=grownCount(c)===5;
   for(const slot of ['B','N','W','T','E','S']){
@@ -3058,7 +3182,12 @@ function render(){
   // 蜂・黒い花粉・かぜの すじ
   for(const b of S.bees) drawBee(b);
   for(const p of S.pollen) drawPollen(p,time);
-  if(S.wind) for(const f of S.windFx){ const d=DIRS[S.wind.dir], fade=Math.min(1,f.t*1.5)*Math.min(1,(5-f.t));
+  if(S.wind&&S.wind.phase!=='calm'){ const W=S.wind, d=DIRS[W.dir], k=W.phase==='warn'?.5+.5*Math.sin(time*10):Math.max(0,1-W.pt/W.dur), cx=COLS/2, cy=ROWS/2;   // かぜの むきの 矢印（地面）
+    ctx.save(); ctx.globalAlpha=.32*k+.08; ctx.fillStyle='#ffffff'; ctx.strokeStyle='rgba(79,127,214,.7)'; ctx.lineWidth=2; ctx.lineJoin='round';
+    for(let q=-1;q<=1;q++){ const ox=cx+d.dy*q*2.2+d.dx*((time*1.5)%1-.5), oy=cy-d.dx*q*2.2+d.dy*((time*1.5)%1-.5), P=(a,b)=>iso(ox+d.dx*a-d.dy*b,oy+d.dy*a+d.dx*b,.02);
+      const pts=[P(-.9,-.22),P(.1,-.22),P(.1,-.55),P(.9,0),P(.1,.55),P(.1,.22),P(-.9,.22)]; ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(const p of pts.slice(1)) ctx.lineTo(p.x,p.y); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    ctx.restore(); }
+  if(S.wind) for(const f of S.windFx){ const d={dx:f.dx??DIRS[S.wind.dir].dx,dy:f.dy??DIRS[S.wind.dir].dy}, fade=Math.min(1,f.t*1.5)*Math.min(1,(5-f.t));
     if(f.leaf){   // 葉っぱ・花びらが ひらひら
       const p=iso(f.x,f.y,f.z+Math.sin(f.t*3+f.ph)*.15); ctx.save(); ctx.globalAlpha=.85*fade; ctx.translate(p.x,p.y); ctx.rotate(f.t*4+f.ph); ctx.scale(1,Math.abs(Math.sin(f.t*5+f.ph))*.8+.2);
       ctx.fillStyle=f.c<2?'#7cc869':PETAL[f.c]; ctx.beginPath(); ctx.ellipse(0,0,3.6,1.8,0,0,7); ctx.fill(); ctx.restore(); continue; }
@@ -3076,9 +3205,11 @@ function render(){
     if(c.state==='bloom') continue; const G=geo.get(c); if(!G) continue;
     const q=iso(G.cx,G.cy,G.z0+cs(c)+.62);
     ctx.globalAlpha=c.state==='drop'?clamp(c.t/CFG.DROP_T):1;
-    drawNet(ctx,c,q.x+4,q.y,8.5,4.25,time,false);
-    { const ta=c.attr[c.ori.T]; if(ta&&!c.grown[c.ori.T]&&c.state!=='roll'){   // いま スタンプできる 面が マーク（v0.9.6）
-      const m=iso(G.cx,G.cy,G.z0+cs(c)+1.2), bob=Math.sin(time*3+c.id)*2.5, gl=.5+.5*Math.sin(time*4);
+    // v0.12.1：展開図は 画面の 上で 1マス 約12px 以上（スマホで 盤面が 小さいときだけ 大きく。さいだい 2.6倍）。大きく した ぶん 上に もちあげ、下はしの 位置は かえない
+    const kN=netScale(), nx=q.x+4, ny=q.y-(kN-1)*1.9*4.25;
+    ctx.save(); ctx.translate(nx,ny); ctx.scale(kN,kN); drawNet(ctx,c,0,0,8.5,4.25,time,false); ctx.restore();
+    { const ta=c.attr[c.ori.T]; if(ta&&!c.grown[c.ori.T]&&c.state!=='roll'){   // いま スタンプできる 面が マーク（v0.9.6）：展開図の 上に うかぶ
+      const m={x:nx-4,y:Math.min(iso(G.cx,G.cy,G.z0+cs(c)+1.2).y,ny-2.9*4.25*kN-12)}, bob=Math.sin(time*3+c.id)*2.5, gl=.5+.5*Math.sin(time*4);
       ctx.save(); ctx.globalAlpha*=.55+.35*gl; const rg=ctx.createRadialGradient(m.x,m.y-bob,0,m.x,m.y-bob,17); rg.addColorStop(0,'rgba(255,250,200,.95)'); rg.addColorStop(1,'rgba(255,250,200,0)'); ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(m.x,m.y-bob,17,0,7); ctx.fill(); ctx.restore();
       drawAttrIcon(ctx,ta,m.x,m.y-bob,8.5); } }
     // 性格マークは 廃止（性格は 左上の せつめいに 出す）
@@ -3160,6 +3291,7 @@ const UI={
     for(const b of document.querySelectorAll('.itm')) b.onclick=()=>{ Sfx.ensure(); useItem(b.dataset.k); };   // もちもの：それぞれ タップで つかう
     $('selBtn').onclick=()=>this.openSelect();
     $('dexBtn').onclick=()=>this.openDex();
+    Album.init();
     $('storyBtn').onclick=()=>this.story(false,null);
     $('fullBtn').hidden=!canFull; $('fullBtn').onclick=()=>{ if(document.fullscreenElement||document.webkitFullscreenElement){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} } else goLandscape(); };
     const fsMark=()=>{ const on=!!(document.fullscreenElement||document.webkitFullscreenElement); $('fullBtn').textContent=on?'⤡':'⛶'; $('fullBtn').setAttribute('aria-label',on?'全画面を やめる':'全画面に する'); };
@@ -3300,7 +3432,63 @@ const UI={
 /* ================================================================
  * 11b. 撮影モード（クリア後）・じぶんを いれる・エンディング
  * ================================================================ */
-// 撮影モード：花（開花した 大きな花・巨大な花）や Hana、じぶんの キャラを ドラッグで うごかして、右下の シャッターで 写真を 保存する
+// ===== v0.11.0：しゃしん アルバム（ブラウザの 中に 保存）と SNSへの シェア =====
+const GAME_URL='';   // 公開したら ここに ゲームの URL を 入れる（シェアの 文に つく）
+const ALBUM_MAX=60;   // アルバムに のこす 枚数（こえたら いちばん 古い ものから けす）
+const TAPES=['rgba(255,170,195,.78)','rgba(255,215,120,.8)','rgba(150,210,170,.78)','rgba(160,200,245,.78)','rgba(210,180,240,.78)'];
+const PhotoDB={db:null,mem:[],p:null,
+  open(){ if(this.p) return this.p; this.p=new Promise(res=>{ try{ const r=indexedDB.open('tof_album',1); r.onupgradeneeded=()=>{ try{ r.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true}); }catch(_){} }; r.onsuccess=()=>{ this.db=r.result; res(this.db); }; r.onerror=()=>res(null); r.onblocked=()=>res(null); }catch(_){ res(null); } }); return this.p; },
+  async add(rec){ const db=await this.open(); if(!db){ rec.id=Date.now(); this.mem.push(rec); return rec; }
+    return new Promise(res=>{ try{ const q=db.transaction('photos','readwrite').objectStore('photos').add(rec); q.onsuccess=()=>{ rec.id=q.result; res(rec); }; q.onerror=()=>{ rec.id=Date.now(); this.mem.push(rec); res(rec); }; }catch(_){ rec.id=Date.now(); this.mem.push(rec); res(rec); } }); },
+  async all(){ const db=await this.open(); if(!db) return this.mem.slice();
+    return new Promise(res=>{ try{ const q=db.transaction('photos').objectStore('photos').getAll(); q.onsuccess=()=>res((q.result||[]).concat(this.mem)); q.onerror=()=>res(this.mem.slice()); }catch(_){ res(this.mem.slice()); } }); },
+  async del(id){ this.mem=this.mem.filter(r=>r.id!==id); const db=await this.open(); if(!db) return;
+    return new Promise(res=>{ try{ const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>res(); }catch(_){ res(); } }); },
+  async trim(){ const L=(await this.all()).sort((a,b)=>a.id-b.id); for(const r of L.slice(0,Math.max(0,L.length-ALBUM_MAX))) await this.del(r.id); }
+};
+const Share={
+  text(stage){ return 'Tons of Flowers で「'+stage+'」を 花で いっぱいに したよ🌸 #TonsOfFlowers #インディーゲーム'+(GAME_URL?'\n'+GAME_URL:''); },
+  save(r){ try{ const u=URL.createObjectURL(r.blob), a=document.createElement('a'); a.href=u; a.download='tons_of_flowers_'+(r.fname||r.id)+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000); }catch(_){} },
+  async native(r,say){   // スマホなどの「共有」：写真と 文を いっしょに わたす（インスタ・X・LINE など えらべる）
+    const t=this.text(r.stage);
+    try{ const f=new File([r.blob],'tons_of_flowers_'+(r.fname||r.id)+'.jpg',{type:'image/jpeg'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],text:t,title:'Tons of Flowers'}); say('シェアしたよ！ ありがとう🌸'); return; } }
+    catch(e){ if(e&&e.name==='AbortError') return; }
+    this.save(r); let cp=false; try{ await navigator.clipboard.writeText(t); cp=true; }catch(_){}
+    say('しゃしんを ほぞん'+(cp?'して、ぶんを コピー':'')+'したよ。SNSに のせてね！');
+  },
+  x(r,say){ this.save(r); try{ window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(this.text(r.stage)),'_blank','noopener'); }catch(_){} say('ほぞんした しゃしんを ポストに つけてね！'); },
+  line(r,say){ this.save(r); try{ window.open('https://line.me/R/msg/text/?'+encodeURIComponent(this.text(r.stage)),'_blank','noopener'); }catch(_){} say('ほぞんした しゃしんも いっしょに おくってね！'); }
+};
+const Album={page:0,list:[],urls:[],per:8,from:null,cur:null,
+  async open(from){ this.from=from; this.list=(await PhotoDB.all()).sort((a,b)=>b.id-a.id); this.page=0; this.draw();
+    if(from==='start') UI.openSub('albumOv'); else $('albumOv').hidden=false; try{ Sfx.tick(2); }catch(_){} },
+  close(){ this.free(); if(this.from==='start') UI.closeSub('albumOv'); else $('albumOv').hidden=true; },
+  free(){ for(const u of this.urls) URL.revokeObjectURL(u); this.urls=[]; },
+  url(r){ const u=URL.createObjectURL(r.blob); this.urls.push(u); return u; },
+  draw(){ this.free(); const n=this.list.length, pages=Math.max(1,Math.ceil(n/this.per)); this.page=clamp(this.page,0,pages-1);
+    const L=$('albL'), R=$('albR'); L.innerHTML=''; R.innerHTML=''; $('albEmpty').hidden=n>0;
+    this.list.slice(this.page*this.per,this.page*this.per+this.per).forEach((r,k)=>{ const el=document.createElement('button'); el.className='ph';
+      el.style.setProperty('--r',((hash(r.id*7+3)-.5)*7).toFixed(1)+'deg'); el.style.setProperty('--tape',TAPES[r.id%TAPES.length]);
+      el.innerHTML='<img alt=""><b></b>'; el.querySelector('img').src=this.url(r); el.querySelector('b').textContent=r.stage+'　'+r.date;
+      el.onclick=()=>this.view(r); (k<4?L:R).appendChild(el); });
+    $('albPage').textContent=(this.page+1)+' / '+pages; $('albCount').textContent=n?'（'+n+'まい）':''; $('albPrev').disabled=this.page<=0; $('albNext').disabled=this.page>=pages-1; },
+  turn(d){ this.page+=d; this.draw(); try{ Sfx.tick(1); }catch(_){} },
+  view(r){ this.cur=r; $('pvImg').src=this.url(r); $('pvCap').textContent='「'+r.stage+'」　'+r.date; $('pvMsg').textContent=''; $('pvDel').textContent='すてる'; this.delArm=false; $('pvOv').hidden=false; },
+  async del(){ if(!this.cur) return;
+    if(!this.delArm){ this.delArm=true; $('pvDel').textContent='もういちど おすと すてるよ'; return; }
+    await PhotoDB.del(this.cur.id); this.list=this.list.filter(x=>x!==this.cur); this.cur=null; $('pvOv').hidden=true; this.draw(); },
+  say(t){ $('pvMsg').textContent=t; },
+  init(){
+    $('albumBtn').onclick=()=>{ Sfx.ensure(); this.open('start'); };
+    $('albClose').onclick=()=>this.close(); $('albPrev').onclick=()=>this.turn(-1); $('albNext').onclick=()=>this.turn(1);
+    $('pvBack').onclick=()=>{ $('pvOv').hidden=true; }; $('pvDel').onclick=()=>this.del();
+    const say=t=>this.say(t);
+    $('pvShare').onclick=()=>this.cur&&Share.native(this.cur,say); $('pvX').onclick=()=>this.cur&&Share.x(this.cur,say);
+    $('pvLine').onclick=()=>this.cur&&Share.line(this.cur,say); $('pvSave').onclick=()=>{ if(this.cur){ Share.save(this.cur); say('しゃしんを ほぞんしたよ！'); } };
+  }
+};
+// 撮影モード：花（開花した 大きな花・巨大な花）や Hana、じぶんの キャラを ドラッグで うごかして、右下の シャッターで 写真を とる（アルバムに 入る）
 const Photo={on:false,drag:null,me:null,
   start(){ this.on=true; $('clearOv').hidden=true; document.body.classList.add('photo'); $('photoUi').hidden=false; $('photoSaved').hidden=true; S.hana.joy=false; S.hana.goal=null; },
   end(){ this.on=false; this.drag=null; document.body.classList.remove('photo'); $('photoUi').hidden=true; $('clearOv').hidden=false; },
@@ -3319,11 +3507,20 @@ const Photo={on:false,drag:null,me:null,
     render(); g.drawImage(canvas,0,0);
     const d=new Date(), ds=d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate(), k=View.dpr;
     g.fillStyle='rgba(255,248,234,.9)'; g.fillRect(0,H-34*k,W,34*k); g.fillStyle='#3b2f2a'; g.font=`800 ${15*k}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle';
-    g.fillText('TONS OF FLOWERS　「'+STAGE.name+'」　'+ds,W/2,H-17*k);
-    const url=c.toDataURL('image/png'), a=document.createElement('a'); a.href=url; a.download='tons_of_flowers_'+d.getFullYear()+(d.getMonth()+1)+d.getDate()+'_'+d.getHours()+d.getMinutes()+d.getSeconds()+'.png';
-    try{ document.body.appendChild(a); a.click(); a.remove(); }catch(_){}
-    const el=$('photoSaved'); el.innerHTML='しゃしんを ほぞんしたよ！<img alt="">'; el.querySelector('img').src=url; el.hidden=false; clearTimeout(this.tm); this.tm=setTimeout(()=>{el.hidden=true;},3500);
-    this.last=url; return url;
+    g.fillText('TONS OF FLOWERS　「'+STAGE.name+'」　'+ds+'　#TonsOfFlowers',W/2,H-17*k);
+    // v0.11.0：ダウンロードは しない。アルバムに 入れて、その場で シェア・アルバム・ほぞんを えらべる
+    const sc=Math.min(1,1600/W), o=document.createElement('canvas'); o.width=Math.round(W*sc); o.height=Math.round(H*sc); o.getContext('2d').drawImage(c,0,0,o.width,o.height);
+    const fname=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'_'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
+    const el=$('photoSaved');
+    o.toBlob(async blob=>{ if(!blob) return; const rec=await PhotoDB.add({blob,stage:STAGE.name,date:ds,fname,w:o.width,h:o.height}); PhotoDB.trim();
+      const u=URL.createObjectURL(blob); if(this.lastUrl) URL.revokeObjectURL(this.lastUrl); this.lastUrl=u; this.lastRec=rec;
+      el.innerHTML='<div class="psTop"><img alt=""><span>アルバムに いれたよ！</span></div><div class="shareRow"><button class="sbtn s-share">シェア</button><button class="sbtn s-album">アルバム</button><button class="sbtn s-save">ほぞん</button></div>';
+      el.querySelector('img').src=u; el.hidden=false;
+      const say=t=>{ el.querySelector('span').textContent=t; };
+      el.querySelector('.s-share').onclick=()=>Share.native(rec,say); el.querySelector('.s-save').onclick=()=>{ Share.save(rec); say('しゃしんを ほぞんしたよ！'); };
+      el.querySelector('.s-album').onclick=()=>{ el.hidden=true; Album.open('photo'); };
+      clearTimeout(this.tm); this.tm=setTimeout(()=>{el.hidden=true;},9000); },'image/jpeg',.9);
+    return true;
   },
   // じぶんを いれる：インカメラで かおを とって、花の となりに たつ キャラに する（写真は この画面の中だけで つかい、保存も 送信も しない）
   stream:null,
@@ -3446,7 +3643,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.10.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.12.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3650,7 +3847,7 @@ function drawStoryArt(g,ending,k){
     else { flowers(34,190); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
   }
 }
-const paused=()=>Op.on||Ending.on||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
+const paused=()=>Op.on||Ending.on||!$('albumOv').hidden||!$('pvOv').hidden||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
 /* ================================================================
  * 12. MAIN
@@ -3697,7 +3894,7 @@ requestAnimationFrame(frame);
 
 // 動作確認用（コンソールから TOF.state() などで中身を見られます）
 window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule,
-  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX,op:Op,hanaJump:HANA_JUMP,jumpAnim:JUMP_ANIM,finishBloom,tryStamp,tryDig,digTarget};
+  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX,op:Op,gustScatter,windSafe,album:Album,photoDB:PhotoDB,photo:Photo,share:Share,hanaJump:HANA_JUMP,jumpAnim:JUMP_ANIM,finishBloom,tryStamp,tryDig,digTarget};
 })();
 </script>
 <script>
