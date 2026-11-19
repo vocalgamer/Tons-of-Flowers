@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.10.1</title>
+<title>TONS OF FLOWERS — Prototype v0.10.3</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.10.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.10.3（GDD v3.8準拠・2.5D・単一HTML）
+  v0.10.3：Perfect（タイミングスタンプ）を 廃止。自動で 育つ 面（あか・なかま・連鎖・おひさま）は マークの 面を えらばない。クリア画面の Perfect回数 → さいた Cubeの 数。
+  v0.10.2：荒地の 絵を 大荒地・中荒地・小荒地に（灰土色・大きな石・深いひび・枯れ草 → 黄土色 → 赤茶色・小石）。ほるのは Hanaが その 荒地の 上に いる ときだけ。
   v0.10.1：スコップは 1回ずつ 手動（荒地の そばで スペース／荒地を タップ）。荒地の 3段階を 色と もようで はっきり（灰色の 岩ばん→黄土色の ひびわれ→こげ茶の ほりかえし→土）。ほれる 荒地に 光る ふち・矢印・のこり回数の 点。
   v0.10.0：バージョンの 表示を スタート画面の カードから オープニングの「クリックしてね」の 右下へ 移動。
   v0.9.9：手袋の カーソルを 倍の 大きさ（88px）に。押した ときの 輪も 大きく。
@@ -400,7 +402,7 @@
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
     </ol>
     <ul class="tip">
-      <li>ころがりおわる しゅんかんに スタンプで <b>Perfect!</b></li>
+      <li>マークの 面を <b>さいごに</b> スタンプすると とくべつな ちから！</li>
       <li>Cubeどうしが くっつくと、花の面が たねに もどることも</li>
     </ul>
     <p class="keys">
@@ -490,7 +492,7 @@
     <div class="stats">
       <div><b id="stRate">0%</b>花率</div>
       <div><b id="stChain">1</b>さいだい れんさ</div>
-      <div><b id="stPerfect">0</b>Perfect</div>
+      <div><b id="stBloom">0</b>さいた Cube</div>
       <div><b id="stTime">0:00</b>じかん</div>
     </div>
     <button class="big" id="nextBtn">つぎの ステージへ</button>
@@ -524,7 +526,6 @@ const CFG = {
   MAX_CUBES:3,
   SPAWN_DELAY:1.3,
   CURIOUS_EVERY:[2,4],        // 5体ごとの出現順のうち「性格もち（好奇心など）」になる番目（=約4割）
-  PERFECT_PRE:0.14, PERFECT_POST:0.42, // 着地の前後、この秒数内のスタンプがPerfect
   CHAIN_BONUS:0.5,            // 連鎖1段ごとに広がる半径
   MAX_BUTTERFLY:3, BF_SPEED:1.4, BF_WORK:2.6, BF_REST:1.6,
   // ここから GDD v3.6 で実装した しくみ（試作値）
@@ -559,7 +560,7 @@ const shade=(c,b)=>`rgb(${Math.round(clamp(c[0]*b,0,255))},${Math.round(clamp(c[
  *               x 雲のすきま ／ = 雲の橋（Hanaだけ わたれる） ／ G 温室のかべ ／ M 風車 ／ Q 花の女王（2×2） ／ H Hana ／ C 最初のCube
  * 新しい要素は 1ステージに 1つずつ（GDD 25章の 20面の ならび）。前のステージで出た要素は そのあとも つづく（stageFlags）。 */
 const STAGES = [
-  { name:'はじまりの草原', theme:'meadow', tip:'ころがりおわる しゅんかんに スタンプすると Perfect!',
+  { name:'はじまりの草原', theme:'meadow', tip:'Cubeを ころがして、たねの 面を 上に むけよう。6つの 面が そろうと 大開花！',
     map:['........','.....R..','........','..H..C..','........','.WW.....','......R.','........']},
   { name:'ころころ丘', theme:'meadow', fastRoll:true, tip:'♪マークの Cubeは Hanaに よってくるよ。ころころ ころがる Cubeを おいかけよう',
     map:['.........','..R......','.........','......W..','..H...C..','.........','.W.......','.....R...','.........']},
@@ -891,32 +892,25 @@ function tryStamp(pick){   // pick：タップ／クリックで えらんだCub
   const f=c.ori.T;                       // スタンプ対象は常に「いま上にある面」
   const p=cubePos(c);
   if(c.grown[f]){ c.shake=.3; textFx(p.x,p.y,1.9,'ここは もう さいてるよ','#7a5a48'); Sfx.miss(); return {ok:false,why:'dup'}; }
-  // タイミングスタンプ：転がり終わる瞬間に押すと、となりの面も1つ咲く（失敗はなく、純粋なおまけ）
-  const perfect=(c.state==='roll'&&c.t>=CFG.ROLL_T-CFG.PERFECT_PRE)||(c.state==='idle'&&c.landT<=CFG.PERFECT_POST);
+  // v0.10.3：タイミングスタンプ（Perfect）は 廃止（反射神経より 面の 計画を だいじに。おまけの 面が マークを こわすため）
   const done=growFace(c,f); S.stamps++;
   Sfx.stamp();
   const z=cs(c);
   ringFx(p.x,p.y,'#ffd0de',.7,z);
   petalFx(p.x,p.y,z,6,1.2);
   let extra='';
-  if(perfect){
-    S.perfects++;
-    const sides=['E','S','W','N'].filter(k=>!c.grown[c.ori[k]]);
-    if(sides.length) growFace(c,c.ori[sides[Math.floor(Math.random()*sides.length)]]);
-    Sfx.perfect(); ringFx(p.x,p.y,'#ffc93c',1.1,z); petalFx(p.x,p.y,z,10,1.8);
-  }
   // あかい Cube：はやく そだつ（スタンプで もう1面さくことがある）／おなじ色の なかまが ちかいと たすけあう（GDD 22）
   if(grownCount(c)<6){
-    const un=[0,1,2,3,4,5].filter(k=>!c.grown[k]&&k!==f);
+    const un=[0,1,2,3,4,5].filter(k=>!c.grown[k]&&k!==f&&!c.attr[k]);   // マークの 面は えらばない
     const buddy=S.flags.colors&&c.color!=='green'&&S.cubes.some(o=>o!==c&&o.color===c.color&&o.state!=='bloom'&&Math.hypot(o.i-c.i,o.j-c.j)<=2.3);
     if(un.length&&((c.color==='red'&&Math.random()<.5)||(buddy&&Math.random()<.3))){ growFace(c,un[Math.floor(Math.random()*un.length)]); extra=c.color==='red'?'あかの ちから！':'なかまの ちから！'; }
   }
   const n=grownCount(c);
-  if(n===6){ c.pendingBloom=true; c.chain=1; c.power=done&&c.attr[f]?c.attr[f]:null; if(perfect) textFx(p.x,p.y,1.9,'Perfect!','#d98a00',1.25); }   // v0.9.5：マークの面を 最後の スタンプで さかせたときだけ ちからが でる
-  else if(c.giant&&!done&&!perfect) textFx(p.x,p.y,2.3,c.prog[f]===1?'あと 2かい！':'あと 1かい！','#c2355f');
-  else textFx(p.x,p.y,1.9+(c.giant?.4:0),perfect?'Perfect!':extra||(n===5?'あと 1めん！':'ぽん！'),perfect||extra?'#d98a00':'#c2355f',perfect?1.25:1);
+  if(n===6){ c.pendingBloom=true; c.chain=1; c.power=done&&c.attr[f]?c.attr[f]:null; }   // v0.9.5：マークの面を 最後の スタンプで さかせたときだけ ちからが でる
+  else if(c.giant&&!done) textFx(p.x,p.y,2.3,c.prog[f]===1?'あと 2かい！':'あと 1かい！','#c2355f');
+  else textFx(p.x,p.y,1.9+(c.giant?.4:0),extra||(n===5?'あと 1めん！':'ぽん！'),extra?'#d98a00':'#c2355f',1);
   if(n===5&&c.attr[c.grown.indexOf(false)]) textFx(p.x,p.y,2.6+(c.giant?.4:0),'さいごは マークの 面で！','#4f7fd6',1.05,2);   // のこり1面が マーク：さいごに スタンプすると ちから
-  return {ok:true,face:f,perfect};
+  return {ok:true,face:f};
 }
 // はちみつの こうか中：Cubeを タップすると、スタンプしてから Hanaの むこうがわへ 1マス おす（GDD 18.5）
 function interactCube(c){
@@ -983,8 +977,8 @@ function chainTouch(e){
   const o=e.cube; if(o.state==='gone'||o.state==='bloom'||o.pendingBloom) return;
   for(let n=0;n<(e.pw||1);n++){
     let id=-1;
-    if(!o.grown[o.ori.B]) id=o.ori.B;                       // いちばん押しにくい下の面から
-    else{ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]); if(un.length) id=un[Math.floor(Math.random()*un.length)]; }
+    if(!o.grown[o.ori.B]&&!o.attr[o.ori.B]) id=o.ori.B;     // いちばん押しにくい下の面から
+    else{ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]&&!o.attr[k]); if(un.length) id=un[Math.floor(Math.random()*un.length)]; }   // マークの 面は えらばない（のこりが マークだけなら スタンプを まつ）
     if(id<0) break;
     growFace(o,id,o.giant?3:1);
   }
@@ -1284,7 +1278,7 @@ function applyAttrs(c,x,y,has){
   const said=[];
   if(has('sun')){   // おひさま：まわりの Cubeを そだてる
     for(const o of S.cubes){ if(o===c||!stampable(o)) continue;
-      if(Math.hypot(o.i-c.i,o.j-c.j)<=4.5){ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]); if(un.length){ growFace(o,un[Math.floor(Math.random()*un.length)],o.giant?3:1);
+      if(Math.hypot(o.i-c.i,o.j-c.j)<=4.5){ const un=[0,1,2,3,4,5].filter(k=>!o.grown[k]&&!o.attr[k]); if(un.length){ growFace(o,un[Math.floor(Math.random()*un.length)],o.giant?3:1);
         if(grownCount(o)===6){ o.pendingBloom=true; o.chain=2; } const q=cubePos(o); ringFx(q.x,q.y,'#ffd34d',.9,cs(o)); } } }
     said.push('おひさまの ちから！');
   }
@@ -1637,25 +1631,22 @@ function spawnScoop(){
   S.scoop={x:best.i+.5,y:best.j+.5,t:0};
   textFx(S.scoop.x,S.scoop.y,1.9,S.told.scoop?'スコップが あるよ！':'スコップが あるよ！ 荒地を たがやせるよ','#8a5a3c',1.1,2); S.told.scoop=1; Sfx.poko();
 }
-// スコップで ほれる 荒地：Hanaの いちばん 近く（となりの マスまで）
-const DIG_REACH=1.05;
+// スコップで ほれる 荒地：Hanaが 上に 立っている マスだけ（v0.10.2）
+const hanaTile=()=>tileAt(Math.floor(S.hana.x),Math.floor(S.hana.y));
 function digTarget(){
   if(!(S.digT>0)||S.dig||S.cleared) return null;
-  const h=S.hana; let best=null,bd=DIG_REACH;
-  for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){ const t=tileAt(i,j); if(!t||!t.hard) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
-  return best;
+  const t=hanaTile(); return t&&t.hard?t:null;
 }
 function tryDig(t){
-  if(!(S.digT>0)||S.dig||S.cleared||!t||!t.hard) return false;
-  const h=S.hana; if(Math.hypot(t.i+.5-h.x,t.j+.5-h.y)>DIG_REACH+.45) return false;
-  h.goal=null; S.dig={tile:t,t:0,hit:false}; const vx=t.i+.5-h.x, vy=t.j+.5-h.y, sx=vx-vy; if(Math.abs(sx)>.05) h.sx=sx>0?1:-1;
+  if(!(S.digT>0)||S.dig||S.cleared||!t||!t.hard||t!==hanaTile()) return false;   // 上に いないと ほれない
+  S.hana.goal=null; S.dig={tile:t,t:0,hit:false};
   return true;
 }
 function useScoop(){
   if(!INV.scoop||!S.started||S.cleared) return false;
   if(!S.tiles.some(r=>r.some(t=>t.hard))){ Sfx.buzzer(); textFx(S.hana.x,S.hana.y,2.1,'あれちが ないから つかえないよ！','#7a5a48',1.05,1.8); return false; }
   invSet('scoop',false); S.digT=CFG.SCOOP_T; Sfx.dig();
-  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'スペース'; textFx(h.x,h.y,2.2,'荒地の そばで '+T+'！ 1かいずつ ザクッ','#8a5a3c',1.1,2.4);
+  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'スペース'; textFx(h.x,h.y,2.2,'荒地の 上で '+T+'！ 1かいずつ ザクッ','#8a5a3c',1.1,2.4);
   return true;
 }
 
@@ -1833,7 +1824,7 @@ const Input={
     if(c){
       S.sel=c;   // 左上に この Cubeの せつめいを だす
       const p=cubePos(c);
-      if(stampable(c)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE){ h.goal=null; interactCube(c); }   // とどく：すぐスタンプ（Perfectのタイミングも そのまま）。はちみつ中は おす
+      if(stampable(c)&&Math.hypot(p.x-h.x,p.y-h.y)<=CFG.STAMP_RANGE){ h.goal=null; interactCube(c); }   // とどく：すぐスタンプ。はちみつ中は おす
       else h.goal={c,stuckT:0};                                                                      // とおい：そばまで 歩くだけ（スタンプは もういちど タップ）
       return;
     }
@@ -2186,10 +2177,10 @@ function tileSprite(kind,alt,v){
   const P=(u,w)=>({x:(u-w)*W/2+W/2,y:(u+w)*H/2}), rnd=rng32(kind.length*977+alt*131+v*31+7);
   g.beginPath(); g.moveTo(W/2,0); g.lineTo(W,H/2); g.lineTo(W/2,H); g.lineTo(0,H/2); g.closePath(); g.save(); g.clip();
   const hp=kind.startsWith('hard')?+kind.slice(4):0;
-  // 荒地（v0.10.1）：3＝青みの 灰色の 岩ばん → 2＝黄土色の ひびわれ → 1＝こげ茶の ほりかえし → 土（明るい ベージュ）
-  const base=hp?(hp>=3?(alt?'#8e929e':'#878b97'):hp===2?(alt?'#d1a253':'#c99a4b'):(alt?'#7b4f35':'#744a31')):GROUND[['soil','bud','flower'].indexOf(kind)][alt];
+  // 荒地（v0.10.2）：3＝大荒地（くすんだ 灰土色・大きな 石・深い ひび・枯れ草）→ 2＝中荒地（砂っぽい 黄土色）→ 1＝小荒地（赤茶色・小石）→ 土（明るい ベージュ）
+  const base=hp?(hp>=3?(alt?'#8f8572':'#887e6b'):hp===2?(alt?'#c29c63':'#bb965e'):(alt?'#b27c5b':'#ab7656')):GROUND[['soil','bud','flower'].indexOf(kind)][alt];
   g.fillStyle=base; g.fillRect(0,0,W,H);
-  { const q=P(.3+rnd()*.4,.3+rnd()*.4); g.fillStyle=hp>=3?'rgba(255,255,255,.1)':kind==='soil'||hp?'rgba(120,85,60,.12)':'rgba(40,90,40,.08)'; g.beginPath(); g.ellipse(q.x,q.y,15,6.5,0,0,7); g.fill(); }   // まだら
+  { const q=P(.3+rnd()*.4,.3+rnd()*.4); g.fillStyle=kind==='soil'||hp?'rgba(120,85,60,.12)':'rgba(40,90,40,.08)'; g.beginPath(); g.ellipse(q.x,q.y,15,6.5,0,0,7); g.fill(); }   // まだら
   if(kind==='soil'){   // つぶつぶ
     for(let k=0;k<16;k++){ const q=P(.08+rnd()*.84,.08+rnd()*.84), d=rnd(); g.fillStyle=hp?(d<.5?'rgba(50,32,22,.35)':'rgba(255,225,190,.22)'):(d<.55?'rgba(105,70,48,.42)':'rgba(255,238,215,.4)'); g.fillRect(q.x-.7,q.y-.5,1.4+rnd()*.8,1); }
   }
@@ -2197,22 +2188,22 @@ function tileSprite(kind,alt,v){
     for(let k=0;k<2;k++){ const q=P(.15+rnd()*.7,.15+rnd()*.7), r=rnd(); g.fillStyle='#a58f7c'; g.beginPath(); g.ellipse(q.x,q.y,1.8+r,1.1+r*.5,0,0,7); g.fill(); }
     g.strokeStyle='rgba(120,84,62,.45)'; g.lineWidth=1.1; g.lineCap='round'; const a1=P(.2+rnd()*.3,.25+rnd()*.3), b1=P(.5+rnd()*.2,.5), c1=P(.6+rnd()*.25,.8-rnd()*.3);
     g.beginPath(); g.moveTo(a1.x,a1.y); g.lineTo(b1.x,b1.y); g.lineTo(c1.x,c1.y); g.stroke();
-  }else if(hp>=3){   // かちかちの 岩ばん：大きな 平たい 板石（白い ハイライト・こい すきま）
-    const slabs=[[.06,.06,.5,.46],[.52,.06,.94,.4],[.06,.5,.44,.94],[.48,.44,.94,.94]];
-    for(const [u0,w0,u1,w1] of slabs){ const a=P(u0+.03,w0+.03), b=P(u1-.03,w0+.03), c=P(u1-.03,w1-.03), d=P(u0+.03,w1-.03);
-      g.fillStyle=rnd()<.5?'#9a9eaa':'#a3a7b3'; g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.lineTo(c.x,c.y); g.lineTo(d.x,d.y); g.closePath(); g.fill();
-      g.strokeStyle='rgba(255,255,255,.45)'; g.lineWidth=1; g.beginPath(); g.moveTo(d.x,d.y); g.lineTo(a.x,a.y); g.lineTo(b.x,b.y); g.stroke();
-      g.strokeStyle='rgba(40,44,56,.55)'; g.beginPath(); g.moveTo(b.x,b.y); g.lineTo(c.x,c.y); g.lineTo(d.x,d.y); g.stroke(); }
-    for(let q=0;q<5;q++){ const p=P(.1+rnd()*.8,.1+rnd()*.8); g.fillStyle='rgba(60,64,78,.5)'; g.fillRect(p.x-.6,p.y-.4,1.3,.9); }
-  }else if(hp===2){   // ひびわれ：かわいた 黄土色の 土が 亀の こうら もように われる
-    g.strokeStyle='#7a5524'; g.lineWidth=1.25; g.lineCap='round'; g.lineJoin='round';
-    const pts=[]; for(let a=0;a<4;a++)for(let b=0;b<4;b++) pts.push(P(.12+a*.25+(rnd()-.5)*.12,.12+b*.25+(rnd()-.5)*.12));
-    for(let a=0;a<4;a++)for(let b=0;b<4;b++){ const p=pts[a*4+b]; if(a<3){ const q=pts[(a+1)*4+b]; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(q.x,q.y); g.stroke(); } if(b<3){ const q=pts[a*4+b+1]; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(q.x,q.y); g.stroke(); } }
-    for(let q=0;q<6;q++){ const p=P(.12+rnd()*.76,.12+rnd()*.76); g.fillStyle='rgba(255,236,170,.45)'; g.beginPath(); g.ellipse(p.x,p.y,3.4,1.5,0,0,7); g.fill(); }   // かわいた ハイライト
-  }else if(hp===1){   // ほりかえし：こげ茶の しめった 土。うねと 土くれ
-    g.lineCap='round';
-    for(let q=0;q<4;q++){ const w=.18+q*.21, a=P(.08,w), b=P(.92,w); g.strokeStyle='rgba(40,22,12,.55)'; g.lineWidth=2.2; g.beginPath(); g.moveTo(a.x,a.y+1); g.lineTo(b.x,b.y+1); g.stroke(); g.strokeStyle='rgba(160,110,78,.7)'; g.lineWidth=1.3; g.beginPath(); g.moveTo(a.x,a.y-.6); g.lineTo(b.x,b.y-.6); g.stroke(); }
-    for(let q=0;q<7;q++){ const p=P(.12+rnd()*.76,.12+rnd()*.76), r=1.6+rnd()*1.4; g.fillStyle='#4e2f1e'; g.beginPath(); g.ellipse(p.x+.6,p.y+.6,r,r*.65,0,0,7); g.fill(); g.fillStyle='#93613f'; g.beginPath(); g.ellipse(p.x,p.y,r,r*.65,0,0,7); g.fill(); }
+  }else if(hp){   // 荒地：かわいた 土ぼこり＋ひび＋石ころ＋枯れ草。大きいほど 石が 大きく 多く、ひびが 深く、草が かれている
+    const L=Math.min(3,hp);
+    for(let k=0;k<18;k++){ const q=P(.06+rnd()*.88,.06+rnd()*.88), d=rnd(); g.fillStyle=d<.5?'rgba(60,45,32,.3)':'rgba(255,240,215,.28)'; g.fillRect(q.x-.6,q.y-.4,1.2+rnd()*.7,.9); }   // 土ぼこり
+    g.lineCap='round'; g.lineJoin='round';
+    for(let q=0;q<L;q++){   // ひび（大＝ふとく 枝わかれ）
+      const a=P(.12+rnd()*.3,.15+rnd()*.7), b=P(.4+rnd()*.2,.3+rnd()*.4), c=P(.65+rnd()*.25,.15+rnd()*.7);
+      g.strokeStyle=`rgba(55,38,26,${.35+.12*L})`; g.lineWidth=.6+.45*L; g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.lineTo(c.x,c.y); g.stroke();
+      if(L>=2){ const e=P(.35+rnd()*.3,.6+rnd()*.3); g.lineWidth=.5+.25*L; g.beginPath(); g.moveTo(b.x,b.y); g.lineTo(e.x,e.y); g.stroke(); } }
+    const NS=L===3?5:L===2?3:3, RS=L===3?[3,4.6]:L===2?[2.2,3.1]:[1.2,1.8];   // 石ころ
+    for(let q=0;q<NS;q++){ const p=P(.14+rnd()*.72,.14+rnd()*.72), r=RS[0]+rnd()*(RS[1]-RS[0]);
+      g.fillStyle='rgba(50,40,30,.45)'; g.beginPath(); g.ellipse(p.x+.9,p.y+.8,r,r*.62,0,0,7); g.fill();
+      g.fillStyle=q%2?'#a49c8f':'#958d80'; g.beginPath(); g.ellipse(p.x,p.y,r,r*.62,0,0,7); g.fill();
+      g.fillStyle='rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(p.x-r*.3,p.y-r*.22,r*.4,r*.2,0,0,7); g.fill(); }
+    const NG=L===3?3:L===2?1:0;   // 枯れ草
+    for(let q=0;q<NG;q++){ const p=P(.15+rnd()*.7,.15+rnd()*.7); g.lineWidth=1;
+      for(let k=0;k<5;k++){ const an=-Math.PI/2+(k-2)*.38, hh=3+rnd()*2.2; g.strokeStyle=k%2?'#c9b277':'#a8925a'; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x+Math.cos(an)*hh,p.y+Math.sin(an)*hh); g.stroke(); } }
   }else{   // つぼみ・花畑：草の すじ
     g.lineCap='round'; g.lineWidth=1.1;
     for(let q=0;q<(kind==='flower'?14:9);q++){ const p=P(.08+rnd()*.84,.08+rnd()*.84), hh=2.5+rnd()*2.5, lean=(rnd()-.5)*2.5, d=rnd();
@@ -2767,11 +2758,6 @@ function drawCube(c,time){
       poly(f.pts); ctx.lineJoin='round';
       ctx.strokeStyle=can?`rgba(255,255,255,${.75+.25*k})`:'rgba(255,255,255,.45)'; ctx.lineWidth=can?3.2:2; ctx.stroke();
       if(can){ ctx.strokeStyle=`rgba(255,201,60,${.5+.5*k})`; ctx.lineWidth=1.4; ctx.stroke(); }
-      // Perfectの合図：着地直後、金色の輪が上の面へすぼまる
-      if(can&&c.state==='idle'&&c.landT<CFG.PERFECT_POST){
-        const u=1-c.landT/CFG.PERFECT_POST, mx=(f.pts[0].x+f.pts[2].x)/2, my=(f.pts[0].y+f.pts[2].y)/2, sc=1+u*.7;
-        poly(f.pts.map(q=>({x:mx+(q.x-mx)*sc,y:my+(q.y-my)*sc}))); ctx.strokeStyle=`rgba(255,201,60,${.35+.65*u})`; ctx.lineWidth=2.6; ctx.stroke();
-      }
     }
   }
   return G;
@@ -3085,8 +3071,8 @@ function render(){
   { const dt0=digTarget(); if(dt0){ const k=.5+.5*Math.sin(time*6), i=dt0.i, j=dt0.j;   // スコップで ほれる 荒地（v0.10.1）
       poly([iso(i,j),iso(i+1,j),iso(i+1,j+1),iso(i,j+1)]); ctx.fillStyle=`rgba(255,240,170,${.18+.18*k})`; ctx.fill(); ctx.strokeStyle=`rgba(255,201,60,${.7+.3*k})`; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
       const a=iso(i+.5,j+.5,.15), bo=Math.abs(Math.sin(time*5))*4;
-      ctx.beginPath(); ctx.moveTo(a.x-6,a.y-30-bo); ctx.lineTo(a.x+6,a.y-30-bo); ctx.lineTo(a.x,a.y-22-bo); ctx.closePath(); ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.stroke();
-      for(let q=0;q<(dt0.hardHP||CFG.HARD_HP);q++){ ctx.fillStyle='#fff8ea'; ctx.strokeStyle='#8a5a3c'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(a.x+(q-((dt0.hardHP||CFG.HARD_HP)-1)/2)*8,a.y-38-bo,2.8,0,7); ctx.fill(); ctx.stroke(); } } }   // のこり回数の 点
+      ctx.beginPath(); ctx.moveTo(a.x-6,a.y-78-bo); ctx.lineTo(a.x+6,a.y-78-bo); ctx.lineTo(a.x,a.y-70-bo); ctx.closePath(); ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.stroke();
+      for(let q=0;q<(dt0.hardHP||CFG.HARD_HP);q++){ ctx.fillStyle='#fff8ea'; ctx.strokeStyle='#8a5a3c'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(a.x+(q-((dt0.hardHP||CFG.HARD_HP)-1)/2)*8,a.y-86-bo,2.8,0,7); ctx.fill(); ctx.stroke(); } } }   // のこり回数の 点
   // 文字
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
   for(const t of S.fx.texts){ const q=iso(t.x,t.y,t.z+easeOut(t.t/t.max)*.5), a=clamp((t.max-t.t)/.3), s=13*t.scale*(t.t<.15?.6+t.t/.15*.4:1);
@@ -3193,7 +3179,7 @@ const UI={
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
-    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の そばで '+(touch?'荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
+    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
     if(tip!==this.itemTip){ this.itemTip=tip; $('itemTip').textContent=tip; }
     if($('itemBox').hidden===any) $('itemBox').hidden=!any;
   },
@@ -3276,7 +3262,7 @@ const UI={
     // クリア表示
     if(S.cleared&&!S.clearShown&&S.time-S.clearAt>2.6&&!S.events.length&&!S.hana.joyWait&&(!S.hana.joy||S.hana.joyT>1.4)){   // Hanaのよろこぶ姿を見せてから
       $('clearTitle').textContent='ステージ '+(S.stage+1)+' クリア！';
-      S.clearShown=true; $('stRate').textContent=Math.floor(flowerRate()*100)+'%'; $('stChain').textContent=S.maxChain; $('stPerfect').textContent=S.perfects;
+      S.clearShown=true; $('stRate').textContent=Math.floor(flowerRate()*100)+'%'; $('stChain').textContent=S.maxChain; $('stBloom').textContent=S.blooms;
       const lastSt=S.stage+1>=STAGES.length; $('nextBtn').textContent=lastSt?'さいしょの ステージへ':'つぎの ステージへ';
       $('clearSub').textContent=lastSt?'ぜんぶの ステージを 花で いっぱいに したよ。ありがとう！':'「'+STAGE.name+'」が 花で いっぱいに なったよ';
       const s=Math.floor(S.clearAt); $('stTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
@@ -3439,7 +3425,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.10.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.10.3';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
