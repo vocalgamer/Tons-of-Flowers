@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.9.9</title>
+<title>TONS OF FLOWERS — Prototype v0.10.0</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.9.9（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.10.0（GDD v3.8準拠・2.5D・単一HTML）
+  v0.10.0：バージョンの 表示を スタート画面の カードから オープニングの「クリックしてね」の 右下へ 移動。
   v0.9.9：手袋の カーソルを 倍の 大きさ（88px）に。押した ときの 輪も 大きく。
   v0.9.8：カーソルを ふっくら 白い 手袋の 絵に 差しかえ。クリックすると 押しこむ（少し 小さく かげる）＋指先に 小さな 輪。
   v0.9.7：PCの マウスカーソルを デフォルメした 手（人差し指を 立てた 手の甲・黄色の そで口・こげ茶と 白の ふち）に。見うしないにくく。
@@ -393,7 +394,6 @@
 <div class="overlay" id="startOv">
   <div class="card">
     <h1>TONS OF <br>FLOWERS</h1>
-    <p class="sub">Prototype v0.9.9</p>
     <ol class="how">
       <li><span>Cubeを <span class="sp">タップ</span><span class="pc">クリック</span>して、そばで もういちど <span class="sp">タップ</span><span class="pc">クリック</span>。「上の面」に 花の スタンプ！</span></li>
       <li>6つの面が ぜんぶ 花に なると 大開花！ 花率90%で クリア。</li>
@@ -3408,6 +3408,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
+const VERSION='v0.10.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3510,6 +3511,8 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
       this.flower(g,W/2,H*.4,(58+p*8)*u,this.COL[0],1,T*.4);
       g.font=`900 ${Math.max(18,30*u)}px ${FONT}`; g.lineWidth=6*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
       const msg=document.body.classList.contains('touch')?'タップしてね':'クリックしてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
+      { const mw=g.measureText(msg).width, fs=Math.max(11,14*u); g.font=`800 ${fs}px ${FONT}`; g.textAlign='right'; g.lineWidth=4*u; g.strokeStyle='rgba(255,255,255,.9)'; g.fillStyle='#9a7a5e';   // バージョン：「クリックしてね」の 右下（v0.10.0）
+        g.strokeText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.fillText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.textAlign='center'; }
       this.partsDraw(g); return;
     }
     // かんばん（ひゅーっと おちて、ぽよんと はずむ）
