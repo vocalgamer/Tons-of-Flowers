@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.10.0</title>
+<title>TONS OF FLOWERS — Prototype v0.10.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.10.0（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.10.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.10.1：スコップは 1回ずつ 手動（荒地の そばで スペース／荒地を タップ）。荒地の 3段階を 色と もようで はっきり（灰色の 岩ばん→黄土色の ひびわれ→こげ茶の ほりかえし→土）。ほれる 荒地に 光る ふち・矢印・のこり回数の 点。
   v0.10.0：バージョンの 表示を スタート画面の カードから オープニングの「クリックしてね」の 右下へ 移動。
   v0.9.9：手袋の カーソルを 倍の 大きさ（88px）に。押した ときの 輪も 大きく。
   v0.9.8：カーソルを ふっくら 白い 手袋の 絵に 差しかえ。クリックすると 押しこむ（少し 小さく かげる）＋指先に 小さな 輪。
@@ -1596,17 +1597,14 @@ function updateScoop(dt){
       const done=t.hardHP<=0; if(done){ t.hard=false; t.hardHP=0; t.flash=1; S.tilledN++; }
       for(let k=0;k<10&&S.fx.petals.length<420;k++){ const a=Math.random()*6.283, sp=.6+Math.random()*1.1;   // 土の かたまりが とびちる
         S.fx.petals.push({x:t.i+.5,y:t.j+.5,z:.05,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,vz:2+Math.random()*1.8,life:0,max:.7,c:k%3?'#7a5136':'#a8754e',rot:Math.random()*6,vr:(Math.random()-.5)*10,s:2.6+Math.random()*1.8}); }
-      textFx(t.i+.5,t.j+.5,1.2,done?'ザックリ！':'ザクッ！','#8a5a3c',done?1.3:1.15,.8);
+      textFx(t.i+.5,t.j+.5,1.2,done?'ザックリ！ 土に なった':'ザクッ！ あと '+t.hardHP+'かい','#8a5a3c',done?1.3:1.15,1.1);
       if(done&&!S.told.till){ S.told.till=1; textFx(t.i+.5,t.j+.5,2.1,'たがやした！ これで 花が そだつよ','#8a5a3c',1.05,2); }
       if(done&&Math.random()<CFG.ONSEN) makeOnsen(t); }
     if(D.t>=CFG.DIG_T){ S.dig=null; }
   }
   if(S.digT>0){
     if(h.moving||S.dig) S.digT-=dt;   // 歩いている間と ほっている 間だけ へる
-    if(!S.dig){   // 足もとの 荒地を みつけたら、そこを ザクッ
-      let best=null,bd=.75; for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){ const t=tileAt(i,j); if(!t||!t.hard) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
-      if(best){ S.dig={tile:best,t:0,hit:false}; const vx=best.i+.5-h.x, vy=best.j+.5-h.y, sx=vx-vy; if(Math.abs(sx)>.05) h.sx=sx>0?1:-1; }
-    }
+    // v0.10.1：自動では ほらない。荒地の そばで スペース（A）か、荒地を タップで 1回ずつ ザクッ（tryDig）
     if(S.digT<=0&&!S.dig){ S.digT=0; S.scoopCool=CFG.SCOOP_COOL; textFx(h.x,h.y,2,'スコップを しまったよ','#7a5a48',1,2); }
   }
 }
@@ -1639,11 +1637,25 @@ function spawnScoop(){
   S.scoop={x:best.i+.5,y:best.j+.5,t:0};
   textFx(S.scoop.x,S.scoop.y,1.9,S.told.scoop?'スコップが あるよ！':'スコップが あるよ！ 荒地を たがやせるよ','#8a5a3c',1.1,2); S.told.scoop=1; Sfx.poko();
 }
+// スコップで ほれる 荒地：Hanaの いちばん 近く（となりの マスまで）
+const DIG_REACH=1.05;
+function digTarget(){
+  if(!(S.digT>0)||S.dig||S.cleared) return null;
+  const h=S.hana; let best=null,bd=DIG_REACH;
+  for(let j=Math.floor(h.y)-1;j<=Math.floor(h.y)+1;j++)for(let i=Math.floor(h.x)-1;i<=Math.floor(h.x)+1;i++){ const t=tileAt(i,j); if(!t||!t.hard) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
+  return best;
+}
+function tryDig(t){
+  if(!(S.digT>0)||S.dig||S.cleared||!t||!t.hard) return false;
+  const h=S.hana; if(Math.hypot(t.i+.5-h.x,t.j+.5-h.y)>DIG_REACH+.45) return false;
+  h.goal=null; S.dig={tile:t,t:0,hit:false}; const vx=t.i+.5-h.x, vy=t.j+.5-h.y, sx=vx-vy; if(Math.abs(sx)>.05) h.sx=sx>0?1:-1;
+  return true;
+}
 function useScoop(){
   if(!INV.scoop||!S.started||S.cleared) return false;
   if(!S.tiles.some(r=>r.some(t=>t.hard))){ Sfx.buzzer(); textFx(S.hana.x,S.hana.y,2.1,'あれちが ないから つかえないよ！','#7a5a48',1.05,1.8); return false; }
   invSet('scoop',false); S.digT=CFG.SCOOP_T; Sfx.dig();
-  const h=S.hana; textFx(h.x,h.y,2.2,'あるいて 荒地を たがやそう！','#8a5a3c',1.1,2.4);
+  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'スペース'; textFx(h.x,h.y,2.2,'荒地の そばで '+T+'！ 1かいずつ ザクッ','#8a5a3c',1.1,2.4);
   return true;
 }
 
@@ -1815,6 +1827,8 @@ const Input={
     if(S.scoop&&this.scrDist(cx,cy,S.scoop.x,S.scoop.y,.3)<34){ setGoalPoint(S.scoop.x,S.scoop.y); if(h.goal) h.goal.scoop=true; return; }
     // 黒い花粉：タップすると おいかけて はらう
     for(const p of S.pollen) if(this.scrDist(cx,cy,p.x,p.y,.6)<36){ setGoalPoint(p.x,p.y); if(h.goal) h.goal.pollen=p; return; }
+    if(S.digT>0&&!S.dig){ const w=this.toWorld(cx,cy), t=tileAt(Math.floor(w.x),Math.floor(w.y));   // スコップ中：荒地を タップ
+      if(t&&t.hard&&!this.pickCube(cx,cy)){ if(tryDig(t)) return; setGoalPoint(t.i+.5,t.j+.5); if(h.goal) ringFx(h.goal.x,h.goal.y,'#ffffff',.32); return; } }
     const c=this.pickCube(cx,cy);
     if(c){
       S.sel=c;   // 左上に この Cubeの せつめいを だす
@@ -1832,7 +1846,7 @@ const Input={
     window.addEventListener('keydown',e=>{
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
@@ -1876,7 +1890,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(Op.on) Op.tap(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -2172,21 +2186,33 @@ function tileSprite(kind,alt,v){
   const P=(u,w)=>({x:(u-w)*W/2+W/2,y:(u+w)*H/2}), rnd=rng32(kind.length*977+alt*131+v*31+7);
   g.beginPath(); g.moveTo(W/2,0); g.lineTo(W,H/2); g.lineTo(W/2,H); g.lineTo(0,H/2); g.closePath(); g.save(); g.clip();
   const hp=kind.startsWith('hard')?+kind.slice(4):0;
-  const base=hp?(hp>=3?(alt?'#8a6b52':'#83654d'):hp===2?(alt?'#98785e':'#927358'):(alt?'#ae8a6e':'#a78468')):GROUND[['soil','bud','flower'].indexOf(kind)][alt];
+  // 荒地（v0.10.1）：3＝青みの 灰色の 岩ばん → 2＝黄土色の ひびわれ → 1＝こげ茶の ほりかえし → 土（明るい ベージュ）
+  const base=hp?(hp>=3?(alt?'#8e929e':'#878b97'):hp===2?(alt?'#d1a253':'#c99a4b'):(alt?'#7b4f35':'#744a31')):GROUND[['soil','bud','flower'].indexOf(kind)][alt];
   g.fillStyle=base; g.fillRect(0,0,W,H);
-  { const q=P(.3+rnd()*.4,.3+rnd()*.4); g.fillStyle=kind==='soil'||hp?'rgba(120,85,60,.12)':'rgba(40,90,40,.08)'; g.beginPath(); g.ellipse(q.x,q.y,15,6.5,0,0,7); g.fill(); }   // まだら
-  if(kind==='soil'||hp){   // つぶつぶ
+  { const q=P(.3+rnd()*.4,.3+rnd()*.4); g.fillStyle=hp>=3?'rgba(255,255,255,.1)':kind==='soil'||hp?'rgba(120,85,60,.12)':'rgba(40,90,40,.08)'; g.beginPath(); g.ellipse(q.x,q.y,15,6.5,0,0,7); g.fill(); }   // まだら
+  if(kind==='soil'){   // つぶつぶ
     for(let k=0;k<16;k++){ const q=P(.08+rnd()*.84,.08+rnd()*.84), d=rnd(); g.fillStyle=hp?(d<.5?'rgba(50,32,22,.35)':'rgba(255,225,190,.22)'):(d<.55?'rgba(105,70,48,.42)':'rgba(255,238,215,.4)'); g.fillRect(q.x-.7,q.y-.5,1.4+rnd()*.8,1); }
   }
   if(kind==='soil'){
     for(let k=0;k<2;k++){ const q=P(.15+rnd()*.7,.15+rnd()*.7), r=rnd(); g.fillStyle='#a58f7c'; g.beginPath(); g.ellipse(q.x,q.y,1.8+r,1.1+r*.5,0,0,7); g.fill(); }
     g.strokeStyle='rgba(120,84,62,.45)'; g.lineWidth=1.1; g.lineCap='round'; const a1=P(.2+rnd()*.3,.25+rnd()*.3), b1=P(.5+rnd()*.2,.5), c1=P(.6+rnd()*.25,.8-rnd()*.3);
     g.beginPath(); g.moveTo(a1.x,a1.y); g.lineTo(b1.x,b1.y); g.lineTo(c1.x,c1.y); g.stroke();
-  }else if(hp){
-    if(hp>=2){ g.strokeStyle='rgba(60,40,28,.55)'; g.lineWidth=1.3; g.lineCap='round'; const a1=P(.15+rnd()*.2,.5), b1=P(.45,.35+rnd()*.2), c1=P(.8,.45+rnd()*.2); g.beginPath(); g.moveTo(a1.x,a1.y); g.lineTo(b1.x,b1.y); if(hp>=3) g.lineTo(c1.x,c1.y); g.stroke(); }
-    for(let q=0;q<hp+2;q++){ const p=P(.16+rnd()*.68,.16+rnd()*.68), r=(2.2+(q%3)*.9)*(hp>=3?1:hp===2?.85:.65);   // かたい 石ころ
-      g.fillStyle='#5f4a3a'; g.beginPath(); g.ellipse(p.x+.8,p.y+.8,r,r*.6,0,0,7); g.fill(); g.fillStyle=q%2?'#a88a70':'#94775e'; g.beginPath(); g.ellipse(p.x,p.y,r,r*.6,0,0,7); g.fill(); }
-    if(hp<3) for(let q=0;q<4-hp;q++){ const p=P(.2+rnd()*.6,.2+rnd()*.6); g.fillStyle='#b58c66'; g.beginPath(); g.ellipse(p.x,p.y,3.2,1.8,0,0,7); g.fill(); }   // ほりかえした 土くれ
+  }else if(hp>=3){   // かちかちの 岩ばん：大きな 平たい 板石（白い ハイライト・こい すきま）
+    const slabs=[[.06,.06,.5,.46],[.52,.06,.94,.4],[.06,.5,.44,.94],[.48,.44,.94,.94]];
+    for(const [u0,w0,u1,w1] of slabs){ const a=P(u0+.03,w0+.03), b=P(u1-.03,w0+.03), c=P(u1-.03,w1-.03), d=P(u0+.03,w1-.03);
+      g.fillStyle=rnd()<.5?'#9a9eaa':'#a3a7b3'; g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.lineTo(c.x,c.y); g.lineTo(d.x,d.y); g.closePath(); g.fill();
+      g.strokeStyle='rgba(255,255,255,.45)'; g.lineWidth=1; g.beginPath(); g.moveTo(d.x,d.y); g.lineTo(a.x,a.y); g.lineTo(b.x,b.y); g.stroke();
+      g.strokeStyle='rgba(40,44,56,.55)'; g.beginPath(); g.moveTo(b.x,b.y); g.lineTo(c.x,c.y); g.lineTo(d.x,d.y); g.stroke(); }
+    for(let q=0;q<5;q++){ const p=P(.1+rnd()*.8,.1+rnd()*.8); g.fillStyle='rgba(60,64,78,.5)'; g.fillRect(p.x-.6,p.y-.4,1.3,.9); }
+  }else if(hp===2){   // ひびわれ：かわいた 黄土色の 土が 亀の こうら もように われる
+    g.strokeStyle='#7a5524'; g.lineWidth=1.25; g.lineCap='round'; g.lineJoin='round';
+    const pts=[]; for(let a=0;a<4;a++)for(let b=0;b<4;b++) pts.push(P(.12+a*.25+(rnd()-.5)*.12,.12+b*.25+(rnd()-.5)*.12));
+    for(let a=0;a<4;a++)for(let b=0;b<4;b++){ const p=pts[a*4+b]; if(a<3){ const q=pts[(a+1)*4+b]; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(q.x,q.y); g.stroke(); } if(b<3){ const q=pts[a*4+b+1]; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(q.x,q.y); g.stroke(); } }
+    for(let q=0;q<6;q++){ const p=P(.12+rnd()*.76,.12+rnd()*.76); g.fillStyle='rgba(255,236,170,.45)'; g.beginPath(); g.ellipse(p.x,p.y,3.4,1.5,0,0,7); g.fill(); }   // かわいた ハイライト
+  }else if(hp===1){   // ほりかえし：こげ茶の しめった 土。うねと 土くれ
+    g.lineCap='round';
+    for(let q=0;q<4;q++){ const w=.18+q*.21, a=P(.08,w), b=P(.92,w); g.strokeStyle='rgba(40,22,12,.55)'; g.lineWidth=2.2; g.beginPath(); g.moveTo(a.x,a.y+1); g.lineTo(b.x,b.y+1); g.stroke(); g.strokeStyle='rgba(160,110,78,.7)'; g.lineWidth=1.3; g.beginPath(); g.moveTo(a.x,a.y-.6); g.lineTo(b.x,b.y-.6); g.stroke(); }
+    for(let q=0;q<7;q++){ const p=P(.12+rnd()*.76,.12+rnd()*.76), r=1.6+rnd()*1.4; g.fillStyle='#4e2f1e'; g.beginPath(); g.ellipse(p.x+.6,p.y+.6,r,r*.65,0,0,7); g.fill(); g.fillStyle='#93613f'; g.beginPath(); g.ellipse(p.x,p.y,r,r*.65,0,0,7); g.fill(); }
   }else{   // つぼみ・花畑：草の すじ
     g.lineCap='round'; g.lineWidth=1.1;
     for(let q=0;q<(kind==='flower'?14:9);q++){ const p=P(.08+rnd()*.84,.08+rnd()*.84), hh=2.5+rnd()*2.5, lean=(rnd()-.5)*2.5, d=rnd();
@@ -3050,12 +3076,17 @@ function render(){
       drawAttrIcon(ctx,ta,m.x,m.y-bob,8.5); } }
     // 性格マークは 廃止（性格は 左上の せつめいに 出す）
     ctx.globalAlpha=1;
-    if(S.target===c&&!c.grown[c.ori.T]&&!S.cleared){
+    if(S.target===c&&!c.grown[c.ori.T]&&!S.cleared&&!digTarget()){
       const a=iso(G.cx,G.cy,G.z0+cs(c)+.16), bo=Math.abs(Math.sin(time*5))*4;
       ctx.beginPath(); ctx.moveTo(a.x-6,a.y-9-bo); ctx.lineTo(a.x+6,a.y-9-bo); ctx.lineTo(a.x,a.y-1-bo); ctx.closePath();
       ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.stroke();
     }
   }
+  { const dt0=digTarget(); if(dt0){ const k=.5+.5*Math.sin(time*6), i=dt0.i, j=dt0.j;   // スコップで ほれる 荒地（v0.10.1）
+      poly([iso(i,j),iso(i+1,j),iso(i+1,j+1),iso(i,j+1)]); ctx.fillStyle=`rgba(255,240,170,${.18+.18*k})`; ctx.fill(); ctx.strokeStyle=`rgba(255,201,60,${.7+.3*k})`; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+      const a=iso(i+.5,j+.5,.15), bo=Math.abs(Math.sin(time*5))*4;
+      ctx.beginPath(); ctx.moveTo(a.x-6,a.y-30-bo); ctx.lineTo(a.x+6,a.y-30-bo); ctx.lineTo(a.x,a.y-22-bo); ctx.closePath(); ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.stroke();
+      for(let q=0;q<(dt0.hardHP||CFG.HARD_HP);q++){ ctx.fillStyle='#fff8ea'; ctx.strokeStyle='#8a5a3c'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(a.x+(q-((dt0.hardHP||CFG.HARD_HP)-1)/2)*8,a.y-38-bo,2.8,0,7); ctx.fill(); ctx.stroke(); } } }   // のこり回数の 点
   // 文字
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
   for(const t of S.fx.texts){ const q=iso(t.x,t.y,t.z+easeOut(t.t/t.max)*.5), a=clamp((t.max-t.t)/.3), s=13*t.scale*(t.t<.15?.6+t.t/.15*.4:1);
@@ -3162,7 +3193,7 @@ const UI={
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
-    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='あるくと 荒地を たがやすよ'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
+    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の そばで '+(touch?'荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
     if(tip!==this.itemTip){ this.itemTip=tip; $('itemTip').textContent=tip; }
     if($('itemBox').hidden===any) $('itemBox').hidden=!any;
   },
@@ -3408,7 +3439,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.10.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.10.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3659,7 +3690,7 @@ requestAnimationFrame(frame);
 
 // 動作確認用（コンソールから TOF.state() などで中身を見られます）
 window.TOF={stages:STAGES,load:i=>UI.load(i),state:()=>S,stamp:tryStamp,rolledOri,cfg:CFG,step:update,rate:flowerRate,render,hanaSprite:HANA_SPR,bgm:Bgm,armInfo,touchRule,
-  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX,op:Op,hanaJump:HANA_JUMP,jumpAnim:JUMP_ANIM,finishBloom,tryStamp};
+  ui:UI,save:Save,photo:Photo,ending:Ending,drink:drinkHoney,useItem,useCan,inv:INV,push:pushCube,interact:interactCube,detectGardens,makeRare,setTile,dex:DEX,op:Op,hanaJump:HANA_JUMP,jumpAnim:JUMP_ANIM,finishBloom,tryStamp,tryDig,digTarget};
 })();
 </script>
 <script>
