@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.12.1</title>
+<title>TONS OF FLOWERS — Prototype v0.12.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.12.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.12.2（GDD v3.8準拠・2.5D・単一HTML）
+  v0.12.2：オープニングの「クリックしてね」を「タップして さかせてね」の つぼみに。タップで さいしょの 1輪が さき（ぽんっ＋花びら）、そこから かんばんが おちてくる。「オープニングを みる」から は つぼみを とばす。
   v0.12.1：Cubeの 上の 展開図を スマホでは 大きく（画面上で 1マス 約12px 以上。さいだい 2.6倍。PC・タブレットは ほぼ そのまま）。
   v0.12.0：風に いみを：「なぎ→よこく→とっぷう」を くりかえし、むきは ランダム。とっぷうで ぽつんと さいた 花が 2〜4マス つぼみに もどり、花びらが かざしもの 土に たねを まく。かぜよけの かげ・かたまりの 花は まもられる。風車は とっぷうで 水を まく。
   v0.11.0：しゃしん アルバム（見開きの 本に ポラロイド風。ブラウザの 中に 60まい まで）。とった あと・アルバムから シェア／X／LINE／ほぞん。写真の 下に #TonsOfFlowers。自動ダウンロードは やめた。
@@ -3643,7 +3644,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.12.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.12.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3651,16 +3652,48 @@ const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null,
   TXT:'Tons of Flowers', E:60/132/2, T0:.9,
   COL:[[255,111,155],[255,190,60],[178,128,240],[255,128,92],[96,196,140],[255,150,190],[120,170,240]],
-  show(cb,now){ for(const k of Object.keys(this)) if(/^(l\d+|landed|fx)$/.test(k)) delete this[k]; this.cb=cb||null; this.on=true; this.go=false; this.t=0; this.last=0; this.parts=[]; this.fadeT=0; $('opOv').hidden=false; $('opOv').style.opacity=1; $('opSkip').hidden=true; this.fit(); requestAnimationFrame(ts=>this.loop(ts)); if(now) this.tap(); },
+  BLOOM:.8,   // つぼみを タップしてから かんばんが おちはじめるまで（秒）
+  show(cb,now){ for(const k of Object.keys(this)) if(/^(l\d+|landed|fx|popped)$/.test(k)) delete this[k]; this.cb=cb||null; this.on=true; this.go=false; this.bl=0; this.t=0; this.last=0; this.parts=[]; this.fadeT=0; $('opOv').hidden=false; $('opOv').style.opacity=1; $('opSkip').hidden=true; this.fit(); requestAnimationFrame(ts=>this.loop(ts)); if(now) this.tap(true); },
   fit(){ const c=$('opCv'), d=Math.min(window.devicePixelRatio||1,2); c.width=Math.round(window.innerWidth*d); c.height=Math.round(window.innerHeight*d); this.dpr=d; },
   slot(i){ return this.T0+8*this.E+i*this.E; },          // 文字 i が さく 時こく（2小節目から 8分音符ごと）
   get fin(){ return this.T0+3*8*this.E; },                // フィナーレ（4小節目）
   get end(){ return this.T0+4*8*this.E+.6; },
-  tap(){
+  tap(now){
     if(!this.on||this.fadeT) return;
-    if(!this.go){ Sfx.ensure(); goLandscape(); this.go=true; this.t=0; $('opSkip').hidden=false; this.music(); return; }
+    if(!this.go){
+      if(this.bl) return;                                   // もう さきはじめている
+      Sfx.ensure(); goLandscape();                          // 音・全画面は タップの その場でしか ゆるされない
+      if(now){ this.start(); return; }                      // 「オープニングを みる」から：つぼみは とばす
+      this.bl=.001; this.bloomSfx(); return; }              // さいしょの 1輪が さく → BLOOM 秒後に かんばん
     if(this.t>=this.fin) this.finish();
   },
+  start(){ this.go=true; this.t=0; $('opSkip').hidden=false; this.music(); },
+  bloomSfx(){   // ぽんっ＋きらきら（さいしょの 1輪）
+    const ac=Sfx.ac; if(!Sfx.on||!ac) return;
+    try{ const A=ac.currentTime+.03, mf=m=>440*Math.pow(2,(m-69)/12), out=ac.createGain(); out.gain.value=.8; out.connect(ac.destination);
+      const o=(type,f,t,dur,vol,to)=>{ const os=ac.createOscillator(), g=ac.createGain(); os.type=type; os.frequency.setValueAtTime(f,A+t); if(to) os.frequency.exponentialRampToValueAtTime(to,A+t+dur);
+        g.gain.setValueAtTime(.0001,A+t); g.gain.exponentialRampToValueAtTime(vol,A+t+.01); g.gain.exponentialRampToValueAtTime(.0001,A+t+dur); os.connect(g); g.connect(out); os.start(A+t); os.stop(A+t+dur+.03); };
+      o('sine',260,0,.14,.25,620); o('triangle',mf(79),.06,.25,.1);
+      [84,88,91,96].forEach((m,k)=>o('sine',mf(m),.12+k*.06,.22,.05,mf(m)*1.15));
+    }catch(e){ console.error(e); } },
+  // さいしょの つぼみ（くき・葉っぱ つき）。k：0＝つぼみ → 1＝まんかい
+  bud(g,x,y,r,T,k){
+    const col=this.COL[0], sway=Math.sin(T*1.6)*.06*(1-k);
+    g.save(); g.translate(x,y); g.rotate(sway);
+    g.strokeStyle='#4f9a43'; g.lineWidth=Math.max(2,r*.13); g.lineCap='round';
+    g.beginPath(); g.moveTo(-r*.1,r*1.55); g.quadraticCurveTo(r*.15,r*.9,0,r*.25); g.stroke();
+    this.leaf(g,r*.02,r*1.0,r*.75,-.45+Math.sin(T*2)*.06); this.leaf(g,-r*.04,r*1.18,r*.65,Math.PI+.5-Math.sin(T*2.2)*.06);
+    if(k<.35){
+      const p=1+.05*Math.sin(T*4);   // ふくらんで 「さわって」と さそう
+      g.scale(p,p);
+      g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.7); g.lineWidth=Math.max(1,r*.06);
+      g.beginPath(); g.moveTo(0,-r*.78); g.bezierCurveTo(r*.48,-r*.45,r*.42,r*.2,0,r*.22); g.bezierCurveTo(-r*.42,r*.2,-r*.48,-r*.45,0,-r*.78); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(0,-r*.74); g.quadraticCurveTo(r*.18,-r*.25,r*.04,r*.18); g.stroke();   // 花びらの あわせめ
+      g.fillStyle='rgba(255,255,255,.45)'; g.beginPath(); g.ellipse(-r*.15,-r*.32,r*.07,r*.2,-.3,0,7); g.fill();
+      g.fillStyle='#5aa647'; g.strokeStyle='#3d7d32';   // がく
+      for(const a of [-.75,0,.75]){ g.save(); g.translate(0,r*.25); g.rotate(a); g.beginPath(); g.moveTo(-r*.13,0); g.quadraticCurveTo(-r*.1,-r*.3,0,-r*.42); g.quadraticCurveTo(r*.1,-r*.3,r*.13,0); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+    } else this.flower(g,0,0,r,col,k,0);
+    g.restore(); },
   finish(){ if(!this.on||this.fadeT) return; this.fadeT=.001; $('opSkip').hidden=true;
     try{ if(this.out){ const t=this.ac.currentTime; this.out.gain.cancelScheduledValues(t); this.out.gain.setValueAtTime(this.out.gain.value,t); this.out.gain.linearRampToValueAtTime(0,t+.35); } }catch(_){} },
   kill(){ if(!this.on) return; this.on=false; $('opOv').hidden=true; try{ if(this.out) this.out.gain.value=0; }catch(_){} },
@@ -3668,6 +3701,10 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
     if(!this.on) return;
     const dt=Math.min(.05,(ts-this.last)/1000||0); this.last=ts;
     if(this.go) this.t+=dt;
+    else if(this.bl){ this.bl+=dt;   // つぼみが さいていく
+      if(this.bl>=.18&&!this.popped){ this.popped=1; const c=$('opCv'), d=this.dpr||1, u=this.u||1, W=c.width/d, H=c.height/d;
+        this.burst(W/2,H*.36,26,340*u,[shade(this.COL[0],1),shade(this.COL[5],1),'#fff6ea','#ffd34d']); }
+      if(this.bl>=this.BLOOM) this.start(); }
     if(this.fadeT){ this.fadeT+=dt; $('opOv').style.opacity=Math.max(0,1-this.fadeT/.45);
       if(this.fadeT>=.45){ this.kill(); const cb=this.cb; this.cb=null; if(cb) cb(); return; } }
     else if(this.go&&this.t>=this.end) this.finish();
@@ -3742,14 +3779,20 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
     for(let k=0;k<46;k++){ const x=hash(k*11)*W, y=gy+8*u+hash(k*17)*(H-gy-10*u), r=(5+hash(k*5)*4)*u*(.6+(y-gy)/(H-gy)); this.flower(g,x,y,r,this.COL[k%this.COL.length],1,Math.sin(T*1.5+k)*.15); }
     // まだ タップ前
     if(!this.go){
-      const p=.5+.5*Math.sin(T*4); g.textAlign='center'; g.textBaseline='middle';
-      this.flower(g,W/2,H*.4,(58+p*8)*u,this.COL[0],1,T*.4);
+      g.textAlign='center'; g.textBaseline='middle';
+      // さいしょの 1輪：つぼみを タップすると さく（音・全画面に ひつような タップを、このゲームの 「さかせる」に する）
+      const bk=this.bl?.3+.7*clamp((this.bl-.1)/.4):.3, br=58*u;
+      if(!this.bl){ const q=(T%1.6)/1.6; g.strokeStyle=`rgba(255,255,255,${.7*(1-q)})`; g.lineWidth=4*u; g.beginPath(); g.arc(W/2,H*.36-br*.25,br*(.6+q*.9),0,7); g.stroke(); }   // さわってね の わっか
+      this.bud(g,W/2,H*.36,br,T,bk);
+      const ta=this.bl?clamp(1-this.bl/.25):1; g.globalAlpha=ta;
       g.font=`900 ${Math.max(18,30*u)}px ${FONT}`; g.lineWidth=6*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
-      const msg=document.body.classList.contains('touch')?'タップしてね':'クリックしてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
+      const msg=document.body.classList.contains('touch')?'タップして さかせてね':'クリックして さかせてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
       { const mw=g.measureText(msg).width, fs=Math.max(11,14*u); g.font=`800 ${fs}px ${FONT}`; g.textAlign='right'; g.lineWidth=4*u; g.strokeStyle='rgba(255,255,255,.9)'; g.fillStyle='#9a7a5e';   // バージョン：「クリックしてね」の 右下（v0.10.0）
         g.strokeText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.fillText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.textAlign='center'; }
-      this.partsDraw(g); return;
+      g.globalAlpha=1; this.partsDraw(g); return;
     }
+    // さいた 1輪は、かんばんが おちてくる あいだに 上へ ふわっと きえる
+    if(this.popped&&t<.45){ const q=t/.45, k=1-q*q; this.bud(g,W/2,H*.36-q*70*u,58*u*k,T,1); }   // すきとおると 花びらの かさなりが 見えるので、ちぢめて けす
     // かんばん（ひゅーっと おちて、ぽよんと はずむ）
     const bw=740*u, bh=310*u, cx=W/2, cy0=H*.42, dk=clamp(t/.86);
     let cy=cy0; if(t<.86) cy=lerp(-bh,cy0,dk*dk); else if(t<1.5){ const q=(t-.86)/.64; cy=cy0-Math.abs(Math.sin(q*Math.PI*2))*(1-q)*26*u; }
