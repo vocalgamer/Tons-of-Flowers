@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.12.2</title>
+<title>TONS OF FLOWERS — Prototype v0.12.3</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.12.2（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.12.3（GDD v3.8準拠・2.5D・単一HTML）
+  v0.12.3：つぼみの 文字を「クリックしてね」（スマホは「タップしてね」）に もどす。さいた 花は ちぢまず、こちらへ ズームインして すきとおって きえる（かんばんより 手前）。
   v0.12.2：オープニングの「クリックしてね」を「タップして さかせてね」の つぼみに。タップで さいしょの 1輪が さき（ぽんっ＋花びら）、そこから かんばんが おちてくる。「オープニングを みる」から は つぼみを とばす。
   v0.12.1：Cubeの 上の 展開図を スマホでは 大きく（画面上で 1マス 約12px 以上。さいだい 2.6倍。PC・タブレットは ほぼ そのまま）。
   v0.12.0：風に いみを：「なぎ→よこく→とっぷう」を くりかえし、むきは ランダム。とっぷうで ぽつんと さいた 花が 2〜4マス つぼみに もどり、花びらが かざしもの 土に たねを まく。かぜよけの かげ・かたまりの 花は まもられる。風車は とっぷうで 水を まく。
@@ -3644,7 +3645,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.12.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.12.3';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3786,13 +3787,11 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
       this.bud(g,W/2,H*.36,br,T,bk);
       const ta=this.bl?clamp(1-this.bl/.25):1; g.globalAlpha=ta;
       g.font=`900 ${Math.max(18,30*u)}px ${FONT}`; g.lineWidth=6*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
-      const msg=document.body.classList.contains('touch')?'タップして さかせてね':'クリックして さかせてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
+      const msg=document.body.classList.contains('touch')?'タップしてね':'クリックしてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
       { const mw=g.measureText(msg).width, fs=Math.max(11,14*u); g.font=`800 ${fs}px ${FONT}`; g.textAlign='right'; g.lineWidth=4*u; g.strokeStyle='rgba(255,255,255,.9)'; g.fillStyle='#9a7a5e';   // バージョン：「クリックしてね」の 右下（v0.10.0）
         g.strokeText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.fillText(VERSION,W/2+mw/2,H*.4+100*u+Math.max(18,30*u)*.5+fs*.9); g.textAlign='center'; }
       g.globalAlpha=1; this.partsDraw(g); return;
     }
-    // さいた 1輪は、かんばんが おちてくる あいだに 上へ ふわっと きえる
-    if(this.popped&&t<.45){ const q=t/.45, k=1-q*q; this.bud(g,W/2,H*.36-q*70*u,58*u*k,T,1); }   // すきとおると 花びらの かさなりが 見えるので、ちぢめて けす
     // かんばん（ひゅーっと おちて、ぽよんと はずむ）
     const bw=740*u, bh=310*u, cx=W/2, cy0=H*.42, dk=clamp(t/.86);
     let cy=cy0; if(t<.86) cy=lerp(-bh,cy0,dk*dk); else if(t<1.5){ const q=(t-.86)/.64; cy=cy0-Math.abs(Math.sin(q*Math.PI*2))*(1-q)*26*u; }
@@ -3846,6 +3845,13 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
         g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.5); g.lineWidth=2; g.beginPath(); g.roundRect?g.roundRect(x-s,y-2*s,2*s,2*s,s*.45):g.rect(x-s,y-2*s,2*s,2*s); g.fill(); g.stroke();
         g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(x-s*.35,y-s*1.15,2,0,7); g.arc(x+s*.35,y-s*1.15,2,0,7); g.fill(); g.strokeStyle='#3b2f2a'; g.lineWidth=1.5; g.beginPath(); g.arc(x,y-s*.95,3.5,.2,2.9); g.stroke(); });
       g.globalAlpha=1; }
+    // さいた 1輪が こちらへ ぐーっと せまって（ズームイン）すきとおって きえる。かんばんより 手前に かく。
+    // そのまま うすくすると 花びらの かさなりが すけるので、べつの キャンバスに かいてから まとめて うすくする
+    if(this.popped&&t<.55){ const q=t/.55, sc=1+q*q*6, a=1-q*q;
+      const f=this.fcv||(this.fcv=document.createElement('canvas')); if(f.width!==c.width||f.height!==c.height){ f.width=c.width; f.height=c.height; }
+      const fg=f.getContext('2d'); fg.setTransform(1,0,0,1,0,0); fg.clearRect(0,0,f.width,f.height); fg.setTransform(d,0,0,d,0,0);
+      this.bud(fg,W/2,H*.36,58*u*sc,T,1);
+      g.globalAlpha=a; g.drawImage(f,0,0,W,H); g.globalAlpha=1; }
     this.partsDraw(g);
     if(t>=this.fin+.4&&!this.fadeT){ const p=.55+.45*Math.sin(T*5); g.globalAlpha=p; g.textAlign='center'; g.textBaseline='middle'; g.font=`900 ${Math.max(15,24*u)}px ${FONT}`; g.lineWidth=5*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
       const msg=document.body.classList.contains('touch')?'タップで スタート':'クリックで スタート'; g.strokeText(msg,cx,H-26*u); g.fillText(msg,cx,H-26*u); g.globalAlpha=1; }
