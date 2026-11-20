@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.12.3</title>
+<title>TONS OF FLOWERS — Prototype v0.12.5</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.12.3（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.12.5（GDD v3.8準拠・2.5D・単一HTML）
+  v0.12.5：ステージ開始の「はじめる」ボタンを なくした。ステージ名の カードが 出て 約1.8秒で 自動で はじまる（さわる・Space/Enter・パッドAで すぐ）。ヒントの 文は はじまったあと 上の お知らせで 出す。
+  v0.12.4：再開時に 音が 鳴らなくなる 対策。1秒より 長く 画面を はなれた／戻るボタンで もどった／resume() で もどらない／「running」なのに 時計が 止まっている（見はり）ときは、次の タップ・キーで 音の 装置を 作りなおす（BGMも 自動で 再開）。
   v0.12.3：つぼみの 文字を「クリックしてね」（スマホは「タップしてね」）に もどす。さいた 花は ちぢまず、こちらへ ズームインして すきとおって きえる（かんばんより 手前）。
   v0.12.2：オープニングの「クリックしてね」を「タップして さかせてね」の つぼみに。タップで さいしょの 1輪が さき（ぽんっ＋花びら）、そこから かんばんが おちてくる。「オープニングを みる」から は つぼみを とばす。
   v0.12.1：Cubeの 上の 展開図を スマホでは 大きく（画面上で 1マス 約12px 以上。さいだい 2.6倍。PC・タブレットは ほぼ そのまま）。
@@ -303,6 +305,11 @@
   #toast{left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);padding:6px 16px;text-align:center;max-width:min(440px,70vw);width:max-content;pointer-events:none;z-index:5;
     background:rgba(255,248,234,.62);border-width:1.5px;box-shadow:none;animation:toastIn .3s ease-out,toastOut .4s ease-in 1.9s forwards}
   @keyframes toastOut{to{opacity:0}}
+  /* ステージ開始カード（v0.12.5）：ぽんっと 出て、自動で きえる */
+  #stageOv{cursor:pointer}
+  #stageOv .card{animation:stIn .4s cubic-bezier(.3,1.6,.5,1) both}
+  #stageOv.out{animation:toastOut .3s forwards}
+  @keyframes stIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
   #toast b{display:block;font-size:15px;letter-spacing:.04em}
   #toast span{display:block;font-size:12.5px;font-weight:700;margin-top:2px;line-height:1.4}
   @keyframes toastIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
@@ -581,8 +588,8 @@
   <div class="card">
     <p class="sub" id="stNo">ステージ 1</p>
     <h1 id="stName">はじまりの草原</h1>
-    <p class="tip" id="stTip"></p>
-    <button class="big" id="stGo">はじめる</button>
+    <!-- v0.12.5：ボタンは なし（約1.8秒で 自動で はじまる。さわれば すぐ）。stGo は テスト・旧コード用に のこす -->
+    <button class="big" id="stGo" style="display:none">はじめる</button>
   </div>
 </div>
 
@@ -1981,6 +1988,7 @@ const Input={
     const STAMP=['Space','Enter','KeyZ','KeyX'];
     window.addEventListener('keydown',e=>{
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
+      if(!document.getElementById('stageOv').hidden&&STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat) UI.stClose(); return; }   // ステージ名カード：キーで すぐ はじめる
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
       else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
@@ -2026,7 +2034,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(Op.on) Op.tap(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -2039,10 +2047,32 @@ const Sfx={
   ac:null,on:true,lastTick:0,
   ensure(){ try{
     try{ if(navigator.audioSession&&navigator.audioSession.type!=='playback') navigator.audioSession.type='playback'; }catch(_){}   // iPhone：マナーモードでも 鳴らす
-    if(this.ac&&this.ac.state==='closed'){ this.ac=null; this.nz=null; if(Bgm.gain){ Bgm.gain=null; Bgm.playing=false; } }
+    if(this.ac&&this.ac.state==='closed'){ this.ac=null; this.nz=null; Bgm.reset(); }   // v0.12.4：タイマーも 止める（前は 古い タイマーが のこっていた）
     if(!this.ac){ const A=window.AudioContext||window.webkitAudioContext; if(A) this.ac=new A(); }
     if(this.ac&&this.ac.state!=='running') this.ac.resume().catch(()=>{});   // suspended／interrupted（電話・ほかのアプリ・画面ロックの あと）から もどす
   }catch(_){} },
+  // 音の 装置を 作りなおす（v0.12.4）。iPhone などで ほかのアプリ・電話・画面ロックから もどると、
+  // resume() しても もどらない／「running」なのに 時計が 止まって 無音、に なることが あるため。
+  // かならず タップ・キーの その場で よぶ（そうでないと 新しい 装置も 止まったまま）
+  stale:false, failed:false, hidAt:0, wd:null,
+  rebuild(){ try{
+    const old=this.ac; this.ac=null; this.nz=null; this.stale=false; this.failed=false; this.wd=null;
+    Bgm.reset();                                            // BGMは 次の フレームで update() が 自動で 再開する
+    if(old){ try{ old.close().catch(()=>{}); }catch(_){} }
+    this.ensure();
+  }catch(_){} },
+  // タップ・キーの たびに よぶ：あやしければ 作りなおす
+  wake(){ const ac=this.ac; if(!ac||!this.on) return;
+    if(this.stale||this.failed||ac.state==='interrupted'){ this.rebuild(); return; }
+    if(ac.state!=='running'){ this.ensure(); setTimeout(()=>{ if(this.ac===ac&&ac.state!=='running') this.failed=true; },400); }   // もどらなければ 次の タップで 作りなおす
+  },
+  // 見はり：「running」なのに 時計が すすまない ＝ こわれている → 次の タップで 作りなおす
+  watch(){ const ac=this.ac; if(!ac||document.hidden||ac.state!=='running'){ this.wd=null; return; }
+    const now=performance.now()/1000;
+    if(!this.wd||this.wd.ac!==ac){ this.wd={ac,t:now,c:ac.currentTime}; return; }
+    const dw=now-this.wd.t; if(dw<1.5) return;
+    if(ac.currentTime-this.wd.c<dw*.3) this.stale=true;
+    this.wd={ac,t:now,c:ac.currentTime}; },
   tone(f,dur,o={}){
     if(!this.on||!this.ac) return;
     try{ const t=this.ac.currentTime+(o.delay||0), os=this.ac.createOscillator(), g=this.ac.createGain();
@@ -2142,6 +2172,7 @@ const Bgm={
       clearInterval(this.timer); this.timer=setInterval(()=>this.pump(),25); this.pump();
     }catch(_){ this.playing=false; }
   },
+  reset(){ clearInterval(this.timer); this.timer=0; this.playing=false; this.gain=null; this.noise=null; },   // 音の 装置を 作りなおすとき（古い 装置に つないだ ものは すてる）
   stop(fade=.6){
     if(!this.playing) return; this.playing=false; clearInterval(this.timer); this.timer=0;
     try{ const t=Sfx.ac.currentTime, g=this.gain.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value,t); g.linearRampToValueAtTime(0,t+fade); }catch(_){}
@@ -3298,7 +3329,8 @@ const UI={
     $('fullBtn').hidden=!canFull; $('fullBtn').onclick=()=>{ if(document.fullscreenElement||document.webkitFullscreenElement){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(_){} } else goLandscape(); };
     const fsMark=()=>{ const on=!!(document.fullscreenElement||document.webkitFullscreenElement); $('fullBtn').textContent=on?'⤡':'⛶'; $('fullBtn').setAttribute('aria-label',on?'全画面を やめる':'全画面に する'); };
     document.addEventListener('fullscreenchange',fsMark); document.addEventListener('webkitfullscreenchange',fsMark);
-    $('stGo').onclick=()=>{ Sfx.ensure(); goLandscape(); $('stageOv').hidden=true; document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); };
+    $('stGo').onclick=()=>{ Sfx.ensure(); goLandscape(); this.stClose(true); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); };
+    $('stageOv').addEventListener('pointerdown',e=>{ e.preventDefault(); Sfx.ensure(); this.stClose(); });   // さわれば すぐ はじまる
     $('selBack').onclick=()=>this.closeSub('selectOv');
     $('dexBack').onclick=()=>this.closeSub('dexOv');
     $('storyNext').onclick=()=>this.storyStep();
@@ -3312,7 +3344,16 @@ const UI={
     if(!Save.data.story&&!S.started){ Save.data.story=true; Save.save(); this.story(false,()=>this.start()); return; }   // はじめてのときは おはなしから（GDD 3）
     const first=!S.started; S.started=true; $('startOv').hidden=true; if(first) this.toast(); canvas.focus&&canvas.focus(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   toastT:0,
-  toast(){ $('stageName').textContent=STAGE.name; $('stNo').textContent='ステージ '+(S.stage+1); $('stName').textContent=STAGE.name; $('stTip').textContent=STAGE.tip; $('stageOv').hidden=false; $('stGo').focus(); },   // ステージ開始カード（はじめるを おすまで 止まる）
+  // ステージ開始カード（v0.12.5）：ステージ名だけ 出して 約1.8秒で 自動で はじまる（さわる・キーで すぐ）。
+  // ヒントの 文は カードから はずし、はじまったあと 上の 小さな お知らせで 出す（とめない）
+  stT:0, ST_SHOW:1.8,
+  toast(){ $('stageName').textContent=STAGE.name; $('stNo').textContent='ステージ '+(S.stage+1); $('stName').textContent=STAGE.name;
+    const ov=$('stageOv'); ov.classList.remove('out'); ov.hidden=false; clearTimeout(this.stT); this.stT=setTimeout(()=>this.stClose(),this.ST_SHOW*1000); },
+  stClose(now){ const ov=$('stageOv'); if(ov.hidden) return; clearTimeout(this.stT);
+    const tip=()=>{ if(STAGE.tip) this.say(STAGE.name,STAGE.tip,true); };
+    if(now){ ov.hidden=true; ov.classList.remove('out'); tip(); return; }
+    if(ov.classList.contains('out')) return;
+    ov.classList.add('out'); this.stT=setTimeout(()=>{ ov.hidden=true; ov.classList.remove('out'); tip(); },300); },
   say(n,t,quiet){ $('toastName').textContent=n; $('toastTip').textContent=t; const el=$('toast'); el.hidden=true; void el.offsetWidth; el.hidden=false; clearTimeout(this.toastT); this.toastT=setTimeout(()=>{el.hidden=true;},2400); if(!quiet) Sfx.rare(); },
   next(){ this.load(S.stage+1>=STAGES.length?0:S.stage+1,true); },   // つぎの ステージへ：もちものを もちこす
   restart(){ this.load(S.stage); },   // やりなおす：もちものは なし
@@ -3645,7 +3686,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.12.3';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.12.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3936,8 +3977,11 @@ document.addEventListener('webkitfullscreenchange',fit);
 if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
 const onTurn=()=>{ Input.keys.clear(); fit(); };
 if(PORTRAIT.addEventListener) PORTRAIT.addEventListener('change',onTurn); else if(PORTRAIT.addListener) PORTRAIT.addListener(onTurn);
-document.addEventListener('visibilitychange',()=>{ if(document.hidden) Bgm.stop(.1); else Sfx.ensure(); });
-['pointerdown','touchend','keydown'].forEach(n=>document.addEventListener(n,()=>{ if(Sfx.ac&&Sfx.ac.state!=='running') Sfx.ensure(); },{capture:true,passive:true}));   // さわるたびに 音を 再開できるか たしかめる   // 画面を離れたら すぐ止める
+// 画面を離れたら すぐ止める。1秒より 長く はなれて いたら、次の タップで 音の 装置を 作りなおす（v0.12.4：再開後に 音が 鳴らない 対策）
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ Bgm.stop(.1); Sfx.hidAt=performance.now(); } else { if(Sfx.hidAt&&performance.now()-Sfx.hidAt>1000) Sfx.stale=true; Sfx.ensure(); } });
+window.addEventListener('pageshow',e=>{ if(e.persisted) Sfx.stale=true; });   // 戻るボタンで キャッシュから もどったとき
+['pointerdown','touchend','keydown'].forEach(n=>document.addEventListener(n,()=>Sfx.wake(),{capture:true,passive:true}));   // さわるたびに 音を 再開できるか たしかめる
+setInterval(()=>Sfx.watch(),500);
 $('stageName').textContent=STAGE.name;
 requestAnimationFrame(frame);
 
