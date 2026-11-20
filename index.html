@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.12.5</title>
+<title>TONS OF FLOWERS — Prototype v0.12.6</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.12.5（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.12.6（GDD v3.8準拠・2.5D・単一HTML）
+  v0.12.6：スマホ（高さ520px以下）で 花率の まどを ちいさく（はば 約170px・数字15px・バー6px・「花率」の 文字と「で クリア」を はぶく）。上の お知らせは スマホでは 画面の 下に ちいさく 出す（ボタンに かからない）。
   v0.12.5：ステージ開始の「はじめる」ボタンを なくした。ステージ名の カードが 出て 約1.8秒で 自動で はじまる（さわる・Space/Enter・パッドAで すぐ）。ヒントの 文は はじまったあと 上の お知らせで 出す。
   v0.12.4：再開時に 音が 鳴らなくなる 対策。1秒より 長く 画面を はなれた／戻るボタンで もどった／resume() で もどらない／「running」なのに 時計が 止まっている（見はり）ときは、次の タップ・キーで 音の 装置を 作りなおす（BGMも 自動で 再開）。
   v0.12.3：つぼみの 文字を「クリックしてね」（スマホは「タップしてね」）に もどす。さいた 花は ちぢまず、こちらへ ズームインして すきとおって きえる（かんばんより 手前）。
@@ -371,8 +372,18 @@
   #questBox{top:max(10px,env(safe-area-inset-top));width:220px;padding:2px 6px}
   @media (max-height:520px){
     .panel,#hint{border-width:11px;border-image-width:15px;border-image-outset:4px}   /* 小さい 画面は わくを ほそく */
-    #rate{width:calc(min(250px,30vw) + 18px)}
-    #itemBox{top:calc(max(8px,env(safe-area-inset-top)) + 118px)}
+    /* v0.12.6：花率の まどを スマホでは ちいさく（ステージに かからないように）。「花率」の 文字は はぶく */
+    #rate{width:calc(min(150px,22vw) + 18px);padding:0 5px 9px}
+    #rate .name{font-size:10px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #rate .lbl{display:none}
+    #rateNum{font-size:15px} #rateNum small{font-size:9px}
+    #bar{height:6px;margin-top:1px;border-width:1.5px}
+    #goal{top:-3px;bottom:-3px}
+    #goal::after{content:"90%";top:6px;right:-8px;font-size:8.5px}
+    #itemBox{top:calc(max(8px,env(safe-area-inset-top)) + 96px)}
+    /* お知らせは 上の ボタンに かかるので、スマホでは 下に ちいさく（下の 説明の まどは スマホでは 出していない） */
+    #toast{top:auto;bottom:max(6px,env(safe-area-inset-bottom));max-width:min(420px,62vw);padding:0 8px}
+    #toast b{font-size:11.5px} #toast span{font-size:10px;margin-top:0;line-height:1.3}
     #questBox{top:max(8px,env(safe-area-inset-top));width:176px;padding:1px 4px}
   }
   /* ===== v0.11.0：しゃしんアルバム（見開きの 本に ポラロイド風の 写真を テープで はる）＋ シェア ===== */
@@ -439,7 +450,7 @@
 </div>
 
 <div id="rate" class="panel">
-  <div class="row"><span class="name"><span id="stageName"></span>　花率</span><span id="rateNum">0<small>%</small></span></div>
+  <div class="row"><span class="name"><span id="stageName"></span><span class="lbl">　花率</span></span><span id="rateNum">0<small>%</small></span></div>
   <div id="bar"><div id="barFill"></div><div id="goal"></div></div>
 </div>
 
@@ -3686,7 +3697,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.12.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.12.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
