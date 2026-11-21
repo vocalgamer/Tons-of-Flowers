@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.13</title>
+<title>TONS OF FLOWERS — Prototype v0.13.14</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.13（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.14（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.14：顔を だした モグラは もとの 大きさに（もぐっている 所は 大きいまま）。もこもこは 通っただけでは もどらず、その上で ジャンプ（その マスを タップ／Space等）すると 着地で 土に。つながりが 0本の もこもこが 見えなくなる バグを 修正（ぽつんと 1つ 描く）。前・左右が ふさがり うしろの もこもこが 土に もどっていると モグラが 止まる バグを 修正（うしろの 土へ ひきかえす）。
   v0.13.13：モグラの 絵を 大きく（もぐっている 所＝マス 1つぶんの はば、顔を だした モグラも 約1.6倍）。タップの あたりも 広く。
   v0.13.12：モグラ・ウリ坊が 向かいやすいのは 花畑だけ（3倍。CFG.FLOWER_PULL）。ウリ坊の 荒地4倍・もこもこ2.5倍は やめて ふつうの 土と 同じに。モグラにも 花畑へ 進みやすい しくみを 追加。
   v0.13.11：ウリ坊も もこもこを 土に もどせる（通った マスが もどる。さきっぽの マスは のぞく）。ウリ坊は もこもこにも むかいやすい（重み 2.5）。
@@ -1594,7 +1595,7 @@ function drinkHoney(){
 const moleHead=()=>{ const m=S.mole, u=clamp(m.t/CFG.MOLE_STEP); return {x:lerp(m.fi,m.i,u)+.5,y:lerp(m.fj,m.j,u)+.5}; };
 function moleOK(t){ return !!t&&t.type==='ground'&&!t.garden&&!bigAt(t.i,t.j)&&!t.mole&&!cubeAt(t.i,t.j); }   // Cubeの 下も とおらない
 function moleMark(t){ t.mole=true; if(t.state>0){ setTile(t,0); wiltFx(t.i+.5,t.j+.5); } t.wt=0; }
-function moleEnd(){ const m=S.mole; if(!m) return; for(const t of m.trail){ t.mole=false; t.ml=null; } S.gardenDirty=true; S.mole=null; S.moleCool=CFG.MOLE_COOL; }
+function moleEnd(){ const m=S.mole; if(!m) return; for(const t of m.trail){ t.mole=false; t.ml=null; } S.gardenDirty=true; S.mole=null; S.moleCool=CFG.MOLE_COOL; S.hana.stomp=null; }
 // v0.13.6：もこもこの つながり。t.ml＝{E:1,...}（その辺の となりの もこもこと つながっている）
 function moleLink(a,d,b){ const nA=!(a.ml&&a.ml[d]), nB=!(b.ml&&b.ml[OPP[d]]); (a.ml=a.ml||{})[d]=1; (b.ml=b.ml||{})[OPP[d]]=1; return {nA,nB}; }
 // Hanaが ふんだ もこもこは もとの 土に もどる（つながりも きる。また 花が さくように なる）
@@ -1620,6 +1621,9 @@ function molePop(){ const m=S.mole, h=S.hana; if(!m||m.mode!=='dig') return; con
   m.mode='pop'; S.molePopN=(S.molePopN|0)+1; m.popT=0; m.tehe=0; m.px=hd.x; m.py=hd.y; Sfx.pop(); h.want=null; if(h.goal&&h.goal.mole) h.goal=null; }
 function uriTouch(){ const u=S.uribo, h=S.hana; if(!u||u.mode==='happy'||u.mode==='leave') return;
   u.mode='happy'; u.t=0; u.tehe=0; Sfx.pop(); h.want=null; if(h.goal&&h.goal.uribo) h.goal=null; }
+// v0.13.14：もこもこは Hanaが その上で ジャンプ（その マスを タップ／Space等）すると、着地で 土に もどる（通っただけでは もどらない）
+const moundUnderHana=()=>{ const t=hanaTile(), m=S.mole; return t&&t.mole&&m&&m.mode==='dig'&&!(t.i===m.i&&t.j===m.j)?t:null; };
+function stompMound(t){ const h=S.hana; if(!t||h.stomp) return false; h.stomp=t; h.stampT=.28; h.goal=null; h.want=null; Sfx.ensure(); return true; }
 function pokeAnimal(kind){ const h=S.hana; if(!S.started||S.cleared) return false;
   if((!kind||kind==='mole')&&S.mole&&S.mole.mode==='dig'){ const hd=moleHead(); if(Math.hypot(hd.x-h.x,hd.y-h.y)<1.0){ molePop(); return true; } }
   const u=S.uribo; if((!kind||kind==='uribo')&&u&&u.mode!=='happy'&&u.mode!=='leave'&&Math.hypot(u.x-h.x,u.y-h.y)<.95){ uriTouch(); return true; }
@@ -1629,11 +1633,11 @@ function updateMole(dt){
   const h=S.hana;
   if(!S.mole){ S.moleCool-=dt; if(S.moleCool<=0) spawnMole(); return; }
   const m=S.mole;
+  if(h.stomp&&h.stampT<=.04){ const t=h.stomp; h.stomp=null; if(t.mole&&m.mode==='dig'&&!(t.i===m.i&&t.j===m.j)) moleFlatten(t); }   // ジャンプの 着地で 土に もどる
   if(m.mode==='pop'){ m.popT+=dt; if(m.popT>=MOLE_POP.T[3]&&!m.tehe){ m.tehe=1; textFx(m.px,m.py,2.2,'てへっ♪','#e0569a',1.3,1.8); } if(m.popT>=MOLE_POP.END) moleEnd(); return; }      // は？ → テヘペロ → もぐる（v0.13.0）
   if(m.mode==='sink'){ m.popT+=dt; if(m.popT>=.6) moleEnd(); return; }      // しずかに いなくなる
   const hd=moleHead();
   if(h.want==='mole'&&Math.hypot(hd.x-h.x,hd.y-h.y)<.7){ molePop(); return; }   // v0.13.10：タップで ねらって さわった ときだけ（ぶつかった だけでは なにも おきない）
-  { const ht=tileAt(Math.floor(h.x),Math.floor(h.y)); if(ht&&ht.mole&&!(ht.i===m.i&&ht.j===m.j)) moleFlatten(ht); }   // ふむと 土に もどる（さきっぽの マスは のぞく）
   m.t+=dt;
   if(m.t<CFG.MOLE_STEP) return;
   // つぎの マスへ：まっすぐ すすみやすく、ときどき まがる。
@@ -1644,7 +1648,9 @@ function updateMole(dt){
   for(const [d,w] of [[m.dir,3],[turn[0],1],[turn[1],1]]){ const t=tileAt(m.i+DIRS[d].dx,m.j+DIRS[d].dy); if(moleOK(t)) opts.push({d,w:w*(t.state===2?CFG.FLOWER_PULL:1),t}); }   // v0.13.12：花畑の ほうへ 進みやすい
   if(!opts.length) for(const d of ['E','W','S','N']){ const t=tileAt(m.i+DIRS[d].dx,m.j+DIRS[d].dy);
     if(t&&t.mole&&t.type==='ground'&&!cubeAt(t.i,t.j)&&!bigAt(t.i,t.j)) opts.push({d,t,w:(cur&&cur.ml&&cur.ml[d]?3:1)*(d===DIRS[m.dir].opp?.35:1)}); }   // もどる（来た 道へ すぐ ひきかえすのは すこし 少なめ）
-  if(!opts.length){ m.fi=m.i; m.fj=m.j; m.stuck=true; return; }
+  // v0.13.14：それも だめなら 真うしろの ふつうの 土へ ひきかえす（うしろの もこもこが 土に もどされて いると、前・左右が ふさがった とき 動けなく なっていた）
+  if(!opts.length){ const d=DIRS[m.dir].opp, t=tileAt(m.i+DIRS[d].dx,m.j+DIRS[d].dy); if(moleOK(t)) opts.push({d,w:1,t}); }
+  if(!opts.length){ m.fi=m.i; m.fj=m.j; m.stuck=true; return; }   // 4方向 すべて ふさがった ときだけ その場で まつ（Cubeが どけば また 動く）
   m.stuck=false;
   let r=Math.random()*opts.reduce((a,o)=>a+o.w,0), pick=opts[opts.length-1]; for(const o of opts){ r-=o.w; if(r<=0){ pick=o; break; } }
   const fresh=!pick.t.mole;
@@ -2039,6 +2045,7 @@ const Input={
     if(S.scoop&&this.scrDist(cx,cy,S.scoop.x,S.scoop.y,.3)<34){ setGoalPoint(S.scoop.x,S.scoop.y); if(h.goal) h.goal.scoop=true; return; }
     // 黒い花粉：タップすると おいかけて はらう
     for(const p of S.pollen) if(this.scrDist(cx,cy,p.x,p.y,.6)<36){ setGoalPoint(p.x,p.y); if(h.goal) h.goal.pollen=p; return; }
+    { const mu=moundUnderHana(); if(mu&&!this.pickCube(cx,cy)){ const w=this.toWorld(cx,cy); if(Math.floor(w.x)===mu.i&&Math.floor(w.y)===mu.j){ stompMound(mu); return; } } }   // 立っている もこもこを タップ ＝ ジャンプ
     if(S.digT>0&&!S.dig){ const w=this.toWorld(cx,cy), t=tileAt(Math.floor(w.x),Math.floor(w.y));   // スコップ中：荒地を タップ
       if(t&&t.hard&&!this.pickCube(cx,cy)){ if(tryDig(t)) return; setGoalPoint(t.i+.5,t.j+.5); if(h.goal) ringFx(h.goal.x,h.goal.y,'#ffffff',.32); return; } }
     const c=this.pickCube(cx,cy);
@@ -2059,7 +2066,7 @@ const Input={
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(!document.getElementById('stageOv').hidden&&STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat) UI.stClose(); return; }   // ステージ名カード：キーで すぐ はじめる
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(pokeAnimal()){} else if(moundUnderHana()) stompMound(moundUnderHana()); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
@@ -2103,7 +2110,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(pokeAnimal()){} else if(moundUnderHana()) stompMound(moundUnderHana()); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -2728,9 +2735,9 @@ const MOUND_EDGE={E:[16,8],W:[-16,-8],N:[16,-8],S:[-16,8]};
 const OPP={E:'W',W:'E',N:'S',S:'N'};
 // v0.13.6：マスごとの つながり（t.ml）で 描く。つながりが 2つ＝曲線（まっすぐ／かど）、1つ＝はし、3つ以上＝わかれ道
 function moundSides(t){
-  const m=S.mole; if(!m||!t.mole||!t.ml) return null;
-  const sides=[]; for(const d of ['E','W','S','N']) if(t.ml[d]){ const n=tileAt(t.i+DIRS[d].dx,t.j+DIRS[d].dy); if(!n||n.mole) sides.push(d); }   // 外（ステージの はし）へは つながった まま
-  if(!sides.length) return null;
+  const m=S.mole; if(!m||!t.mole) return null;
+  const sides=[]; for(const d of ['E','W','S','N']) if(t.ml&&t.ml[d]){ const n=tileAt(t.i+DIRS[d].dx,t.j+DIRS[d].dy); if(!n||n.mole) sides.push(d); }   // 外（ステージの はし）へは つながった まま
+  // v0.13.14：つながりが 0本でも（となりが 土に もどった など）もこもこの ままなので、ぽつんと 1つ もりあがりを 描く（前は 何も 描かず 見えなくなっていた）
   const u=clamp(m.t/CFG.MOLE_STEP), moving=m.mode==='dig'&&!m.stuck;
   const grow={};   // のびている とちゅうの 辺：from＝'c'（中心から 辺へ）／'e'（辺から 中心へ）、f＝のびぐあい
   if(moving&&m.gA&&m.gA.t===t) grow[m.gA.s]={from:'c',f:clamp(u*2)};
@@ -2777,12 +2784,13 @@ function drawMound(t,time){
   const sd=moundSides(t); if(!sd) return;
   const c=iso(t.i+.5,t.j+.5), art=MOUND_TEX.ok&&MOUND_TEX.img, S2=sd.sides, growing=Object.keys(sd.grow).length>0;
   const draw=(pts,straight)=>{ if(!pts) return; art?ribbonPath(pts,straight):strokePath(pts,t); };
+  if(!S2.length){ if(!sd.head) moundDome(c,art); return; }   // ぽつんと 1マス
   if(S2.length===2&&!growing){ const [a,b]=S2; draw(moundCurve(c,a,b,18),OPP[a]===b); return; }
   for(const d of S2) draw(moundSpoke(c,d,sd.grow[d],10),true);
   if((S2.length===1&&!sd.head&&!growing)||S2.length>=3) moundDome(c,art);   // はし（モグラの いない がわ）・わかれ道
 }
 // モグラ（v0.13.0：絵）。pop の ながれ：T＝[あたま, 顔, は？, テヘペロ, もぐる]の はじまり（秒）
-const MOLE_POP={T:[0,.22,.45,1.05,1.95], END:2.4, K:.55, KD:.62};   // K＝顔を だした 絵、KD＝もぐっている 所の 絵（v0.13.13：マス 1つぶんの はばまで 大きく）
+const MOLE_POP={T:[0,.22,.45,1.05,1.95], END:2.4, K:.34, KD:.62};   // K＝顔を だした 絵（v0.13.14で もとの 大きさに もどした）、KD＝もぐっている 所の 絵（マス 1つぶんの はば）
 function popMark(x,y,ch,t,col){   // は？の「？」・テヘペロの「★」（記号は ゲームが 出す）
   ctx.save(); ctx.font=`900 ${ch==='？'?16:13}px ${FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.fillStyle=col;
   const b=Math.sin(t*9)*1.5; ctx.strokeText(ch,x,y+b); ctx.fillText(ch,x,y+b); ctx.restore(); }
@@ -3870,7 +3878,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.13';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.14';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
