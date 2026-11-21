@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.14.0</title>
+<title>TONS OF FLOWERS — Prototype v0.14.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.14.0（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.14.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.14.1：もちもの（アイテムボックス）の 絵が 見切れていた（スコップ）のを 修正。どの アイテムも はこに おさまる 大きさで まんなかに。
   v0.14.0：ChatGPT作の 絵を 大量に 反映：温泉の おさる（2コマ）・スコップ・じょうろ・はちみつ／風車（羽が まわる）・岩・木・生け垣・温室／つぼみ畑・花畑・池の 質感、飛び石、吊り橋／小さな 花5色・つぼみ／ちょうちょ・金の ちょうちょ・はち（パタパタ）／魚・黒い 花粉（ゆらゆら）／花の 女王（黒・浄化）／大きな 花5・めずらしい 花15・巨大な 花15（図鑑も）。絵が 読めない ときは これまでの プログラムの 絵。
   v0.13.28：荒地3段階の 絵を 凝った ものに（角ばった 多角形の 石＝上の 面が あかるく 側面が くらい 立体、石どうしは はなす。ぎざぎざに 枝わかれする ひび＋光の すじ、土の むら、三角の かけら、根もとに かげの ある 枯れ草）。
   v0.13.27：もこもこの はし（切れ目）にも 土山の 絵を かぶせる。
@@ -3787,7 +3788,10 @@ const UI={
       if(b._k===key) continue; b._k=key; b.hidden=!show; if(!show) continue;
       const g=b.querySelector('canvas').getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,112,112);
       const f=has?1:act[k]/MAX[k];
-      if(k==='honey') drawHoneyJar(g,56,104,3.1,f); else if(k==='can') drawCan(g,46,98,2.5,f); else drawScoop(g,56,104,2.6,-.5);
+      if(artOk('items')){   // v0.14.1：絵は はこ（112×112）に おさまる 大きさで、まんなかに（スコップは かたむけない）
+        const ix={honey:4,can:3,scoop:2}[k], fr=ART.items.f[ix], sc=Math.min(92/fr[2],92/fr[3]);
+        artDraw(g,'items',ix,56,56,fr[3]*sc,{cx:1,center:1}); }
+      else if(k==='honey') drawHoneyJar(g,56,104,3.1,f); else if(k==='can') drawCan(g,46,98,2.5,f); else drawScoop(g,56,104,2.6,-.5);
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
@@ -4107,7 +4111,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.14.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.14.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
