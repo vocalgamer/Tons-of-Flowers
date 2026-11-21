@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.18</title>
+<title>TONS OF FLOWERS — Prototype v0.13.20</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.18（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.20（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.20：モグラが 通った 荒地は 土に（もこもこが 消えると ふつうの 土）。もぐっている モグラの 絵を もう ひとまわり 小さく（マスの 約72%）。もこもこの 切れ目の 土山を こい 茶色に。
+  v0.13.19：もこもこは Cubeが 通っても（ころがって 着地／空から おりる）土に もどる。スコップでも 消せる（上に 立って ほると 1回で 土に。スコップ中は ジャンプより スコップ）。
   v0.13.18：もこもこの 切れ目（はし・わかれ道・ぽつんと 1マス）を 低くて すそが ひろい 土山の 絵に（表面は もこもこの 絵と 同じ 土の もよう。こぼれた 土の かたまりつき）。
   v0.13.17：もこもこは モグラが いなくなっても のこる（S.mounds）。消えるのは Hanaの ジャンプと ウリ坊だけ（モグラが いなくても できる）。さいしょに モグラが いなくなった とき 1回だけ ヒント。
   v0.13.16：もぐっている モグラの 絵を ひとまわり 小さく（マス 1つぶん → 約85%）。
@@ -959,6 +961,7 @@ function onLand(c){
     setTile(t,1); wiltFx(c.i+.5,c.j+.5); Sfx.wilt();
     if(S.toldTrample<3){ S.toldTrample++; textFx(c.i+.5,c.j+.5,1.9,'ふまれて つぼみに…','#6c6f8f'); }
   }
+  if(t&&t.mole&&!(S.mole&&S.mole.mode==='dig'&&t.i===S.mole.i&&t.j===S.mole.j)) moleFlatten(t,'cube');   // v0.13.19：Cubeが 通った もこもこは 土に
   touchRule(c);
 }
 // Cube同士がとなりあったとき、くっついた面が「花」と「たね」なら、花の面は たねに もどる。
@@ -990,7 +993,7 @@ function updateCubes(dt){
     if(c.armBack){ c.armBack.t+=dt; if(c.armBack.t>.2) c.armBack=null; }
     c.t+=dt;
     if(c.state==='drop'){
-      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); touchRule(c); introCube(c); }
+      if(c.t>=CFG.DROP_T){ c.state='idle'; c.t=0; c.rest=1.6; c.landT=0; Sfx.land(); ringFx(c.i+.5,c.j+.5,'#ffffff',.9); { const t=tileAt(c.i,c.j); if(t&&t.mole&&!(S.mole&&S.mole.mode==='dig'&&t.i===S.mole.i&&t.j===S.mole.j)) moleFlatten(t,'cube'); } touchRule(c); introCube(c); }
     }else if(c.state==='idle'){
       if(c.pendingBloom){ startBloom(c); continue; }
       if(S.cleared) continue;
@@ -1619,7 +1622,10 @@ function drinkHoney(){
  *      かおを だして テヘペロ → もぐって きえる。通り道は ふつうの 土に もどる ---- */
 const moleHead=()=>{ const m=S.mole, u=clamp(m.t/CFG.MOLE_STEP); return {x:lerp(m.fi,m.i,u)+.5,y:lerp(m.fj,m.j,u)+.5}; };
 function moleOK(t){ return !!t&&t.type==='ground'&&!t.garden&&!bigAt(t.i,t.j)&&!t.mole&&!cubeAt(t.i,t.j); }   // Cubeの 下も とおらない
-function moleMark(t){ t.mole=true; if(t.state>0){ setTile(t,0); wiltFx(t.i+.5,t.j+.5); } t.wt=0; const L=S.mounds||(S.mounds=[]); if(!L.includes(t)) L.push(t); }   // S.mounds：ステージに のこる もこもこ（v0.13.17）
+// S.mounds：ステージに のこる もこもこ（v0.13.17）。v0.13.20：荒地も ほりかえして 土に する（もこもこが 消えると ふつうの 土）
+function moleMark(t){ t.mole=true; if(t.state>0){ setTile(t,0); wiltFx(t.i+.5,t.j+.5); } t.wt=0; const L=S.mounds||(S.mounds=[]); if(!L.includes(t)) L.push(t);
+  if(t.hard){ t.hard=false; t.hardHP=0; t.flash=.8; S.tilledN=(S.tilledN|0)+1; S.moleTillN=(S.moleTillN|0)+1;
+    if((S.told.moleTill|0)<2){ S.told.moleTill=(S.told.moleTill|0)+1; textFx(t.i+.5,t.j+.5,1.8,'モグラが 荒地を ほりかえしたよ','#8a5a3c',1,2); } } }
 // v0.13.17：もこもこは のこす（消えるのは Hanaの ジャンプか ウリ坊だけ）。さいしょの 1回だけ ヒント
 function moleEnd(){ const m=S.mole; if(!m) return; S.mole=null; S.moleCool=CFG.MOLE_COOL;
   if(!S.cleared&&S.mounds&&S.mounds.length&&!S.told.moundStay){ S.told.moundStay=1; const t=S.mounds[S.mounds.length-1]; textFx(t.i+.5,t.j+.5,2.2,'もこもこは のこるよ。上で タップして ジャンプ！','#8a5a3c',1,3.2); } }
@@ -1632,6 +1638,8 @@ function moleFlatten(t,by){ if(!t||!t.mole) return; const m=S.mole;   // by：'u
   if(m){ const k=m.trail.indexOf(t); if(k>=0) m.trail.splice(k,1); if(m.gA&&m.gA.t===t) m.gA=null; if(m.gB&&m.gB.t===t) m.gB=null; }
   t.pop=0; t.flash=.6; dustFx(t.i+.5,t.j+.5); ringFx(t.i+.5,t.j+.5,'#e8cfa8',.5); Sfx.dig(); S.gardenDirty=true; S.moleFlatN=(S.moleFlatN|0)+1;
   if(by==='uribo'){ S.uriFlatN=(S.uriFlatN|0)+1; if((S.told.uriFlat|0)<2){ S.told.uriFlat=(S.told.uriFlat|0)+1; textFx(t.i+.5,t.j+.5,1.8,'ウリ坊が もこもこを ならしたよ','#a0622d',1,2); } return; }
+  if(by==='cube'){ S.cubeFlatN=(S.cubeFlatN|0)+1; if((S.told.cubeFlat|0)<2){ S.told.cubeFlat=(S.told.cubeFlat|0)+1; textFx(t.i+.5,t.j+.5,1.8,'Cubeが もこもこを ならしたよ','#3f8f6a',1,2); } return; }   // v0.13.19
+  if(by==='scoop'){ textFx(t.i+.5,t.j+.5,1.2,'ザクッ！ もこもこが 土に','#8a5a3c',1.2,1.1); return; }   // v0.13.19
   if((S.told.moleFlat|0)<2){ S.told.moleFlat=(S.told.moleFlat|0)+1; textFx(t.i+.5,t.j+.5,1.8,'ふみふみ♪ 土に もどった','#8a5a3c',1,2); } }
 function spawnMole(){
   const edge=[]; for(const row of S.tiles) for(const t of row) if(moleOK(t)&&!cubeAt(t.i,t.j)&&(t.i===0||t.j===0||t.i===COLS-1||t.j===ROWS-1)) edge.push(t);
@@ -1801,6 +1809,8 @@ function updateScoop(dt){
     if(Math.hypot(S.scoop.x-h.x,S.scoop.y-h.y)<.6){ S.scoop=null; invSet('scoop',true); Sfx.get(); textFx(h.x,h.y,2.1,'スコップ ゲット！','#8a5a3c',1.2,2); if(h.goal&&h.goal.scoop) h.goal=null; } }
   if(S.dig){   // ジャンプ（前半）→ ザクッと つきさす（なかほど）→ ほりかえす
     const D=S.dig; D.t+=dt;
+    if(!D.hit&&D.t>=CFG.DIG_T*.55&&D.mound){ D.hit=true; const t=D.tile; Sfx.zak(); if(t.mole) moleFlatten(t,'scoop');   // v0.13.19：もこもこは 1回で 土に
+      for(let k=0;k<8&&S.fx.petals.length<420;k++){ const a=Math.random()*6.283, sp=.6+Math.random()*1.1; S.fx.petals.push({x:t.i+.5,y:t.j+.5,z:.05,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,vz:2+Math.random()*1.8,life:0,max:.7,c:k%3?'#9a5428':'#c8783c',rot:Math.random()*6,vr:(Math.random()-.5)*10,s:2.6+Math.random()*1.8}); } }
     if(!D.hit&&D.t>=CFG.DIG_T*.55){ D.hit=true; const t=D.tile;
       t.hardHP=(t.hardHP||CFG.HARD_HP)-1; t.pop=0; t.flash=.6; Sfx.zak(); ringFx(t.i+.5,t.j+.5,'#e8cfa8',.6);
       const done=t.hardHP<=0; if(done){ t.hard=false; t.hardHP=0; t.flash=1; S.tilledN++; }
@@ -1850,11 +1860,12 @@ function spawnScoop(){
 const hanaTile=()=>tileAt(Math.floor(S.hana.x),Math.floor(S.hana.y));
 function digTarget(){
   if(!(S.digT>0)||S.dig||S.cleared) return null;
-  const t=hanaTile(); return t&&t.hard?t:null;
+  const t=hanaTile(); return t&&(t.hard||t===moundUnderHana())?t:null;   // v0.13.19：もこもこも
 }
 function tryDig(t){
-  if(!(S.digT>0)||S.dig||S.cleared||!t||!t.hard||t!==hanaTile()) return false;   // 上に いないと ほれない
-  S.hana.goal=null; S.dig={tile:t,t:0,hit:false};
+  if(!(S.digT>0)||S.dig||S.cleared||!t||t!==hanaTile()) return false;   // 上に いないと ほれない
+  const mound=!t.hard&&t===moundUnderHana(); if(!t.hard&&!mound) return false;
+  S.hana.goal=null; S.dig={tile:t,t:0,hit:false,mound};
   return true;
 }
 function useScoop(){
@@ -2072,9 +2083,9 @@ const Input={
     if(S.scoop&&this.scrDist(cx,cy,S.scoop.x,S.scoop.y,.3)<34){ setGoalPoint(S.scoop.x,S.scoop.y); if(h.goal) h.goal.scoop=true; return; }
     // 黒い花粉：タップすると おいかけて はらう
     for(const p of S.pollen) if(this.scrDist(cx,cy,p.x,p.y,.6)<36){ setGoalPoint(p.x,p.y); if(h.goal) h.goal.pollen=p; return; }
-    { const mu=moundUnderHana(); if(mu&&!this.pickCube(cx,cy)){ const w=this.toWorld(cx,cy); if(Math.floor(w.x)===mu.i&&Math.floor(w.y)===mu.j){ stompMound(mu); return; } } }   // 立っている もこもこを タップ ＝ ジャンプ
+    { const mu=moundUnderHana(); if(mu&&!this.pickCube(cx,cy)){ const w=this.toWorld(cx,cy); if(Math.floor(w.x)===mu.i&&Math.floor(w.y)===mu.j){ if(!tryDig(mu)) stompMound(mu); return; } } }   // 立っている もこもこを タップ ＝ ジャンプ
     if(S.digT>0&&!S.dig){ const w=this.toWorld(cx,cy), t=tileAt(Math.floor(w.x),Math.floor(w.y));   // スコップ中：荒地を タップ
-      if(t&&t.hard&&!this.pickCube(cx,cy)){ if(tryDig(t)) return; setGoalPoint(t.i+.5,t.j+.5); if(h.goal) ringFx(h.goal.x,h.goal.y,'#ffffff',.32); return; } }
+      if(t&&(t.hard||t.mole)&&!this.pickCube(cx,cy)){ if(tryDig(t)) return; setGoalPoint(t.i+.5,t.j+.5); if(h.goal) ringFx(h.goal.x,h.goal.y,'#ffffff',.32); return; } }
     const c=this.pickCube(cx,cy);
     if(c){
       S.sel=c; h.want=null;   // 左上に この Cubeの せつめいを だす。モグラ／ウリ坊の ねらいは やめる
@@ -2093,7 +2104,7 @@ const Input={
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(!document.getElementById('stageOv').hidden&&STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat) UI.stClose(); return; }   // ステージ名カード：キーで すぐ はじめる
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(pokeAnimal()){} else if(moundUnderHana()) stompMound(moundUnderHana()); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
@@ -2137,7 +2148,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(pokeAnimal()){} else if(moundUnderHana()) stompMound(moundUnderHana()); else if(digTarget()) tryDig(digTarget()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -2805,20 +2816,22 @@ function strokePath(pts,t){ const W=12.5, H=4.4, n=pts.length-1;   // プログ�
 // 表面は もこもこの 絵と 同じ 土の もようで ぬる。大きさは 前と ほぼ 同じ
 let moundPat=null;
 function moundDome(c,art,seed=0){
-  const R=art?9.2:7.6, Hh=art?7.6:6.4, rnd=k=>Math.sin(seed*12.9898+k*78.233)*.5+.5;
-  const C=art?{base:'#b86a32',line:'#7a3f1c',light:'rgba(255,214,160,.55)',dark:'rgba(110,55,20,.35)',crumb:['#9a5428','#d08a4c','#7a4220']}
+  const R=art?9.4:7.8, Hh=art?9:7.6, rnd=k=>Math.sin(seed*12.9898+k*78.233)*.5+.5;
+  const C=art?{base:'#8a4a22',line:'#4f2610',light:'rgba(230,170,110,.35)',dark:'rgba(70,30,10,.45)',tint:'rgba(70,32,12,.38)',crumb:['#6e3818','#9a5428','#55290f']}   // v0.13.20：こい 茶色に
              :{base:'#a8754e',line:'#6e4630',light:'rgba(240,210,170,.5)',dark:'rgba(80,50,30,.3)',crumb:['#7e5236','#bd8a5f','#6e4630']};
   // 足もとの うすい かげ
   ctx.fillStyle='rgba(70,45,30,.18)'; ctx.beginPath(); ctx.ellipse(c.x+1,c.y+2.2,R*1.18,R*.46,0,0,7); ctx.fill();
   // 土山の 形：すそは 横に ひろく、上は ゆるやかな でこぼこ
-  const path=()=>{ ctx.beginPath(); const N=14;
-    for(let k=0;k<=N;k++){ const a=Math.PI+Math.PI*k/N, bump=1+(rnd(k)-.5)*.22, y=Math.sin(a);
-      const px=c.x+Math.cos(a)*R*bump, py=c.y+1.5+y*Hh*bump;
-      k?ctx.lineTo(px,py):ctx.moveTo(px,py); }
-    ctx.quadraticCurveTo(c.x+R*.6,c.y+R*.42,c.x,c.y+R*.46); ctx.quadraticCurveTo(c.x-R*.6,c.y+R*.42,c.x-R,c.y+1.5); ctx.closePath(); };
+  // 上の 輪郭：7点を なめらかに つなぐ（まるい でこぼこ）。すそは 地面に そって ゆるい だ円
+  const top=[]; { const N=6; for(let k=0;k<=N;k++){ const a=Math.PI+Math.PI*k/N, bump=(k===0||k===N)?1:1+(rnd(k)-.5)*.16; top.push([c.x+Math.cos(a)*R*bump, c.y+1.5+Math.sin(a)*Hh*bump]); } }
+  const path=()=>{ ctx.beginPath(); ctx.moveTo(top[0][0],top[0][1]);
+    for(let k=1;k<top.length-1;k++){ const mx=(top[k][0]+top[k+1][0])/2, my=(top[k][1]+top[k+1][1])/2; ctx.quadraticCurveTo(top[k][0],top[k][1],mx,my); }
+    ctx.lineTo(top[top.length-1][0],top[top.length-1][1]);
+    ctx.quadraticCurveTo(c.x+R*.7,c.y+R*.45,c.x,c.y+R*.47); ctx.quadraticCurveTo(c.x-R*.7,c.y+R*.45,top[0][0],top[0][1]); ctx.closePath(); };
   path();
   if(art&&MOUND_TEX.img){ if(!moundPat){ try{ moundPat=ctx.createPattern(MOUND_TEX.img,'repeat'); moundPat.setTransform(new DOMMatrix().scale(.42)); }catch(_){ moundPat=null; } } }
   ctx.fillStyle=art&&moundPat?moundPat:C.base; ctx.fill();
+  if(C.tint){ ctx.fillStyle=C.tint; ctx.fill(); }   // もようの 上から こい 茶色を かさねる
   // 光と かげ（左上が あかるく、右下が くらい）
   const g=ctx.createLinearGradient(c.x-R*.6,c.y-Hh,c.x+R*.5,c.y+R*.3); g.addColorStop(0,C.light); g.addColorStop(.5,'rgba(255,255,255,0)'); g.addColorStop(1,C.dark);
   ctx.fillStyle=g; path(); ctx.fill();
@@ -2841,7 +2854,7 @@ function drawMound(t,time){
   if((S2.length===1&&!sd.head&&!growing)||S2.length>=3) moundDome(c,art,t.i*7+t.j*13);   // はし（モグラの いない がわ）・わかれ道
 }
 // モグラ（v0.13.0：絵）。pop の ながれ：T＝[あたま, 顔, は？, テヘペロ, もぐる]の はじまり（秒）
-const MOLE_POP={T:[0,.22,.45,1.05,1.95], END:2.4, K:.34, KD:.53};   // K＝顔を だした 絵（v0.13.14で もとの 大きさに もどした）、KD＝もぐっている 所の 絵（v0.13.16で .62→.53 ひとまわり 小さく。マスの 約85%の はば）
+const MOLE_POP={T:[0,.22,.45,1.05,1.95], END:2.4, K:.34, KD:.45};   // K＝顔を だした 絵（v0.13.14で もとの 大きさに もどした）、KD＝もぐっている 所の 絵（v0.13.16で .62→.53、v0.13.20で .53→.45。マスの 約72%の はば）
 function popMark(x,y,ch,t,col){   // は？の「？」・テヘペロの「★」（記号は ゲームが 出す）
   ctx.save(); ctx.font=`900 ${ch==='？'?16:13}px ${FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.fillStyle=col;
   const b=Math.sin(t*9)*1.5; ctx.strokeText(ch,x,y+b); ctx.fillText(ch,x,y+b); ctx.restore(); }
@@ -3929,7 +3942,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.18';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.20';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
