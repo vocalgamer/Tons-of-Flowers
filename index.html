@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.4</title>
+<title>TONS OF FLOWERS — Prototype v0.13.5</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.4（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.5（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.5：もこもこを 地面の もようと 同じ あつかいに（ほかの ものより さきに 描く）して、もぐっている モグラの 絵が かならず もこもこの 上に くるように。もぐっている 所の 絵を 1.3倍に。
   v0.13.4：もこもこを ChatGPT作の 絵に（市松模様を けして 1本の 帯に のばし、つなぎ目なく くりかえす。道の 曲線に そって はる：まっすぐは 1まい、かどは 小さく 切って すきまなく）。開発者モードに「もこもこ：絵／プログラム」の 切りかえ。
   v0.13.3：モグラを ゆっくりに（1マス 2.8→4.2秒）。ウリ坊も ゆっくりに（はしる速さ 2.4→1.6。足の うごきも あわせて ゆっくり）。
   v0.13.2：モグラ・ウリ坊は Hanaに さわられるまで いなくならない（モグラの マス数上限・行き止まりで もぐる、ウリ坊の 32秒で かえる を やめた。行き止まりの モグラは その場で 道が あくのを まつ）。
@@ -2759,7 +2760,7 @@ function drawMole(hd,time){
   const m=S.mole, p=iso(hd.x,hd.y), M=MOLE_SPR, K=MOLE_POP.K;
   if(M.ok&&M.img){
     if(m.mode==='dig'||m.mode==='sink'){ const k=m.mode==='sink'?1-clamp(m.popT/.6):1, w=1+.06*Math.sin(time*14);
-      ctx.save(); ctx.translate(p.x,p.y+7); ctx.scale(w*k,k/w); sprFrame(ctx,M,Math.floor(time*5)%2,0,0,K*.9,false); ctx.restore(); return; }
+      ctx.save(); ctx.translate(p.x,p.y+7); ctx.scale(w*k,k/w); sprFrame(ctx,M,Math.floor(time*5)%2,0,0,K*.9*1.3,false); ctx.restore(); return; }   // もぐっている 所の 絵は 1.3倍（v0.13.5）
     const T=m.popT, P=MOLE_POP.T; let fr=2;
     if(T>=P[4]) fr=8; else if(T>=P[3]) fr=T<P[3]+.35?6:7; else if(T>=P[2]) fr=T<P[2]+.3?4:5; else if(T>=P[1]) fr=3;
     const pop=T<.3?1+.12*Math.sin(clamp(T/.3)*Math.PI):1, sink=T>=P[4]?1-clamp((T-P[4])/(MOLE_POP.END-P[4]))*.35:1;
@@ -3303,7 +3304,7 @@ function render(){
   if(S.honey) items.push({d:S.honey.x+S.honey.y+.02,k:'honey'});
   if(S.can) items.push({d:S.can.x+S.can.y+.02,k:'can'});
   if(S.scoop) items.push({d:S.scoop.x+S.scoop.y+.02,k:'scoop'});
-  if(S.mole){ const m=S.mole; for(const t of m.trail) items.push({d:t.i+t.j+.9,k:'mound',t}); const hd=m.mode==='pop'?{x:m.px,y:m.py}:moleHead(); items.push({d:hd.x+hd.y+.05,k:'mole',hd}); }
+  if(S.mole){ const m=S.mole; const hd=m.mode==='pop'?{x:m.px,y:m.py}:moleHead(); items.push({d:hd.x+hd.y+.05,k:'mole',hd}); }
   if(S.uribo) items.push({d:S.uribo.x+S.uribo.y,k:'uribo'});
   for(const b of S.bigFlowers) items.push({d:b.i+b.j+1,k:'b',b});
   for(const c of S.cubes){ const p=cubePos(c); items.push({d:p.x+p.y+.05,k:'c',c}); }
@@ -3312,6 +3313,8 @@ function render(){
   if(S.fish) items.push({d:S.fish.x2+S.fish.y2+.1,k:'fish'});
   if(Photo.me) items.push({d:Photo.me.x+Photo.me.y,k:'me'});
   items.sort((a,b)=>a.d-b.d);
+  // もこもこは 地面の もようと 同じ あつかい：ほかの ものより さきに 描く（モグラの 絵が かならず もこもこの 上に くる。v0.13.5）
+  if(S.mole) for(const t of [...S.mole.trail].sort((a,b)=>(a.i+a.j)-(b.i+b.j))) drawMound(t,time);
   const geo=new Map();
   for(const it of items){
     if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07+flowerBend(t,t.i+de.u,t.j+de.v)+windSway(time,de.ph);
@@ -3825,7 +3828,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
