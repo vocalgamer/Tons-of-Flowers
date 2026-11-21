@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.0</title>
+<title>TONS OF FLOWERS — Prototype v0.13.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.0（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.1：開発者モード（オープニングの つぼみ画面で PC＝Shift＋クリック／スマホ＝5秒 長押し。ゲージつき）。いまは 全ステージ選択だけ（ロック・おはなしを とばす。セーブは かえない）。スマホの つぼみは はなした ときに さく。
   v0.13.0：モグラ・ウリ坊を ChatGPT作の 絵に（モグラ9コマ・ウリ坊10コマ。ふちの にじみを けして 切り出し）。さわると「は？ 何ごと？」（？）→ テヘペロ（★・てへっ♪／ぷぎっ♪）の ながれに。モグラの 通り道（もこもこ）を 道の むきに そって 1本に つながる 土の うねに（プログラムで 描く。絵の 版は 比較まち）。
   v0.12.6：スマホ（高さ520px以下）で 花率の まどを ちいさく（はば 約170px・数字15px・バー6px・「花率」の 文字と「で クリア」を はぶく）。上の お知らせは スマホでは 画面の 下に ちいさく 出す（ボタンに かからない）。
   v0.12.5：ステージ開始の「はじめる」ボタンを なくした。ステージ名の カードが 出て 約1.8秒で 自動で はじまる（さわる・Space/Enter・パッドAで すぐ）。ヒントの 文は はじまったあと 上の お知らせで 出す。
@@ -265,7 +266,9 @@
   #endOv{position:fixed;inset:0;z-index:40;background:#141633}
   #opOv{position:fixed;inset:0;z-index:25;background:#8fd3f2;cursor:pointer}
   #opOv[hidden]{display:none}
-  #opCv{position:absolute;inset:0;width:100%;height:100%}
+  #opCv{position:absolute;inset:0;width:100%;height:100%;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+  #devOv{z-index:40}
+  #devOv h1{color:#8a3a5a}
   #opSkip{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
   #endOv[hidden]{display:none}
   #endCv{position:absolute;inset:0;width:100%;height:100%}
@@ -588,6 +591,16 @@
 <div id="opOv" hidden>
   <canvas id="opCv" aria-label="オープニング"></canvas>
   <button class="btn" id="opSkip" hidden>とばす</button>
+</div>
+
+<!-- v0.13.1：開発者モード（オープニングの つぼみ画面で PC＝Shift＋クリック／スマホ＝5秒 長押し）。セーブは かえない -->
+<div class="overlay" id="devOv" hidden>
+  <div class="card">
+    <h1>開発者モード</h1>
+    <p class="sub">ステージを えらぶと すぐ はじまります（ロック・おはなしは とばす。セーブは かわりません）</p>
+    <div class="grid" id="devGrid"></div>
+    <button class="link" id="devBack">オープニングに もどる</button>
+  </div>
 </div>
 
 <div id="endOv" hidden>
@@ -3392,7 +3405,16 @@ const UI={
     $('camShot').onclick=()=>Photo.camShot();
     $('camCancel').onclick=()=>Photo.camStop();
     $('endSkip').onclick=()=>Ending.stop();
-    $('opCv').addEventListener('pointerdown',e=>{ e.preventDefault(); Op.tap(); });
+    // オープニング：PCは おした 瞬間に さく。Shift＋クリックは 開発者モード（v0.13.1）
+    // タッチは はなした ときに さく（長押しと 見わけるため）。つぼみ画面で 5秒 長押し ＝ 開発者モード
+    $('opCv').addEventListener('pointerdown',e=>{ e.preventDefault();
+      if(!Op.go&&!Op.bl&&e.shiftKey){ Dev.open(); return; }
+      if(e.pointerType==='mouse'||Op.go||Op.bl){ Op.tap(); return; }
+      Op.hold={t0:performance.now(),id:e.pointerId}; try{ $('opCv').setPointerCapture(e.pointerId); }catch(_){} });
+    const holdEnd=e=>{ const h=Op.hold; if(!h||h.id!==e.pointerId) return; Op.hold=null; if(e.type==='pointerup'&&!h.done) Op.tap(); };
+    $('opCv').addEventListener('pointerup',holdEnd); $('opCv').addEventListener('pointercancel',holdEnd);
+    $('opCv').addEventListener('contextmenu',e=>e.preventDefault());
+    Dev.init();
     $('opSkip').onclick=e=>{ e.stopPropagation(); Op.finish(); };
     $('opBtn').onclick=()=>{ $('startOv').hidden=true; Op.show(()=>{ $('startOv').hidden=false; },true); };
     $('endDone').onclick=()=>Ending.stop();
@@ -3764,7 +3786,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -3773,13 +3795,13 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
   TXT:'Tons of Flowers', E:60/132/2, T0:.9,
   COL:[[255,111,155],[255,190,60],[178,128,240],[255,128,92],[96,196,140],[255,150,190],[120,170,240]],
   BLOOM:.8,   // つぼみを タップしてから かんばんが おちはじめるまで（秒）
-  show(cb,now){ for(const k of Object.keys(this)) if(/^(l\d+|landed|fx|popped)$/.test(k)) delete this[k]; this.cb=cb||null; this.on=true; this.go=false; this.bl=0; this.t=0; this.last=0; this.parts=[]; this.fadeT=0; $('opOv').hidden=false; $('opOv').style.opacity=1; $('opSkip').hidden=true; this.fit(); requestAnimationFrame(ts=>this.loop(ts)); if(now) this.tap(true); },
+  show(cb,now){ for(const k of Object.keys(this)) if(/^(l\d+|landed|fx|popped)$/.test(k)) delete this[k]; this.cb=cb||null; this.on=true; this.go=false; this.bl=0; this.hold=null; this.t=0; this.last=0; this.parts=[]; this.fadeT=0; $('opOv').hidden=false; $('opOv').style.opacity=1; $('opSkip').hidden=true; this.fit(); requestAnimationFrame(ts=>this.loop(ts)); if(now) this.tap(true); },
   fit(){ const c=$('opCv'), d=Math.min(window.devicePixelRatio||1,2); c.width=Math.round(window.innerWidth*d); c.height=Math.round(window.innerHeight*d); this.dpr=d; },
   slot(i){ return this.T0+8*this.E+i*this.E; },          // 文字 i が さく 時こく（2小節目から 8分音符ごと）
   get fin(){ return this.T0+3*8*this.E; },                // フィナーレ（4小節目）
   get end(){ return this.T0+4*8*this.E+.6; },
   tap(now){
-    if(!this.on||this.fadeT) return;
+    if(!this.on||this.fadeT||!$('devOv').hidden) return;   // 開発者モードの 画面が 出ている 間は さかない
     if(!this.go){
       if(this.bl) return;                                   // もう さきはじめている
       Sfx.ensure(); goLandscape();                          // 音・全画面は タップの その場でしか ゆるされない
@@ -3820,6 +3842,7 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
   loop(ts){
     if(!this.on) return;
     const dt=Math.min(.05,(ts-this.last)/1000||0); this.last=ts;
+    if(this.hold&&!this.hold.done&&!this.go&&!this.bl&&performance.now()-this.hold.t0>=Dev.HOLD*1000){ this.hold.done=true; Dev.open(); }   // 5秒 長押し ＝ 開発者モード
     if(this.go) this.t+=dt;
     else if(this.bl){ this.bl+=dt;   // つぼみが さいていく
       if(this.bl>=.18&&!this.popped){ this.popped=1; const c=$('opCv'), d=this.dpr||1, u=this.u||1, W=c.width/d, H=c.height/d;
@@ -3904,6 +3927,9 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
       const bk=this.bl?.3+.7*clamp((this.bl-.1)/.4):.3, br=58*u;
       if(!this.bl){ const q=(T%1.6)/1.6; g.strokeStyle=`rgba(255,255,255,${.7*(1-q)})`; g.lineWidth=4*u; g.beginPath(); g.arc(W/2,H*.36-br*.25,br*(.6+q*.9),0,7); g.stroke(); }   // さわってね の わっか
       this.bud(g,W/2,H*.36,br,T,bk);
+      if(this.hold&&!this.hold.done){ const e=(performance.now()-this.hold.t0)/1000;   // 長押しの ゲージ（すこし おしてから 出す）
+        if(e>.6){ const k=clamp((e-.6)/(Dev.HOLD-.6)); g.save(); g.lineCap='round'; g.lineWidth=6*u; g.strokeStyle='rgba(255,255,255,.55)'; g.beginPath(); g.arc(W/2,H*.36-br*.25,br*1.25,0,7); g.stroke();
+          g.strokeStyle='#8a3a5a'; g.beginPath(); g.arc(W/2,H*.36-br*.25,br*1.25,-Math.PI/2,-Math.PI/2+k*Math.PI*2); g.stroke(); g.restore(); } }
       const ta=this.bl?clamp(1-this.bl/.25):1; g.globalAlpha=ta;
       g.font=`900 ${Math.max(18,30*u)}px ${FONT}`; g.lineWidth=6*u; g.strokeStyle='#fff'; g.fillStyle='#7a4a26';
       const msg=document.body.classList.contains('touch')?'タップしてね':'クリックしてね'; g.strokeText(msg,W/2,H*.4+100*u); g.fillText(msg,W/2,H*.4+100*u);
@@ -4015,7 +4041,19 @@ function drawStoryArt(g,ending,k){
     else { flowers(34,190); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
   }
 }
-const paused=()=>Op.on||Ending.on||!$('albumOv').hidden||!$('pvOv').hidden||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
+/* ---- 開発者モード（v0.13.1）：いまは ステージ選択だけ。セーブ（ロック・おはなし）は かえない ---- */
+const Dev={
+  HOLD:5,   // スマホ：つぼみ画面で この秒数 長押し
+  init(){ $('devBack').onclick=()=>{ $('devOv').hidden=true; }; },
+  open(){ const G=$('devGrid'); G.innerHTML='';
+    STAGES.forEach((st,i)=>{ const b=document.createElement('button'), best=Save.data.best[i];
+      b.innerHTML='<b>'+(i+1)+'</b>'+st.name+(best!=null?'<br>'+(st.boss?'✿':best+'%'):''); if(best!=null) b.className='done';
+      b.onclick=()=>this.pick(i); G.appendChild(b); });
+    Op.hold=null; $('devOv').hidden=false; },
+  pick(i){ $('devOv').hidden=true; Op.kill(); Sfx.ensure(); goLandscape();
+    UI.load(i); S.started=true; $('startOv').hidden=true; UI.toast(); }
+};
+const paused=()=>!$('devOv').hidden||Op.on||Ending.on||!$('albumOv').hidden||!$('pvOv').hidden||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
 /* ================================================================
  * 12. MAIN
