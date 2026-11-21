@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.26</title>
+<title>TONS OF FLOWERS — Prototype v0.13.27</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.26（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.27（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.27：もこもこの はし（切れ目）にも 土山の 絵を かぶせる。
   v0.13.26：1マスだけ のこった もこもこを ChatGPT作の 土山の 絵に（3しゅるい、マスごとに ちがう 絵）。
   v0.13.25：雲の上の庭：雲の すきまに 面した マスの はしに うすい 地層（約8px。外周に ちかづくほど 外周の 地層の あつさまで なめらかに ふとく して 角で つながる。上の ふちの 草・土の 層・小石・たまに 根っこ）。雲の すきまの 上には ステージの ふちの 線を ひかない。
   v0.13.24：雲の上の庭の 雲海（画面 手前）が ものすごく はやく 流れていた バグを 修正（速さの 計算 ミス。1秒に 約7pxに）。雲海の むきも 空の 雲と 同じ 左→右に。空の 雲も ぜんたいに ゆっくり。
@@ -2936,7 +2937,8 @@ function drawMound(t,time){
   const draw=(pts,straight)=>{ if(!pts) return; art?ribbonPath(pts,straight):strokePath(pts,t); };
   if(!S2.length){ if(!sd.head){ if(!drawHeap(c,t.i*7+t.j*13)) moundDome(c,art,t.i*7+t.j*13); } return; }   // ぽつんと 1マス：v0.13.23 土山（ChatGPTの 絵が とどくまでは プログラムの 土山）
   if(S2.length===2&&!growing){ const [a,b]=S2; draw(moundCurve(c,a,b,18),OPP[a]===b); return; }
-  if(art&&S2.length===1&&!sd.head&&!growing){ moundEndArt(c,S2[0]); return; }   // はし（絵の 帯で 丸く）
+  if(art&&S2.length===1&&!sd.head&&!growing){ moundEndArt(c,S2[0]);   // はし（絵の 帯で 丸く）
+    const A=MOUND_EDGE[S2[0]], L=Math.hypot(A[0],A[1]); drawHeap({x:c.x-A[0]/L*3,y:c.y-A[1]/L*3},t.i*7+t.j*13); return; }   // v0.13.27：はしに 土山を かぶせる（帯の 丸い はしを かくす）
   for(const d of S2) draw(moundSpoke(c,d,sd.grow[d],10),true);
   if(!art&&S2.length===1&&!sd.head&&!growing) moundDome(c,art,t.i*7+t.j*13);   // （絵が 読めない ときだけ）はし
   if(S2.length>=3){ if(art) moundKnobArt(c); else moundDome(c,art,t.i*7+t.j*13); }   // わかれ道の まんなか
@@ -4030,7 +4032,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.26';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.27';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
