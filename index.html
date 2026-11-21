@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.13.20</title>
+<title>TONS OF FLOWERS — Prototype v0.13.22</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.13.20（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.13.22（GDD v3.8準拠・2.5D・単一HTML）
+  v0.13.22：もこもこの 切れ目は 別の 土山を おかず、もこもこの 絵の 帯 そのものを 丸く おわらせる（はし・ぽつんと 1マス・わかれ道の まんなか）。帯の さかいめを 1px かさねて すけを なくす。
+  v0.13.21：雲の上の庭の 背景に 流れる 雲（3つの 層で とおくは 小さく ゆっくり・ちかくは 大きく はやく、下には 雲海が ゆっくり 流れる。左→右）。
   v0.13.20：モグラが 通った 荒地は 土に（もこもこが 消えると ふつうの 土）。もぐっている モグラの 絵を もう ひとまわり 小さく（マスの 約72%）。もこもこの 切れ目の 土山を こい 茶色に。
   v0.13.19：もこもこは Cubeが 通っても（ころがって 着地／空から おりる）土に もどる。スコップでも 消せる（上に 立って ほると 1回で 土に。スコップ中は ジャンプより スコップ）。
   v0.13.18：もこもこの 切れ目（はし・わかれ道・ぽつんと 1マス）を 低くて すそが ひろい 土山の 絵に（表面は もこもこの 絵と 同じ 土の もよう。こぼれた 土の かたまりつき）。
@@ -216,6 +218,10 @@
     radial-gradient(ellipse 13% 5% at 22% 74%,rgba(255,255,255,.75),transparent 70%),radial-gradient(ellipse 12% 5% at 92% 55%,rgba(255,255,255,.8),transparent 70%),
     radial-gradient(ellipse 10% 4% at 6% 50%,rgba(255,255,255,.75),transparent 70%)}
   body[data-theme=clouds]::after{display:none}
+  /* v0.13.21：雲は キャンバスで ほんとうに 流す（前の ぼかし雲は 左右に 3%ゆれる だけだった） */
+  body[data-theme=clouds]::before{display:none}
+  #cloudCv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;display:none}
+  body[data-theme=clouds] #cloudCv{display:block}
   @keyframes drift{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
   body[data-theme=night]{--neb1:rgba(120,90,210,.24);--neb2:rgba(60,80,180,.18)}
   body[data-theme=garden]{--neb1:rgba(110,190,140,.18);--neb2:rgba(230,190,120,.12)}
@@ -475,6 +481,7 @@
 </style>
 </head>
 <body>
+<canvas id="cloudCv" aria-hidden="true"></canvas>   <!-- v0.13.21：雲の上の庭の 流れる 雲（ゲーム画面の うしろ） -->
 <canvas id="game" aria-label="TONS OF FLOWERS のゲーム画面"></canvas>
 
 <div id="cubePanel" class="panel">
@@ -2844,14 +2851,43 @@ function moundDome(c,art,seed=0){
     const px=c.x+Math.cos(a)*d, py=c.y+1.8+Math.sin(a)*d*.42; if(Math.sin(a)<-.3) continue;   // うしろがわは 山に かくれる
     ctx.fillStyle=C.crumb[k%3]; ctx.beginPath(); ctx.ellipse(px,py,r*1.2,r*.8,0,0,7); ctx.fill(); }
 }
+// v0.13.22：はしは 別の 土山を おかず、もこもこの 絵の 帯 そのものを 丸く おわらせる（色・もよう・かげが 本体と つながる）
+// p→r に 帯を はる。capP／capR：その はしを だ円で 丸く 切りぬく
+function ribbonPiece(p,r,capP,capR){ const X=MOUND_TEX, HD=18, ts=X.h/HD, tu=x=>((x%X.w)+X.w)%X.w;
+  let a=Math.atan2(r[1]-p[1],r[0]-p[0]), o=p, cL=capP, cR=capR; if(Math.cos(a)<0){ a+=Math.PI; o=r; cL=capR; cR=capP; }   // 左→右に そろえる
+  let len=Math.hypot(r[0]-p[0],r[1]-p[1]); if(len<.5) return;
+  const top=-HD*.62, bot=HD*.38, cy=(top+bot)/2, ry=(bot-top)/2, rx=Math.min(ry*1.05,len/2);
+  const span=Math.abs(r[0]-p[0])*MK*ts, k=len/Math.max(.001,span/ts);
+  ctx.save(); ctx.translate(o[0],o[1]); ctx.rotate(a);
+  // 丸めない がわは となりの 帯と 1px かさねる（ぴったりだと さかいめが うっすら すける）
+  const ov=1; if(!cL){ ctx.translate(-ov,0); len+=ov; } if(!cR) len+=ov;
+  // 足もとの かげ（丸い はしにも）
+  ctx.fillStyle='rgba(70,45,30,.16)'; ctx.beginPath(); ctx.ellipse(len/2,bot*.55,len/2+rx*.2,ry*.55,0,0,7); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cL?rx:0,top); ctx.lineTo(cR?len-rx:len,top);
+  if(cR) ctx.ellipse(len-rx,cy,rx,ry,0,-Math.PI/2,Math.PI/2); else { ctx.lineTo(len,bot); }
+  ctx.lineTo(cL?rx:0,bot);
+  if(cL) ctx.ellipse(rx,cy,rx,ry,0,Math.PI/2,Math.PI*1.5); else { ctx.lineTo(0,top); }
+  ctx.closePath(); ctx.clip();
+  let c=tu(o[0]*MK*ts), x=0, rest=span;
+  while(rest>.01){ const take=Math.min(rest,X.w-c); ctx.drawImage(X.img,c,0,take,X.h,x,top,take/ts*k+.01,HD); x+=take/ts*k; rest-=take; c=0; }
+  // 丸い はしに すこし 立体の かげ（はしの 下がわを くらく）
+  for(const [on,ex] of [[cL,rx],[cR,len-rx]]) if(on){ const g=ctx.createRadialGradient(ex,cy-ry*.35,ry*.2,ex,cy,ry*1.1); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(60,28,10,.2)'); ctx.fillStyle=g; ctx.fillRect(ex-rx,top,rx*2,HD); }
+  ctx.restore(); }
+function moundEndArt(c,d){   // はし：辺の まんなか → 中心を 少し こえた 所で 丸く おわる
+  const A=MOUND_EDGE[d], L=Math.hypot(A[0],A[1]), ux=-A[0]/L, uy=-A[1]/L, ext=5;
+  ribbonPiece([c.x+A[0],c.y+A[1]],[c.x+ux*ext,c.y+uy*ext],false,true); }
+function moundKnobArt(c){   // ぽつんと 1マス／わかれ道の まんなか：みじかい 帯の 両はしを 丸く（よこむき）
+  const u=[16/17.89,8/17.89], h=12; ribbonPiece([c.x-u[0]*h,c.y-u[1]*h],[c.x+u[0]*h,c.y+u[1]*h],true,true); }
 function drawMound(t,time){
   const sd=moundSides(t); if(!sd) return;
   const c=iso(t.i+.5,t.j+.5), art=MOUND_TEX.ok&&MOUND_TEX.img, S2=sd.sides, growing=Object.keys(sd.grow).length>0;
   const draw=(pts,straight)=>{ if(!pts) return; art?ribbonPath(pts,straight):strokePath(pts,t); };
-  if(!S2.length){ if(!sd.head) moundDome(c,art,t.i*7+t.j*13); return; }   // ぽつんと 1マス
+  if(!S2.length){ if(!sd.head){ if(art) moundKnobArt(c); else moundDome(c,art,t.i*7+t.j*13); } return; }   // ぽつんと 1マス
   if(S2.length===2&&!growing){ const [a,b]=S2; draw(moundCurve(c,a,b,18),OPP[a]===b); return; }
+  if(art&&S2.length===1&&!sd.head&&!growing){ moundEndArt(c,S2[0]); return; }   // はし（絵の 帯で 丸く）
   for(const d of S2) draw(moundSpoke(c,d,sd.grow[d],10),true);
-  if((S2.length===1&&!sd.head&&!growing)||S2.length>=3) moundDome(c,art,t.i*7+t.j*13);   // はし（モグラの いない がわ）・わかれ道
+  if(!art&&S2.length===1&&!sd.head&&!growing) moundDome(c,art,t.i*7+t.j*13);   // （絵が 読めない ときだけ）はし
+  if(S2.length>=3){ if(art) moundKnobArt(c); else moundDome(c,art,t.i*7+t.j*13); }   // わかれ道の まんなか
 }
 // モグラ（v0.13.0：絵）。pop の ながれ：T＝[あたま, 顔, は？, テヘペロ, もぐる]の はじまり（秒）
 const MOLE_POP={T:[0,.22,.45,1.05,1.95], END:2.4, K:.34, KD:.45};   // K＝顔を だした 絵（v0.13.14で もとの 大きさに もどした）、KD＝もぐっている 所の 絵（v0.13.16で .62→.53、v0.13.20で .53→.45。マスの 約72%の はば）
@@ -3942,7 +3978,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.13.20';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.13.22';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4233,14 +4269,64 @@ function update(dt){
   if(want&&!Bgm.playing) Bgm.start(); else if(!want&&Bgm.playing) Bgm.stop();
 }
 let last=0;
+/* ---- 雲の上の庭（v0.13.21）：背景に 雲が 流れる。とおくの 雲は 小さく ゆっくり、ちかくの 雲は 大きく はやい（奥行き）。
+ *      下には 雲海が ゆっくり 流れて、島が 空に うかんで いるように 見せる。左 → 右へ 流れて、はしまで 行くと 反対がわから もどる ---- */
+const CloudBG={cv:null,g:null,W:0,H:0,dpr:1,sprites:[],sea:null,clouds:[],seaX:0,ready:false,
+  rnd(seed){ let x=seed*9301+49297; return ()=>{ x=(x*9301+49297)%233280; return x/233280; }; },
+  sprite(seed,w,h){   // ふんわり 雲 1つ（下が すこし 青みの かげ、上が まっ白）
+    const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'), r=this.rnd(seed);
+    const puffs=[], n=5+Math.floor(r()*3), base=h*.76;   // まるい 頭が キャンバスの 上で 切れないように（いちばん 高い 所でも 上に すきま）
+    for(let k=0;k<n;k++){ const t=(k+.5)/n, x=w*(.16+.68*t), mid=1-Math.abs(t-.5)*1.6, rad=h*(.14+.15*mid+r()*.06); puffs.push([x,base-rad*.5-mid*h*.1,rad]); }
+    puffs.push([w*.5,base-h*.04,h*.24]);
+    const blob=(dy,col)=>{ g.fillStyle=col; g.beginPath(); for(const [x,y,rad] of puffs){ g.moveTo(x+rad,y+dy); g.arc(x,y+dy,rad,0,7); } g.ellipse(w*.5,base+dy,w*.38,h*.12,0,0,7); g.fill(); };
+    blob(h*.05,'rgba(170,195,225,.55)');   // うらがわの かげ
+    blob(0,'#f4f8fd');
+    const gr=g.createLinearGradient(0,base-h*.6,0,base+h*.1); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.6,'rgba(255,255,255,.2)'); gr.addColorStop(1,'rgba(205,222,242,.6)');
+    g.globalCompositeOperation='source-atop'; g.fillStyle=gr; g.fillRect(0,0,w,h); g.globalCompositeOperation='source-over';
+    return c; },
+  seaBand(w,h){   // 雲海（よこに つながる 帯）
+    const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'), r=this.rnd(77);
+    const puffs=[]; for(let x=0;x<w;x+=h*.22){ puffs.push([x+r()*h*.1,h*(.42+r()*.16),h*(.22+r()*.14)]); }
+    const draw=(dy,col)=>{ g.fillStyle=col; g.beginPath(); for(const [x,y,rad] of puffs) for(const ox of [-w,0,w]){ g.moveTo(x+ox+rad,y+dy); g.arc(x+ox,y+dy,rad,0,7); } g.rect(0,h*.55+dy,w,h); g.fill(); };
+    draw(h*.06,'rgba(175,200,230,.6)'); draw(0,'#f2f7fd');
+    const gr=g.createLinearGradient(0,0,0,h); gr.addColorStop(0,'rgba(255,255,255,.95)'); gr.addColorStop(.7,'rgba(255,255,255,0)'); gr.addColorStop(1,'rgba(215,230,246,.5)');
+    g.globalCompositeOperation='source-atop'; g.fillStyle=gr; g.fillRect(0,0,w,h); g.globalCompositeOperation='source-over';
+    return c; },
+  init(){ this.cv=$('cloudCv'); if(!this.cv) return; this.g=this.cv.getContext('2d');
+    for(let k=0;k<6;k++) this.sprites.push(this.sprite(11+k*7,360,180));
+    this.sea=this.seaBand(1400,260);
+    const r=this.rnd(5);
+    // 層：[数, 大きさ, 速さ(px/秒・画面幅1000あたり), 濃さ, 高さの はんい]
+    for(const [n,sc,sp,al,y0,y1] of [[7,.45,7,.55,.04,.55],[6,.75,15,.8,.08,.7],[4,1.15,28,.95,.15,.8]])
+      for(let k=0;k<n;k++) this.clouds.push({x:r(),y:y0+r()*(y1-y0),sc:sc*(.8+r()*.4),sp:sp*(.85+r()*.3),al,spr:Math.floor(r()*this.sprites.length)});
+    this.clouds.sort((a,b)=>a.sc-b.sc);
+    this.ready=true; this.fit(); },
+  fit(){ if(!this.cv) return; const d=Math.min(window.devicePixelRatio||1,2); this.dpr=d; this.W=window.innerWidth; this.H=window.innerHeight;
+    this.cv.width=Math.round(this.W*d); this.cv.height=Math.round(this.H*d); },
+  draw(dt){ if(!this.ready||document.body.dataset.theme!=='clouds') return;
+    if(this.cv.width!==Math.round(window.innerWidth*this.dpr)||this.cv.height!==Math.round(window.innerHeight*this.dpr)) this.fit();
+    const g=this.g, W=this.W, H=this.H, u=Math.max(W,H)/1000;
+    g.setTransform(this.dpr,0,0,this.dpr,0,0); g.clearRect(0,0,W,H);
+    // 雲海（下）：2まいの 帯を ずらして 流す
+    this.seaX=(this.seaX+dt*10*u)%1;
+    for(const [yy,al,sc,off] of [[.78,.75,.9,0],[.86,1,1.15,.37]]){ const sw=W*1.6*sc, sh=sw*260/1400, x0=-((this.seaX+off)%1)*sw;
+      g.globalAlpha=al; for(let x=x0;x<W;x+=sw-1) g.drawImage(this.sea,x,H*yy-sh*.45,sw,sh); }
+    g.globalAlpha=1;
+    // 空の 雲
+    for(const c of this.clouds){ c.x+=dt*c.sp*u/(W+600*u*c.sc)*1; if(c.x>1) c.x-=1;
+      const w=360*c.sc*u, h=180*c.sc*u, span=W+w*2, x=-w+c.x*span;
+      g.globalAlpha=c.al; g.drawImage(this.sprites[c.spr],x,H*c.y-h*.5,w,h); }
+    g.globalAlpha=1; }
+};
 function frame(ts){
   const dt=Math.min(.05,(ts-last)/1000||0); last=ts;
   try{ update(dt); render(); UI.update(); }catch(e){ console.error(e); }
+  try{ CloudBG.draw(dt); }catch(e){ console.error(e); }   // v0.13.21：雲の上の庭の 流れる 雲
   requestAnimationFrame(frame);
 }
 Bgm.init(); Save.load(); Save.data.inv={};   // ページを ひらきなおしたら あたらしく はじめる（もちものは もちこさない）
 S=newState(0);
-Assets.init(); UI.init(); Input.init(canvas); UI.theme(); fit();
+Assets.init(); UI.init(); Input.init(canvas); UI.theme(); fit(); CloudBG.init();
 $('startOv').hidden=true; Op.show(()=>{ $('startOv').hidden=false; $('startBtn').focus(); });   // さいしょは オープニング
 window.addEventListener('resize',()=>{ fit(); if(Ending.on) Ending.fit(); if(Op.on) Op.fit(); });
 window.addEventListener('orientationchange',()=>{ fit(); setTimeout(fit,250); });   // 回転直後はサイズが遅れて変わる端末がある
