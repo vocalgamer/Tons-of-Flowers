@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.14.10</title>
+<title>TONS OF FLOWERS — Prototype v0.15.0</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.14.10（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.15.0（GDD v3.8準拠・2.5D・単一HTML）
+  v0.15.0：音の 対策を 強化（無音の <audio> ループで iPhoneの マナースイッチ・中断に つよく、指を はなした とき・クリックでも 再開、イヤホン 切りかえで 作りなおし、「おと」OFF→ONで 音の 装置を 作りなおす＋あそびかたに 案内）。エンディングの 配置を 画面の 形に あわせて 自動調整（キャラは 字幕の わくの 上・「とばす」の 下、さいごの 場面は ロゴ→文字→Hana→「おわる」を つめて ならべ、高さが たりない ときは Hanaを ボタンの よこに）。
+  v0.14.11：エンディングで ふってくる 花びらを 3倍の 大きさに。
   v0.14.10：モグラの テヘペロ（2コマ）で 手が 3本 あったのを 修正（穴の ふちの 右手を けして、毛と ふちで うめた）。
   v0.14.9：エンディングの 花の 星の まわりの 光の 輪が 右がわで 欠けていたのを 修正。
   v0.14.8：エンディングの 背景3枚を 作りなおした 大きな 絵（1672×941）に 差し替え。
@@ -574,6 +576,7 @@
     <ul class="tip">
       <li>マークの 面を <b>さいごに</b> スタンプすると とくべつな ちから！</li>
       <li>Cubeどうしが くっつくと、花の面が たねに もどることも</li>
+      <li>音が 出ない ときは、右上の「おと」を OFF → ON に してね</li>
     </ul>
     <p class="keys">
       <span class="pc">マウスだけで あそべるよ：クリックした ところへ あるく ／ そばの Cubeを クリックで スタンプ</span>
@@ -2221,8 +2224,19 @@ const Sfx={
     if(old){ try{ old.close().catch(()=>{}); }catch(_){} }
     this.ensure();
   }catch(_){} },
+  // v0.15.0：無音の <audio> を ループで ながして おく（iPhone：マナースイッチが ONでも Web Audioの 音が 消されにくく なる。
+  // 音の セッションが「再生中」に たもたれ、ほかの アプリや 画面ロックの あとも もどりやすい。Androidでも 音の 出口を にぎって おける）
+  keep:null,
+  keepAlive(){ try{ if(!this.on||document.hidden) return;
+    if(!this.keep){ const sr=8000, n=sr/4, b=new ArrayBuffer(44+n), v=new DataView(b), w=(o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
+      w(0,'RIFF'); v.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true); v.setUint32(24,sr,true); v.setUint32(28,sr,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,'data'); v.setUint32(40,n,true);
+      for(let i=0;i<n;i++) v.setUint8(44+i,128);   // 0.25秒の 無音
+      const a=new Audio(URL.createObjectURL(new Blob([b],{type:'audio/wav'}))); a.loop=true; a.setAttribute('playsinline',''); a.preload='auto'; this.keep=a; }
+    if(this.keep.paused){ const p=this.keep.play(); if(p&&p.catch) p.catch(()=>{}); }
+  }catch(_){} },
+  keepStop(){ try{ if(this.keep&&!this.keep.paused) this.keep.pause(); }catch(_){} },
   // タップ・キーの たびに よぶ：あやしければ 作りなおす
-  wake(){ const ac=this.ac; if(!ac||!this.on) return;
+  wake(){ this.keepAlive(); const ac=this.ac; if(!ac||!this.on) return;
     if(this.stale||this.failed||ac.state==='interrupted'){ this.rebuild(); return; }
     if(ac.state!=='running'){ this.ensure(); setTimeout(()=>{ if(this.ac===ac&&ac.state!=='running') this.failed=true; },400); }   // もどらなければ 次の タップで 作りなおす
   },
@@ -3818,7 +3832,8 @@ const UI={
   restart(){ this.load(S.stage); },   // やりなおす：もちものは なし
   load(idx,keep){ if(!keep) invClear(); Photo.me=null; Photo.on=false; document.body.classList.remove('photo'); $('photoUi').hidden=true; const was=S.started; S=newState(idx); S.started=was; this.theme(); fit(); if(was) this.toast(); $('clearOv').hidden=true; this.lastRate=-1; this.itemKey=''; Input.keys.clear(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
   theme(){ document.body.dataset.theme=STAGE.theme||'meadow'; Bgm.setTheme(STAGE.theme); $('stageName').textContent=STAGE.name; },
-  toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on) Sfx.ensure(); Save.data.sound=Sfx.on; Save.save(); },
+  // v0.15.0：ONに したときは 音の 装置を まるごと 作りなおす（音が 出なく なったら「おと」を OFF→ON で なおせる）
+  toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on){ Sfx.rebuild(); Sfx.keepAlive(); } else { Bgm.stop(.1); Sfx.keepStop(); } Save.data.sound=Sfx.on; Save.save(); },
   // もちもの（はちみつ）：右上。もっているときは「タップで つかえるよ！」、のんだら 残り時間（びんの中身が へっていく）
   itemKey:'',
   updItem(touch){
@@ -4110,14 +4125,17 @@ const Ending={on:false,t:0,last:0,cb:null,
     const cap=(txt,a)=>{ g.globalAlpha=a; g.fillStyle='rgba(255,248,234,.92)'; const w=Math.min(W-30,640); g.beginPath(); g.roundRect?g.roundRect(W/2-w/2,H-78*u-30,w,56*u+20,14):g.rect(W/2-w/2,H-78*u-30,w,56*u+20); g.fill();
       g.fillStyle='#3b2f2a'; g.font=`800 ${Math.max(14,19*u)}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(txt,W/2,H-50*u-20,w-24); g.globalAlpha=1; };
     const fade=(a,b)=>clamp(Math.min((t-a)/.8,(b-t)/.8));
-    const petals=(n,sp)=>{ for(let k=0;k<n;k++){ const x=(hash(k*9)*W+Math.sin(t*.7+k)*30)%W, y=((hash(k*4)*H+t*sp*(30+hash(k)*30))%(H+20))-10; g.fillStyle=PETAL[k%5]; g.save(); g.translate(x,y); g.rotate(t*2+k); g.beginPath(); g.ellipse(0,0,4,2.3,0,0,7); g.fill(); g.restore(); } };
+    // v0.15.0：キャラは 字幕の わくより 上、「とばす」ボタンより 下に おさめる（PC・スマホ・iPadで 画面の 形が ちがっても かぶらない）
+    const capTop=H-78*u-30, SB=capTop-8, sk=$('endSkip').getBoundingClientRect(), ST=Math.max(H*.04,(sk.bottom||0)+6);
+    const petals=(n,sp)=>{ for(let k=0;k<n;k++){ const x=(hash(k*9)*W+Math.sin(t*.7+k)*30)%W, y=((hash(k*4)*H+t*sp*(30+hash(k)*30))%(H+40))-20; g.fillStyle=PETAL[k%5]; g.save(); g.translate(x,y); g.rotate(t*2+k); g.beginPath(); g.ellipse(0,0,12,6.9,0,0,7); g.fill(); g.restore(); } };   // v0.14.11：花びらを 3倍に（4×2.3 → 12×6.9）
     if(t<9){   // 1. 女王が ほんとうの すがたに
       const a=fade(0,9), k=easeBack(clamp(t/2.2)); g.globalAlpha=a; endBg(g,'bg1',W,H);
-      const glow=g.createRadialGradient(W/2,H*.45,10,W/2,H*.45,260*u); glow.addColorStop(0,'rgba(255,240,200,.55)'); glow.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=glow; g.fillRect(0,0,W,H);
-      g.save(); g.translate(W/2,H*.62); g.scale(2.1*u*k,2.1*u*k); drawQueenFlower(g,true,t); g.restore(); g.globalAlpha=1;
+      const q=Math.min(2.1*u,(SB-ST)/140), qy=SB, gcy=qy-70*q;
+      const glow=g.createRadialGradient(W/2,gcy,10,W/2,gcy,260*u); glow.addColorStop(0,'rgba(255,240,200,.55)'); glow.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=glow; g.fillRect(0,0,W,H);
+      g.save(); g.translate(W/2,qy); g.scale(q*k,q*k); drawQueenFlower(g,true,t); g.restore(); g.globalAlpha=1;
       petals(40,1); cap(t<4.5?STORY_END[0]:STORY_END[1],a);
     }else if(t<19){   // 2. 花の ほし：世界じゅうに 花が ひろがる
-      const a=fade(9,19), R=150*u, cx=W/2, cy=H*.46, sp=clamp((t-9.5)/7);
+      const a=fade(9,19), R=Math.min(150*u,(SB-ST)/2/1.3), cx=W/2, cy=(ST+SB)/2, sp=clamp((t-9.5)/7);
       g.globalAlpha=a; endBg(g,'bg2',W,H);
       if(artOk('planet')){ g.save(); g.translate(cx,cy); g.rotate(t*.05); artDraw(g,'planet',0,0,0,R*2.1,{cx:1,center:1}); g.restore();
         g.fillStyle='rgba(255,250,220,.18)'; g.beginPath(); g.arc(cx,cy,R*1.12,0,Math.PI*2); g.moveTo(cx+R*1.04,cy); g.arc(cx,cy,R*1.04,0,Math.PI*2,true); g.fill();   // v0.14.9：光の 輪（前は 外と 内の 円の あいだに 線が つながって 右がわが 欠けていた）
@@ -4133,7 +4151,7 @@ const Ending={on:false,t:0,last:0,cb:null,
         g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.55); g.lineWidth=1.5; g.beginPath(); g.roundRect?g.roundRect(x-9*u,y-9*u,18*u,18*u,5*u):g.rect(x-9*u,y-9*u,18*u,18*u); g.fill(); g.stroke(); }
       g.globalAlpha=1; cap(STORY_END[2],a);
     }else if(t<30){   // 3. みんなの パレード
-      const art3=artOk('bg3'), a=fade(19,30), gy=H*(art3?.8:.68); g.globalAlpha=a;
+      const art3=artOk('bg3'), a=fade(19,30), gy=Math.min(H*(art3?.8:.68),SB-4); g.globalAlpha=a;
       if(art3) endBg(g,'bg3',W,H); else {
       g.fillStyle='#86cf72'; g.fillRect(0,gy,W,H-gy); g.fillStyle='#7cc869'; for(let x=0;x<W;x+=18){ g.beginPath(); g.arc(x,gy,10,Math.PI,0); g.fill(); } }
       for(let k=0;k<40;k++){ const sp=Assets.flower[k%5]; if(sp) drawSprite(g,sp,(k*53)%W,gy+12+(k*29)%Math.max(10,H-gy-24),1.2*u+.4,Math.sin(t*2+k)*.08); }
@@ -4157,17 +4175,24 @@ const Ending={on:false,t:0,last:0,cb:null,
     }else{   // 4. ありがとう・おしまい
       const a=clamp((t-30)/1.2); g.globalAlpha=a; petals(70,1.2);
       g.fillStyle='#fff8ea'; g.textAlign='center'; g.textBaseline='middle';
-      if(artOk('logo')){ const lw=Math.min(W*.86,860*u+120); artDraw(g,'logo',0,W/2,H*.15,0,{w:lw,cx:1,center:1}); } else { g.font=`800 ${Math.max(26,46*u)}px ${FONT}`; g.fillText('TONS OF FLOWERS',W/2,H*.16); }
-      g.font=`800 ${Math.max(16,24*u)}px ${FONT}`; g.fillStyle='#ffd0de'; g.fillText('あそんでくれて ありがとう！',W/2,H*.34);
+      const lw=Math.min(W*.74,860*u+120), lh=lw*.142, ly=Math.max(H*.14,ST+lh/2+4), lb=ly+lh/2;
+      if(artOk('logo')){ artDraw(g,'logo',0,W/2,ly,0,{w:lw,cx:1,center:1}); } else { g.font=`800 ${Math.max(26,46*u)}px ${FONT}`; g.fillText('TONS OF FLOWERS',W/2,ly); }
+      const y1=lb+Math.max(18,28*u), y2=y1+Math.max(22,34*u), y3=y2+Math.max(30,46*u);
+      g.font=`800 ${Math.max(16,24*u)}px ${FONT}`; g.fillStyle='#ffd0de'; g.fillText('あそんでくれて ありがとう！',W/2,y1);
       const n=DEX.filter(x=>Save.data.dex[x.id]).length; g.fillStyle='#fff8ea'; g.font=`800 ${Math.max(14,18*u)}px ${FONT}`;
-      g.fillText('みつけた 花：'+n+' / '+DEX.length,W/2,H*.43);
-      if(H2ok()) { const H2=HANA_SPR, s=Math.min(.7*u+.25,H*.3/H2.ch), hop=Math.abs(Math.sin(t*4))*10*u; if(!hanaJumpDraw(g,t-30,W/2,H*.985,s,18*u,2.0)) g.drawImage(H2.img,H2.smile*H2.cw,0,H2.cw,H2.ch,W/2-H2.ax*s,H*.985-H2.ay*s-hop,H2.cw*s,H2.ch*s); }
-      if(t>34){ g.globalAlpha=clamp((t-34)/1.5); g.font=`800 ${Math.max(22,34*u)}px ${FONT}`; g.fillStyle='#ffc93c'; g.fillText('― おしまい ―',W/2,H*.55); }
+      g.fillText('みつけた 花：'+n+' / '+DEX.length,W/2,y2);
+      { const bd=$('endDone'), bh=bd.offsetHeight||Math.max(44,52*u), bt=H-Math.max(18,parseFloat(getComputedStyle(bd).bottom)||18)-bh;   // 「おわる」ボタンの 上はし（まだ 出ていなくても 場所を あけておく）
+        const feet=bt-8-12*u, room=feet-(y3+Math.max(18,24*u)), hop=18*u;
+        if(H2ok()){ const H2=HANA_SPR; let hx=W/2, hf=feet, s=Math.min(.7*u+.25,(room-hop)/H2.ch);
+          if(room<80){   // 高さが たりない（スマホの よこ画面など）：Hanaは「おわる」ボタンの 左よこで ジャンプ
+            const bw=bd.offsetWidth||90; hx=W/2-Math.max(bw/2+70,170*u); hf=H-12; s=Math.min(.7*u+.25,(hf-lb-10-hop)/H2.ch); }   // 文字は まんなかだけ なので、よこに いる Hanaは ロゴの 下まで つかえる
+          if(s>.12&&!hanaJumpDraw(g,t-30,hx,hf,s,hop,2.0)) g.drawImage(H2.img,H2.smile*H2.cw,0,H2.cw,H2.ch,hx-H2.ax*s,hf-H2.ay*s,H2.cw*s,H2.ch*s); } }
+      if(t>34){ g.globalAlpha=clamp((t-34)/1.5); g.font=`800 ${Math.max(22,34*u)}px ${FONT}`; g.fillStyle='#ffc93c'; g.fillText('― おしまい ―',W/2,y3); }
       g.globalAlpha=1;
     }
   }
 };
-const VERSION='v0.14.10';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.15.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4526,9 +4551,13 @@ if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
 const onTurn=()=>{ Input.keys.clear(); fit(); };
 if(PORTRAIT.addEventListener) PORTRAIT.addEventListener('change',onTurn); else if(PORTRAIT.addListener) PORTRAIT.addListener(onTurn);
 // 画面を離れたら すぐ止める。1秒より 長く はなれて いたら、次の タップで 音の 装置を 作りなおす（v0.12.4：再開後に 音が 鳴らない 対策）
-document.addEventListener('visibilitychange',()=>{ if(document.hidden){ Bgm.stop(.1); Sfx.hidAt=performance.now(); } else { if(Sfx.hidAt&&performance.now()-Sfx.hidAt>1000) Sfx.stale=true; Sfx.ensure(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ Bgm.stop(.1); Sfx.keepStop(); Sfx.hidAt=performance.now(); } else { if(Sfx.hidAt&&performance.now()-Sfx.hidAt>1000) Sfx.stale=true; Sfx.ensure(); } });
 window.addEventListener('pageshow',e=>{ if(e.persisted) Sfx.stale=true; });   // 戻るボタンで キャッシュから もどったとき
-['pointerdown','touchend','keydown'].forEach(n=>document.addEventListener(n,()=>Sfx.wake(),{capture:true,passive:true}));   // さわるたびに 音を 再開できるか たしかめる
+window.addEventListener('pagehide',()=>{ Sfx.keepStop(); });
+// さわるたびに 音を 再開できるか たしかめる。v0.15.0：iPhoneは「指を はなした」ときしか 音の 再開を ゆるさないので touchend／pointerup／click も
+['pointerdown','pointerup','touchend','click','keydown'].forEach(n=>document.addEventListener(n,()=>Sfx.wake(),{capture:true,passive:true}));
+// 耳を つなぎかえた（イヤホン・Bluetooth）ときも 音が 出なく なることが あるので、つぎの タップで 作りなおす
+try{ if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange',()=>{ Sfx.stale=true; }); }catch(_){}
 setInterval(()=>Sfx.watch(),500);
 $('stageName').textContent=STAGE.name;
 requestAnimationFrame(frame);
