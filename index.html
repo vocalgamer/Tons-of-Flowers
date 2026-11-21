@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.15.0</title>
+<title>TONS OF FLOWERS — Prototype v0.15.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.15.0（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.15.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.15.1：つぼみの 絵の ピンクを 黄緑に（花が さいている ように 見えて 画面が うるさかった）。
   v0.15.0：音の 対策を 強化（無音の <audio> ループで iPhoneの マナースイッチ・中断に つよく、指を はなした とき・クリックでも 再開、イヤホン 切りかえで 作りなおし、「おと」OFF→ONで 音の 装置を 作りなおす＋あそびかたに 案内）。エンディングの 配置を 画面の 形に あわせて 自動調整（キャラは 字幕の わくの 上・「とばす」の 下、さいごの 場面は ロゴ→文字→Hana→「おわる」を つめて ならべ、高さが たりない ときは Hanaを ボタンの よこに）。
   v0.14.11：エンディングで ふってくる 花びらを 3倍の 大きさに。
   v0.14.10：モグラの テヘペロ（2コマ）で 手が 3本 あったのを 修正（穴の ふちの 右手を けして、毛と ふちで うめた）。
@@ -2430,7 +2431,15 @@ const artOk=k=>!!(ART[k]&&ART[k].ok);
 function artFrameCanvas(k,i){ const a=ART[k], [sx,sy,sw,sh]=a.f[i], c=document.createElement('canvas'); c.width=sw; c.height=sh; c.getContext('2d').drawImage(a.img,sx,sy,sw,sh,0,0,sw,sh); return c; }
 function artFlowers(){   // マスに さく 小さな 花（5色）と つぼみ：drawSprite 用の スプライトに おきかえ
   for(let k=0;k<5;k++){ const f=ART.flowers.f[k], h=30, s2=h/f[3]; Assets.flower[k]={img:artFrameCanvas('flowers',k),w:f[2]*s2,h,ax:f[4]*s2,ay:h-1}; }
-  { const f=ART.flowers.f[5], h=22, s2=h/f[3]; Assets.bud={img:artFrameCanvas('flowers',5),w:f[2]*s2,h,ax:f[4]*s2,ay:h-1}; } }
+  { const f=ART.flowers.f[5], h=22, s2=h/f[3]; Assets.bud={img:greenBud(artFrameCanvas('flowers',5)),w:f[2]*s2,h,ax:f[4]*s2,ay:h-1}; } }
+// v0.15.1：つぼみの ピンクを 黄緑に（まだ さいていない ことが わかるように。花畑と まちがえない）。茎・葉の 緑は そのまま
+function greenBud(c){ try{ const g=c.getContext('2d'), im=g.getImageData(0,0,c.width,c.height), d=im.data;
+  for(let i=0;i<d.length;i+=4){ if(d[i+3]<10) continue; const r=d[i]/255, gg=d[i+1]/255, b=d[i+2]/255, mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), l=(mx+mn)/2, dl=mx-mn;
+    if(dl<.08) continue; let hh; if(mx===r) hh=((gg-b)/dl+6)%6; else if(mx===gg) hh=(b-r)/dl+2; else hh=(r-gg)/dl+4; hh*=60;
+    if(!(hh>290||hh<25)) continue;   // ピンク〜赤（花びらと ふち）だけ
+    const sat=dl/(1-Math.abs(2*l-1)||1), H2=82, S2=Math.min(.62,sat*.85), L2=l*.92, C=(1-Math.abs(2*L2-1))*S2, X=C*(1-Math.abs((H2/60)%2-1)), m=L2-C/2;
+    d[i]=Math.round((X+m)*255); d[i+1]=Math.round((C+m)*255); d[i+2]=Math.round(m*255); }   // H=82°（黄緑）
+  g.putImageData(im,0,0); }catch(_){} return c; }
 function artInit(){ for(const k in ART_SRC){ const a=ART[k]={f:ART_SRC[k].f,ok:false,img:new Image(),maxH:Math.max(...ART_SRC[k].f.map(f=>f[3]))};
   a.img.onload=()=>{ a.ok=true; if(k==='ground') for(const key in TILE_SPR) delete TILE_SPR[key]; if(k==='flowers') artFlowers(); }; a.img.src=ART_SRC[k].src; } }
 // k の i コマ目を (x,y) に 描く。ふつうは 下の まんなか（足もと）を (x,y) に。h＝高さ／o.w＝はば／o.unit＝シートで いちばん 高い コマを h に（コマどうしの 大きさの 比を たもつ）
@@ -4192,7 +4201,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.15.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.15.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
