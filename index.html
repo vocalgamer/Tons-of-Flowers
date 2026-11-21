@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.15.1</title>
+<title>TONS OF FLOWERS — Prototype v0.15.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.15.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.15.2（GDD v3.8準拠・2.5D・単一HTML）
+  v0.15.2：HanaとCubeが 手描きの 花に うもれないよう、白い ふち取り＋まわりの 花の かき分け（小さく・外へ たおれ・手前は うすく）。
   v0.15.1：つぼみの 絵の ピンクを 黄緑に（花が さいている ように 見えて 画面が うるさかった）。
   v0.15.0：音の 対策を 強化（無音の <audio> ループで iPhoneの マナースイッチ・中断に つよく、指を はなした とき・クリックでも 再開、イヤホン 切りかえで 作りなおし、「おと」OFF→ONで 音の 装置を 作りなおす＋あそびかたに 案内）。エンディングの 配置を 画面の 形に あわせて 自動調整（キャラは 字幕の わくの 上・「とばす」の 下、さいごの 場面は ロゴ→文字→Hana→「おわる」を つめて ならべ、高さが たりない ときは Hanaを ボタンの よこに）。
   v0.14.11：エンディングで ふってくる 花びらを 3倍の 大きさに。
@@ -2471,6 +2472,27 @@ const JUMP_ANIM={F:.75, P:.52,
     return {fr:5,hop:0,sq:Math.sin(Math.PI*(u-AIR)/(1-AIR)),n};
   }};
 // ジャンプを 描く（s＝HANA_SPRの 1コマに 対する 倍率、hp＝跳ぶ 高さpx、loop＝くり返しの 秒数：最後は 立って万歳で ひと休み）
+// v0.15.2：Hanaを 花の 絵に うもれさせない 白い ふち取り。コマごとに（となりの コマが はみ出さないよう）よはくを つけて、
+// シルエットを ふくらませて 白く ぬった シートを 1回だけ つくる。 drawOutlined() で 本体の うしろに しく
+const OUTLINE_PX=2.2;   // 画面上の ふちの 太さ（ゲームの 座標で）
+function outlineSheet(o,scale){
+  if(o.ol!==undefined) return o.ol; o.ol=null;
+  try{ const im=o.img, w=im.naturalWidth||im.width, h=im.naturalHeight||im.height; if(!w){ o.ol=undefined; return null; }
+    const r=Math.max(1,OUTLINE_PX/scale), P=Math.ceil(r)+2, cw=o.cw, ch=o.ch, nx=Math.round(w/cw), ny=Math.round(h/ch), CW=cw+2*P, CH=ch+2*P;
+    const c=document.createElement('canvas'); c.width=nx*CW; c.height=ny*CH; const g=c.getContext('2d');
+    const tc=document.createElement('canvas'); tc.width=CW; tc.height=CH; const tg=tc.getContext('2d');
+    for(let y=0;y<ny;y++) for(let x=0;x<nx;x++){
+      tg.globalCompositeOperation='source-over'; tg.clearRect(0,0,CW,CH);
+      for(let a=0;a<16;a++){ const t=a/16*Math.PI*2; tg.drawImage(im,x*cw,y*ch,cw,ch,P+Math.cos(t)*r,P+Math.sin(t)*r,cw,ch); }
+      tg.globalCompositeOperation='source-in'; tg.fillStyle='#fffdf4'; tg.fillRect(0,0,CW,CH);
+      g.drawImage(tc,x*CW,y*CH); }
+    o.ol={c,P,CW,CH}; }catch(_){ o.ol=null; }
+  return o.ol;
+}
+function drawOutline(g,o,scale,fx,fy,dx,dy,dw,dh){   // (fx,fy)＝コマ番号。dx..dh＝本体を えがく 場所
+  const ol=outlineSheet(o,scale); if(!ol) return; const k=dw/o.cw;
+  g.drawImage(ol.c,fx*ol.CW,fy*ol.CH,ol.CW,ol.CH,dx-ol.P*k,dy-ol.P*k,ol.CW*k,ol.CH*k);
+}
 function hanaJumpDraw(g,t,x,y,s,hp,loop){
   const J=HANA_JUMP; if(!(J.ok&&J.img)) return false;
   const tt=loop?t%loop:t; let q=JUMP_ANIM.pose(Math.max(0,tt));
@@ -2478,6 +2500,7 @@ function hanaJumpDraw(g,t,x,y,s,hp,loop){
   const k=s/J.ss, ky=1-.06*q.sq, kx=1+.05*q.sq, tilt=q.n>0?(q.n%2?1:-1)*.05*q.hop:0;
   g.save(); g.translate(x+J.dx*s,y-q.hop*hp); if(tilt) g.rotate(tilt); g.scale(kx,ky);
   g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high';
+  if(g===ctx) drawOutline(g,J,k,q.fr,0,-J.ax*k,-J.ay*k,J.cw*k,J.ch*k);   // ゲーム画面だけ ふち取り（エンディングは なし）
   g.drawImage(J.img,q.fr*J.cw,0,J.cw,J.ch,-J.ax*k,-J.ay*k,J.cw*k,J.ch*k); g.restore(); return true;
 }
 const Assets={flower:[],bud:null,
@@ -3374,7 +3397,8 @@ function drawCube(c,time){
   const base=iso(G.cx,G.cy,G.z0), br=(c.state==='idle'||c.state==='drop')?Math.sin(time*2.1+c.id*1.7):0;
   ctx.save(); ctx.translate(base.x,base.y); ctx.scale(1-.045*br,1+.075*br); ctx.translate(-base.x,-base.y);   // v0.9.6：息づかいを はっきり（前は 横1.8%・縦3%）
   // まるい シルエット：見えている面の 角を ぜんぶ つないだ 外がわを、角を まるめて ぬる
-  roundHull(G.faces.flatMap(f=>f.pts),7*cs(c)/CFG.CUBE); ctx.fillStyle=shade(PE,.95); ctx.fill();
+  roundHull(G.faces.flatMap(f=>f.pts),7*cs(c)/CFG.CUBE); ctx.lineJoin='round'; ctx.strokeStyle='#fffdf4'; ctx.lineWidth=OUTLINE_PX*2.2; ctx.stroke();   // v0.15.2：白い ふち取り（花に うもれない）
+  ctx.fillStyle=shade(PE,.95); ctx.fill();
   for(const f of G.faces){
     const [a,b,,d]=f.pts, grown=c.grown[f.id];
     ctx.save(); ctx.transform(b.x-a.x,b.y-a.y,d.x-a.x,d.y-a.y,a.x,a.y);
@@ -3471,6 +3495,15 @@ function drawArm(a){
 }
 
 /* ---- 花のなびき：Hanaがそばにいると かき分けられ、通りすぎたあとは ゆらゆら ゆれて おさまる ---- */
+// v0.15.2：花の かき分け。Hana・Cubeの まわりの 花を 小さく・外へ たおして、キャラの すがたを 見せる
+let PARTERS=[];
+function partersUpdate(){ const L=[{x:S.hana.x,y:S.hana.y,r:.85}]; for(const c of S.cubes){ const p=cubePos(c); L.push({x:p.x,y:p.y,r:1.05*cs(c)/CFG.CUBE}); } PARTERS=L; }
+function flowerPart(wx,wy){   // かえす：{k:0〜1 ちかさ, bend:たおす むき, front:キャラより 手前か}
+  let best=null;
+  for(const q of PARTERS){ const dx=wx-q.x, dy=wy-q.y, d=Math.hypot(dx,dy); if(d>=q.r) continue; const k=1-d/q.r;
+    if(!best||k>best.k) best={k:k*k*(3-2*k),bend:(dx-dy>=0?1:-1),front:(dx+dy)>0}; }
+  return best;
+}
 function flowerBend(t,wx,wy){
   let r=0;
   if(t.wt<2.6){ const k=t.wt-((wx%1)+(wy%1))*.07; if(k>0) r+=t.wd*Math.exp(-2.2*k)*Math.sin(10*k)*.5; }
@@ -3558,6 +3591,7 @@ function drawHana(time){
   const s=H.scale;
   ctx.save(); ctx.translate(p.x,p.y-hop); if(tilt) ctx.rotate(tilt); if(kx!==1||ky!==1) ctx.scale(kx,ky);
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  drawOutline(ctx,H,s,fr,row,-H.ax*s,-H.ay*s,H.cw*s,H.ch*s);   // v0.15.2：白い ふち取り
   ctx.drawImage(H.img,fr*H.cw,row*H.ch,H.cw,H.ch,-H.ax*s,-H.ay*s,H.cw*s,H.ch*s);
   ctx.restore();
 }
@@ -3619,6 +3653,7 @@ function render(){
   if(goal&&!goal.c){ const p=.5+.5*Math.sin(time*7); groundEllipse(goal.x,goal.y,.17+.05*p); ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=2.4; ctx.stroke();
     groundEllipse(goal.x,goal.y,.07); ctx.fillStyle='#ff8fb1'; ctx.fill(); }
   for(const c of S.cubes) drawCubeShadow(c);
+  partersUpdate();
 
   // 奥行き順に並べて描く
   const items=[];
@@ -3650,8 +3685,11 @@ function render(){
   for(const it of items){
     if(it.k==='f'){ const t=it.t,de=it.de, p=iso(t.i+de.u,t.j+de.v), s=easeBack(clamp(t.pop*1.6-it.q*.1))*de.s, rot=Math.sin(time*1.7+de.ph)*.07+flowerBend(t,t.i+de.u,t.j+de.v)+windSway(time,de.ph);
       if(s<=0) continue;
-      ctx.fillStyle='rgba(59,47,42,.16)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y,5*s,2*s,0,0,7); ctx.fill();
-      drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*(t.state===1?.95:.9),rot); }
+      const pt=flowerPart(t.i+de.u,t.j+de.v), ps=pt?1-.42*pt.k:1, pa=pt&&pt.front?1-.45*pt.k:1;   // かき分け（v0.15.2）
+      ctx.fillStyle='rgba(59,47,42,.16)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y,5*s*ps,2*s*ps,0,0,7); ctx.fill();
+      if(pa<1) ctx.globalAlpha=pa;
+      drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*ps*(t.state===1?.95:.9),rot+(pt?pt.bend*.45*pt.k:0));
+      if(pa<1) ctx.globalAlpha=1; }
     else if(it.k==='r') drawRock(it.i,it.j);
     else if(it.k==='hedge') drawHedge(it.i,it.j);
     else if(it.k==='tree') drawTree(it.i,it.j,time);
@@ -4201,7 +4239,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.15.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.15.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
