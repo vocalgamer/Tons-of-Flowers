@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.16.0</title>
+<title>TONS OF FLOWERS — Prototype v0.16.1</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.16.0（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.16.1（GDD v3.8準拠・2.5D・単一HTML）
+  v0.16.1：開発者画面から ステージを はじめた ときだけ、右上の ボタンの ならびの 左はしに「🛠 開発者」ボタン（おすと 開発者画面に もどる。ゲームは 止まる）。
   v0.16.0：ステージを 名前どおりに（マップの 形・天気・時間・かざり・しかけ）。丘の 坂（Cubeが ころがり おちる）、くねくね小道、レンガの 花壇、ふんすいの 広場、雲の 下の 高原、雨の 谷、本物の 迷路、きらめく 池、虹、夕焼け、ホタルと zzz、ながれぼし（おちた マスの 花が そだつ）、さいしょから さく 巨大ひまわり、くらい 森、ツタと われた ガラスの 温室、左右対称の 庭園。
   v0.15.6：キャラが うしろに いる ときの すけ方を 5%ゆるく（木.28→.33・大きな花.38→.43・女王.4→.45・小さな花 45%→40%）。風車も 木と 同じく すける。
   v0.15.5：飛び石の 絵を 縦に 6わりへ つぶして 見おろしの 平たい 石に（ChatGPTの 絵が 横から 見た まんじゅう形だった）。池の マス目の 線を けし、岸の 辺だけ ふちどる。
@@ -321,6 +322,8 @@
   #opOv[hidden]{display:none}
   #opCv{position:absolute;inset:0;width:100%;height:100%;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
   #devOv{z-index:40}
+  #devRet{background:#ffe3ef;color:#8a3a5a;border-color:#e0569a}   /* v0.16.1：開発者画面から はじめた ときだけ 出る */
+  #devRet[hidden]{display:none}
   #devOv h1{color:#8a3a5a}
   #opSkip{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
   #endOv[hidden]{display:none}
@@ -531,6 +534,7 @@
 </div>
 
 <div id="btns">
+  <button class="btn" id="devRet" hidden aria-label="開発者画面に もどる">🛠 開発者</button>
   <button class="btn" id="fullBtn" aria-label="全画面に する">⛶</button>
   <button class="btn" id="helpBtn" aria-label="あそびかた">？</button>
   <button class="btn" id="soundBtn" aria-label="おとの きりかえ">おと ON</button>
@@ -4380,7 +4384,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.16.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.16.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4638,7 +4642,9 @@ function drawStoryArt(g,ending,k){
 /* ---- 開発者モード（v0.13.1）：いまは ステージ選択だけ。セーブ（ロック・おはなし）は かえない ---- */
 const Dev={
   HOLD:5,   // スマホ：つぼみ画面で この秒数 長押し
+  active:false,   // v0.16.1：開発者画面から ステージを はじめたら true（ページを よみなおすまで）。右上に「開発者」ボタンが 出る
   init(){ $('devBack').onclick=()=>{ $('devOv').hidden=true; };
+    $('devRet').onclick=e=>{ e.stopPropagation(); this.open(); };
     $('devEnding').onclick=()=>{ Sfx.ensure(); $('devOv').hidden=true; Ending.play(()=>{ $('devOv').hidden=false; }); }; },   // セーブは かえない
   open(){ const G=$('devGrid'); G.innerHTML='';
     STAGES.forEach((st,i)=>{ const b=document.createElement('button'), best=Save.data.best[i];
@@ -4646,7 +4652,7 @@ const Dev={
       b.onclick=()=>this.pick(i); G.appendChild(b); });
     Op.hold=null; $('devOv').hidden=false; },
   pick(i){ $('devOv').hidden=true; Op.kill(); Sfx.ensure(); goLandscape();
-    UI.load(i); S.started=true; $('startOv').hidden=true; UI.toast(); }
+    UI.load(i); S.started=true; $('startOv').hidden=true; UI.toast(); this.active=true; $('devRet').hidden=false; }
 };
 const paused=()=>!$('devOv').hidden||Op.on||Ending.on||!$('albumOv').hidden||!$('pvOv').hidden||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
