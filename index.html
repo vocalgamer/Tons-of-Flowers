@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.16.1</title>
+<title>TONS OF FLOWERS — Prototype v0.16.4</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.16.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.16.4（GDD v3.8準拠・2.5D・単一HTML）
+  v0.16.4：開発者画面の「オープニングに もどる」が、ステージから ひらいた ときも オープニングに もどるように（前は ステージに もどっていた）。
+  v0.16.3：しずくの谷の 雨に いみを：はれ→くもり→雨（8秒）を くりかえし、雨の 間は じょうろと 同じく ぬれた 土に つぼみが でる。
+  v0.16.2：ころころ丘の 坂を やめ（不採用）、草の 小さな 丘（o）が ならぶ 野原に。Cubeは ぴょんと はずんで ころがる。
   v0.16.1：開発者画面から ステージを はじめた ときだけ、右上の ボタンの ならびの 左はしに「🛠 開発者」ボタン（おすと 開発者画面に もどる。ゲームは 止まる）。
   v0.16.0：ステージを 名前どおりに（マップの 形・天気・時間・かざり・しかけ）。丘の 坂（Cubeが ころがり おちる）、くねくね小道、レンガの 花壇、ふんすいの 広場、雲の 下の 高原、雨の 谷、本物の 迷路、きらめく 池、虹、夕焼け、ホタルと zzz、ながれぼし（おちた マスの 花が そだつ）、さいしょから さく 巨大ひまわり、くらい 森、ツタと われた ガラスの 温室、左右対称の 庭園。
   v0.15.6：キャラが うしろに いる ときの すけ方を 5%ゆるく（木.28→.33・大きな花.38→.43・女王.4→.45・小さな花 45%→40%）。風車も 木と 同じく すける。
@@ -795,8 +798,8 @@ const shade=(c,b)=>`rgb(${Math.round(clamp(c[0]*b,0,255))},${Math.round(clamp(c[
 const STAGES = [
   { name:'はじまりの草原', theme:'meadow', tip:'Cubeを ころがして、たねの 面を 上に むけよう。6つの 面が そろうと 大開花！',
     map:['........','.....R..','........','..H..C..','........','.WW.....','......R.','........']},
-  { name:'ころころ丘', theme:'meadow', fastRoll:true, tip:'♪マークの Cubeは Hanaに よってくるよ。丘の 坂に のった Cubeは、ころころ ころがり おちるよ',
-    map:['.........','.R.......','...^^^...','..<...>..','..<.C.>..','..<...>..','...vvv.W.','.H.....W.','.....R...']},
+  { name:'ころころ丘', theme:'meadow', fastRoll:true, tip:'ころころ丘の Cubeは、ぴょんぴょん はずんで ころがるよ。♪マークの Cubeは Hanaに よってくるよ',
+    map:['.........','.oo......','.o....oo.','......o..','..H...C..','.........','.oo....W.','..o....W.','.....oo..']},
   { name:'ちょうちょの小道', theme:'meadow', tip:'さいた花から ちょうちょが きて、つぼみを そだててくれるよ',
     map:['....WWWWWW','.H..WWWWWW','....WWWWWW','.....C....','WWW.......','WWWWWW...R','WWWWWW....','R.........','..........','....WWWWWW']},
   { name:'ひみつの花壇', theme:'garden', tip:'花で ぐるっと かこむと「ひみつの庭」が できるよ。岩も かべに なるよ',
@@ -805,7 +808,7 @@ const STAGES = [
     map:['..........','.R......R.','..........','..........','....FF....','....FF....','..H.......','.......C..','.R......R.','..........']},
   { name:'そよ風の高原', theme:'sky', fx:'highcloud', wind:'E', tip:'ときどき つよい かぜが ふくよ。ぽつんと さいた 花は つぼみに もどるけど、花びらが かざしもに たねを まくよ。岩の かげや かたまりの 花は だいじょうぶ',
     map:['RR........','R.........','..........','.....R....','..H....C..','..........','....W.....','....W.....','.........R','........RR']},
-  { name:'しずくの谷', theme:'water', fx:'rain', attrs:['rain','sun','leaf'], tip:'Cubeの 面の マーク（おひさま・あめ・はっぱ）は、その 面を さいごに スタンプして さかせると とくべつな ちからを だすよ',
+  { name:'しずくの谷', theme:'water', fx:'rain', attrs:['rain','sun','leaf'], tip:'谷には ときどき 雨が ふるよ。雨で ぬれた 土からは つぼみが でるよ。Cubeの 面の マーク（おひさま・あめ・はっぱ）は、その 面を さいごに スタンプして さかせると とくべつな ちからを だすよ',
     map:['RR...W...R','R....W....','....WW....','....W.....','..H....C..','....W.....','...WW.....','R..W.....R','RR.W.....R','RRRW....RR']},
   { name:'迷いの生け垣', theme:'forest', tip:'はちが 花を まわると はちみつが できるよ。のむと 30びょう Cubeを おせるよ',
     map:['...........','.hhhhh.hhh.','.h.......h.','.h.hh.hhh..','.h.h...h.h.','...h.C.h.h.','.h.h...h.h.','.h.hhh.h.h.','.h.....H.h.','.hhh.hhhhh.','...........']},
@@ -856,9 +859,8 @@ let STAGE=STAGES[0], ROWS=STAGE.map.length, COLS=STAGE.map[0].length;
 // 地面 state: 0=土 1=つぼみ 2=花畑。t.hard＝荒地（かたい土。スコップで たがやすまで 育たない）
 // 地形 type：ground（花が さく・花率の対象）／ rock・water・hedge・tree・cloud・glass・mill・queen（通れない）
 //            stone・bridge（Hanaだけ 通れる。花率には 入らない）
-const TILE_CH={R:'rock',W:'water',s:'stone',h:'hedge',T:'tree',x:'cloud','=':'bridge',G:'glass',M:'mill',Q:'queen',F:'water',k:'rock'};
-// v0.16.0：F＝ふんすい（水）／ k＝レンガの 花壇ふち（岩と おなじ）／ ^ v < >＝丘の 坂（その むきへ Cubeが ころがり おちる）／ S＝さいしょから さいている 巨大ひまわり
-const SLOPE_CH={'^':'N',v:'S','<':'W','>':'E'};
+const TILE_CH={R:'rock',W:'water',s:'stone',h:'hedge',T:'tree',x:'cloud','=':'bridge',G:'glass',M:'mill',Q:'queen',F:'water',k:'rock',o:'rock'};
+// v0.16.0：F＝ふんすい（水）／ k＝レンガの 花壇ふち（岩と おなじ）／ o＝ころころ丘の 小さな 丘（岩と おなじ）／ S＝さいしょから さいている 巨大ひまわり
 const HANA_OK={ground:1,stone:1,bridge:1};   // 温泉（onsen）は 入れない
 let S=null;
 function newState(idx){
@@ -877,7 +879,7 @@ function newState(idx){
       const deco=[]; for(let k=0;k<5;k++) deco.push({u:.14+rnd()*.72, v:.14+rnd()*.72, c:Math.floor(rnd()*5), s:.8+rnd()*.35, ph:rnd()*6.28});
       deco.sort((a,b)=>(a.u+a.v)-(b.u+b.v));
       row.push({i,j,type,state:ch==='b'?1:ch==='S'?2:0,bf:null,pop:1,flash:0,deco,crack:[rnd(),rnd(),rnd(),rnd()],
-        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined, slope:SLOPE_CH[ch]});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
+        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined, knoll:ch==='o'||undefined});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
       if(ch==='S') suns.push({i,j});
     } tiles.push(row);
   }
@@ -914,7 +916,8 @@ function newState(idx){
     blooms:0, stamps:0, spawnT:0, nextId:1, firstSpawn:first,
     target:null, nearest:null,
     fx:{petals:[],rings:[],texts:[],stars:[],marks:[],flash:null,banner:null},
-    tickN:0, falls:[], fallT:4
+    tickN:0, falls:[], fallT:4,
+    rain:{phase:'sun',t:0,dur:10,k:0,dropT:0}   // v0.16.3：しずくの谷の 天気（はれ→くもり→雨→はれ…）
   };
   for(const q of suns){ st.bigFlowers.push({i:q.i,j:q.j,t:9,c:0,ph:rnd()*6,wt:9,wd:1,inside:false,kind:'sunflower',shape:'daisy',pre:true}); st.flowerCount++; }   // v0.16.0：巨大ひまわりの庭は さいしょから さいている
   return st;
@@ -1016,13 +1019,6 @@ function startRoll(c,d){
   c.prevOri=c.ori; c.ori=rolledOri(c.ori,d); c.fi=c.i; c.fj=c.j; c.i+=DIRS[d].dx; c.j+=DIRS[d].dy;
   c.dir=d; c.state='roll'; c.t=0; c.armBack=null;
 }
-// v0.16.0：丘の 坂に のった Cubeは、坂の むきへ もう 1マス ころがり おちる（ころころ丘）
-function slopeRoll(c){
-  const t=tileAt(c.i,c.j); if(!t||!t.slope||c.state!=='idle') return; const d=DIRS[t.slope];
-  if(!cubeCanEnter(c.i+d.dx,c.j+d.dy,c)) return;
-  startRoll(c,t.slope);
-  if((S.told.slope|0)<2){ S.told.slope=(S.told.slope|0)+1; textFx(c.i+.5,c.j+.5,2.2,'ころころ〜！','#d98a00'); }
-}
 // 未熟なCube：たねの面を下にして花畑に乗ると、その1マスだけ つぼみに戻る（荒地までは戻さない）
 function onLand(c){
   c.landT=0;
@@ -1080,7 +1076,7 @@ function updateCubes(dt){
       }
       if(c.t>=CFG.PREP_T){ const d=DIRS[c.dir]; if(cubeFree(c.i+d.dx,c.j+d.dy,c)) startRoll(c,c.dir); else cancelPrep(c); }
     }else if(c.state==='roll'){
-      if(c.t>=CFG.ROLL_T){ c.state='idle'; c.t=0; c.prevOri=null; c.rest=restTime(c); Sfx.roll(); onLand(c); slopeRoll(c); }
+      if(c.t>=CFG.ROLL_T){ c.state='idle'; c.t=0; c.prevOri=null; c.rest=restTime(c); Sfx.roll(); onLand(c); }
     }else if(c.state==='bloom'){
       if(c.t>=CFG.BLOOM_T) finishBloom(c);
     }
@@ -2733,7 +2729,6 @@ function drawBoard(time){
     // 地面の しつかんは、マスの 種類ごとに 1回だけ 絵を つくって はる（毎フレーム えがかない＝スマホでも かるい）
     { const kind=t.hard?'hard'+Math.max(1,t.hardHP||CFG.HARD_HP):['soil','bud','flower'][t.state], q=iso(i,j);
       ctx.drawImage(tileSprite(kind,alt,(i*7+j*13)%4),q.x-CFG.TW/2,q.y,CFG.TW,CFG.TH); }
-    if(t.slope) drawSlope(i,j,t.slope,time);
     if(t.shade){ const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(40,70,40,.13)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,26,12,0,0,7); ctx.fill(); }   // 木かげ
     if(t.wet>0){ poly(P); ctx.fillStyle=`rgba(70,50,40,${Math.min(.2,t.wet*.14)})`; ctx.fill(); }   // じょうろで ぬれた 地面
     if(t.garden){ poly(P); ctx.fillStyle=t.garden.kind==='royal'?'rgba(255,215,120,.22)':'rgba(255,240,170,.2)'; ctx.fill(); }   // ひみつの庭
@@ -2814,15 +2809,6 @@ function drawSprout(g,prog,pop){
   g.restore();
 }
 // 箱の形（手前の2面と上の面）
-// v0.16.0：丘の 坂。下がわを こく、上がわを 明るく して、下り むきの「く」の 字を うすく ならべる
-function drawSlope(i,j,dir,time){
-  const d=DIRS[dir], c=iso(i+.5,j+.5), a=iso(i+.5-d.dx*.5,j+.5-d.dy*.5), b=iso(i+.5+d.dx*.5,j+.5+d.dy*.5);
-  const g=ctx.createLinearGradient(a.x,a.y,b.x,b.y); g.addColorStop(0,'rgba(255,255,220,.34)'); g.addColorStop(1,'rgba(60,45,20,.42)');
-  poly([iso(i,j),iso(i+1,j),iso(i+1,j+1),iso(i,j+1)]); ctx.fillStyle=g; ctx.fill();
-  const px=-d.dy, py=d.dx; ctx.strokeStyle='rgba(255,255,240,.85)'; ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round';
-  for(const o of [-.18,.14]){ const m=(o+((time*.35)%1)*.08); const tip=iso(i+.5+d.dx*(m+.1),j+.5+d.dy*(m+.1)), l=iso(i+.5+d.dx*m+px*.18,j+.5+d.dy*m+py*.18), r=iso(i+.5+d.dx*m-px*.18,j+.5+d.dy*m-py*.18);
-    ctx.beginPath(); ctx.moveTo(l.x,l.y); ctx.lineTo(tip.x,tip.y); ctx.lineTo(r.x,r.y); ctx.stroke(); }
-}
 // v0.16.0：ふんすい（2×2の 水の まんなか）
 function drawFountain(i,j,time){
   const c=iso(i+1,j+1);
@@ -2837,6 +2823,21 @@ function drawFountain(i,j,time){
     ctx.fillStyle=`rgba(225,245,255,${.85*(1-u)})`; ctx.beginPath(); ctx.arc(x,y,2.2-u*1.2,0,7); ctx.fill(); }
   const h=.5+.5*Math.sin(time*5); ctx.fillStyle=`rgba(235,250,255,${.7+.2*h})`; ctx.beginPath(); ctx.ellipse(c.x,c.y-36-h*3,3.2,8+h*3,0,0,7); ctx.fill();
   for(let k=0;k<3;k++){ const u=((time*.5+k/3)%1); ctx.strokeStyle=`rgba(255,255,255,${.5*(1-u)})`; ctx.lineWidth=1.2; ctx.beginPath(); ctx.ellipse(c.x,c.y,14+u*22,6+u*10,0,0,7); ctx.stroke(); }
+  ctx.restore();
+}
+// v0.16.2：ころころ丘の 小さな 丘（草の こぶ）。となりも 丘なら 大きめに えがいて つながって 見せる
+function drawKnoll(i,j){
+  const N=(a,b)=>{ const o=tileAt(a,b); return !!o&&o.knoll; }, n=[N(i-1,j),N(i+1,j),N(i,j-1),N(i,j+1)].filter(x=>x).length;
+  const p=iso(i+.5,j+.5), rx=27+n*3, ry=rx*.5, hh=17+n*3, h=hash2(i,j);
+  ctx.save();
+  ctx.fillStyle='rgba(40,70,30,.22)'; ctx.beginPath(); ctx.ellipse(p.x+3,p.y+3,rx+2,ry+1,0,0,7); ctx.fill();
+  const g=ctx.createLinearGradient(p.x-rx*.6,p.y-hh,p.x+rx*.5,p.y+ry); g.addColorStop(0,'#a6e07e'); g.addColorStop(.55,'#6fbf55'); g.addColorStop(1,'#4b9a3e');
+  ctx.beginPath(); ctx.moveTo(p.x-rx,p.y); ctx.bezierCurveTo(p.x-rx,p.y-hh*1.25,p.x+rx,p.y-hh*1.25,p.x+rx,p.y); ctx.ellipse(p.x,p.y,rx,ry,0,0,Math.PI); ctx.closePath();
+  ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='#3f7d33'; ctx.lineWidth=1.3; ctx.stroke();
+  ctx.fillStyle='rgba(255,255,230,.35)'; ctx.beginPath(); ctx.ellipse(p.x-rx*.3,p.y-hh*.55,rx*.3,hh*.18,-.25,0,7); ctx.fill();
+  ctx.strokeStyle='#3f8a35'; ctx.lineWidth=1.2; ctx.lineCap='round';
+  for(let k=0;k<5;k++){ const u=hash2(i*5+k,j), v=hash2(j*5+k,i), x=p.x+(u-.5)*rx*1.4, y=p.y-hh*.15+(v-.5)*ry*.9; ctx.beginPath(); ctx.moveTo(x-2,y); ctx.lineTo(x-3,y-4); ctx.moveTo(x,y); ctx.lineTo(x,y-5); ctx.moveTo(x+2,y); ctx.lineTo(x+3,y-4); ctx.stroke(); }
+  if(h<.5){ const x=p.x+(h-.25)*rx*1.6, y=p.y-hh*.45; ctx.fillStyle='#fff'; for(let k=0;k<5;k++){ const a=k*1.257; ctx.beginPath(); ctx.arc(x+Math.cos(a)*2,y+Math.sin(a)*1.4,1.5,0,7); ctx.fill(); } ctx.fillStyle='#ffd34d'; ctx.beginPath(); ctx.arc(x,y,1.2,0,7); ctx.fill(); }
   ctx.restore();
 }
 // v0.16.0：レンガの 花壇ふち（ひみつの花壇）
@@ -3368,7 +3369,7 @@ function drawIslandSides(time){
   }
 }
 function drawRock(i,j){
-  { const t=tileAt(i,j); if(t&&t.brick) return drawBrick(i,j); }
+  { const t=tileAt(i,j); if(t&&t.brick) return drawBrick(i,j); if(t&&t.knoll) return drawKnoll(i,j); }
   if(artOk('props')){ const p=iso(i+.5,j+.5); ctx.fillStyle='rgba(59,47,42,.22)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+4,23,9,0,0,7); ctx.fill(); artDraw(ctx,'props',2,p.x,p.y+9,0,{w:50,cx:1}); return; }
   const p=iso(i+.5,j+.5);
   ctx.fillStyle='rgba(59,47,42,.22)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+1,22,9,0,0,7); ctx.fill();
@@ -3392,7 +3393,8 @@ const LOCAL={ // 単位立方体（中心が原点、底がz=0）
 function cubeGeometry(c){
   const s=cs(c), h=s/2; let cx=c.i+.5, cy=c.j+.5, z0=0, ori=c.ori, d=null, ang=0, sc=1;
   if(c.state==='roll'){ const t=easeInOut(clamp(c.t/CFG.ROLL_T)); d=DIRS[c.dir]; ori=c.prevOri; ang=t*Math.PI/2;
-    cx=c.fi+.5+d.dx*(1-s)*t; cy=c.fj+.5+d.dy*(1-s)*t; }
+    cx=c.fi+.5+d.dx*(1-s)*t; cy=c.fj+.5+d.dy*(1-s)*t;
+    if(S.flags.fastRoll) z0=Math.sin(clamp(c.t/CFG.ROLL_T)*Math.PI)*.22; }   // v0.16.2：ころころ丘：ぴょんと はずんで ころがる
   else if(c.state==='drop'){ const t=clamp(c.t/CFG.DROP_T); z0=(1-t*t)*7; }
   else if(c.state==='bloom'){ sc=1+.35*easeOut(clamp(c.t/CFG.BLOOM_T)); }
   if(c.shake>0){ const k=Math.sin(c.shake*60)*.04*(c.shake/.3); cx+=k; cy-=k; }
@@ -3740,15 +3742,16 @@ function atmosFront(time){
   if(fx==='sunset') atmosTint((()=>{ const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'rgba(255,120,40,.40)'); g.addColorStop(.6,'rgba(255,150,70,.30)'); g.addColorStop(1,'rgba(200,70,120,.26)'); return g; })());
   if(fx==='sleep'||fx==='stars') atmosTint('rgba(30,40,110,.30)');
   if(fx==='gloom') atmosTint('rgba(50,30,70,.40)');
-  if(fx==='rain') atmosTint('rgba(70,100,140,.14)');
-  if(fx==='sparkle'||fx==='rain'){   // 水面の きらめき・雨の 波紋
+  const rk=fx==='rain'?S.rain.k:0;
+  if(fx==='rain'&&rk>.01) atmosTint(`rgba(70,100,140,${.2*rk})`);
+  if(fx==='sparkle'||(fx==='rain'&&rk>.3)){   // 水面の きらめき・雨の 波紋
     for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.type!=='water'&&t.type!=='stone') continue;
       for(let q=0;q<2;q++){ const h=hash2(i*3+q,j), u=(time*(fx==='rain'?.9:.45)+h*7)%1, x=i+.15+hash2(j,i+q)*.7, y=j+.15+h*.7, p=iso(x,y);
-        if(fx==='rain'){ ctx.strokeStyle=`rgba(255,255,255,${.6*(1-u)})`; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(p.x,p.y,2+u*9,1+u*4.5,0,0,7); ctx.stroke(); }
+        if(fx==='rain'){ ctx.strokeStyle=`rgba(255,255,255,${.6*(1-u)*rk})`; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(p.x,p.y,2+u*9,1+u*4.5,0,0,7); ctx.stroke(); }
         else{ const a=Math.max(0,Math.sin(u*Math.PI)), r=2+5*a; ctx.fillStyle=`rgba(255,255,255,${.9*a})`; ctx.beginPath(); ctx.moveTo(p.x,p.y-r); ctx.lineTo(p.x+r*.25,p.y-r*.25); ctx.lineTo(p.x+r,p.y); ctx.lineTo(p.x+r*.25,p.y+r*.25); ctx.lineTo(p.x,p.y+r); ctx.lineTo(p.x-r*.25,p.y+r*.25); ctx.lineTo(p.x-r,p.y); ctx.lineTo(p.x-r*.25,p.y-r*.25); ctx.closePath(); ctx.fill(); } } } }
-  if(fx==='rain'){   // 小雨（画面ぜんたい）
-    ctx.save(); ctx.setTransform(1,0,0,1,0,0); const W=canvas.width, H=canvas.height, d=View.dpr||1; ctx.strokeStyle='rgba(210,230,255,.45)'; ctx.lineWidth=1.2*d; ctx.beginPath();
-    for(let k=0;k<90;k++){ const x=(hash2(k,1)*W+time*60*d)%W, y=(hash2(k,2)*H+time*(520+hash2(k,3)*200)*d)%H; ctx.moveTo(x,y); ctx.lineTo(x-4*d,y+14*d); }
+  if(fx==='rain'&&rk>.4){   // 雨（画面ぜんたい）。雨の ときだけ
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0); const W=canvas.width, H=canvas.height, d=View.dpr||1; ctx.strokeStyle=`rgba(210,230,255,${.5*(rk-.4)/.6})`; ctx.lineWidth=1.2*d; ctx.beginPath();
+    for(let k=0;k<110;k++){ const x=(hash2(k,1)*W+time*60*d)%W, y=(hash2(k,2)*H+time*(520+hash2(k,3)*200)*d)%H; ctx.moveTo(x,y); ctx.lineTo(x-4*d,y+14*d); }
     ctx.stroke(); ctx.restore(); }
   if(fx==='sleep'){   // 眠れる花畑：ホタルと、ねむっている つぼみの zzz
     ctx.save(); ctx.globalCompositeOperation='lighter';
@@ -3766,6 +3769,26 @@ function atmosFront(time){
     for(const f of S.falls){ const u=clamp(f.t/f.max), x=f.x+(1-u)*2.4, y=f.y-(1-u)*2.4, p=iso(x,y,(1-u)*7), q=iso(x+.9,y-.9,(1-u)*7+2.4);
       const g=ctx.createLinearGradient(q.x,q.y,p.x,p.y); g.addColorStop(0,'rgba(255,250,200,0)'); g.addColorStop(1,'rgba(255,250,200,.95)'); ctx.strokeStyle=g; ctx.lineWidth=3; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(q.x,q.y); ctx.lineTo(p.x,p.y); ctx.stroke();
       ctx.fillStyle='#fffbe0'; ctx.beginPath(); ctx.arc(p.x,p.y,3.2,0,7); ctx.fill(); } }
+}
+// v0.16.3：しずくの谷の 雨。はれ（14〜20秒）→ くもり（2秒・あんない）→ 雨（8秒）。
+// 雨の 間は じょうろと 同じく、ぬれた 土に つぼみが でる（0.5秒ごとに 1マス。荒地・もこもこ・Cubeの 下は のぞく）
+const RAIN={SUN:[14,20],CLOUD:2,RAIN:8,DROP:.5};
+function updateRain(dt){
+  if(STAGE.fx!=='rain') return; const R=S.rain;
+  R.k+=((R.phase==='rain'?1:R.phase==='cloud'?.35:0)-R.k)*Math.min(1,dt*1.6);   // 見た目の こさ（ふわっと かわる）
+  if(S.cleared) return;
+  R.t+=dt;
+  if(R.t>=R.dur){ R.t=0;
+    if(R.phase==='sun'){ R.phase='cloud'; R.dur=RAIN.CLOUD; textFx(S.hana.x,S.hana.y,2.3,'くもってきた…','#5a6f8f',1,1.8); }
+    else if(R.phase==='cloud'){ R.phase='rain'; R.dur=RAIN.RAIN; R.dropT=0; Sfx.water();
+      textFx(S.hana.x,S.hana.y,2.3,(S.told.rain|0)<2?'雨だ！ ぬれた 土から つぼみが でるよ':'雨だ！','#2f7fbf',1.05,2.4); S.told.rain=(S.told.rain|0)+1; }
+    else { R.phase='sun'; R.dur=RAIN.SUN[0]+Math.random()*(RAIN.SUN[1]-RAIN.SUN[0]); textFx(S.hana.x,S.hana.y,2.3,'はれた！','#d98a00',1,1.6); } }
+  if(R.phase!=='rain') return;
+  for(const row of S.tiles) for(const t of row) if(t.type==='ground') t.wet=Math.max(t.wet||0,.8);   // 地面ぜんたいが しっとり
+  R.dropT-=dt; if(R.dropT>0) return; R.dropT=RAIN.DROP;
+  const L=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.state===0&&!t.hard&&!t.mole&&!cubeAt(t.i,t.j)&&!bigAt(t.i,t.j)) L.push(t);
+  if(!L.length) return; const t=L[Math.floor(Math.random()*L.length)];
+  setTile(t,1); S.wateredN++; t.wet=1.6; ringFx(t.i+.5,t.j+.5,'#bfe6ff',.5);
 }
 // v0.16.0：ながれぼし（星降る原っぱ）。おちた マスの 花が そだつ（土→つぼみ、つぼみ→花）
 function updateFalls(dt){
@@ -4384,7 +4407,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.16.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.16.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4643,7 +4666,10 @@ function drawStoryArt(g,ending,k){
 const Dev={
   HOLD:5,   // スマホ：つぼみ画面で この秒数 長押し
   active:false,   // v0.16.1：開発者画面から ステージを はじめたら true（ページを よみなおすまで）。右上に「開発者」ボタンが 出る
-  init(){ $('devBack').onclick=()=>{ $('devOv').hidden=true; };
+  init(){ $('devBack').onclick=()=>{ $('devOv').hidden=true;
+      if(!Op.on){   // v0.16.4：ステージから ひらいた ときも オープニングに もどる（前は 画面を とじる だけで ステージに もどっていた）
+        this.active=false; $('devRet').hidden=true; S.started=false; $('stageOv').hidden=true; $('startOv').hidden=true;
+        Op.show(()=>{ $('startOv').hidden=false; $('startBtn').focus(); }); } };
     $('devRet').onclick=e=>{ e.stopPropagation(); this.open(); };
     $('devEnding').onclick=()=>{ Sfx.ensure(); $('devOv').hidden=true; Ending.play(()=>{ $('devOv').hidden=false; }); }; },   // セーブは かえない
   open(){ const G=$('devGrid'); G.innerHTML='';
@@ -4669,6 +4695,7 @@ function update(dt){
     updateButterflies(dt);
     updateExtras(dt);
     updateFalls(dt);
+    updateRain(dt);
     updateGarden(dt);
     updateFx(dt);
   }
