@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.19.1</title>
+<title>TONS OF FLOWERS — Prototype v0.19.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.19.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.19.2（GDD v3.8準拠・2.5D・単一HTML）
+  v0.19.2：つぼみも プログラムの 絵に もどした。
   v0.19.1：マスに さく 小さな 花（5色）を プログラムの 絵に もどした（つぼみは ChatGPTの 絵の まま）。
   v0.19.0：アイテムを 見つけやすく：空から 光と ストンと おちて 着地で 光の 輪と ポン、その 場所から 空へ アイテムの 色の 光の 柱（3秒 つよく → よわく 明滅）、「〇〇が でたよ！」の おしらせ。花どんぐりの ↓と 輪も 光の 柱に。
   v0.18.9：開花の ひろさを さいしょの いちばん ひろい 値に（花畑 半径2.9・1段階 成長 半径3.7）。忘れられた温室の 4つの 温室の うち いちばん 上の 1つを けした（むずかしすぎた）。
@@ -2494,7 +2495,8 @@ const artOk=k=>!!(ART[k]&&ART[k].ok);
 function artFrameCanvas(k,i){ const a=ART[k], [sx,sy,sw,sh]=a.f[i], c=document.createElement('canvas'); c.width=sw; c.height=sh; c.getContext('2d').drawImage(a.img,sx,sy,sw,sh,0,0,sw,sh); return c; }
 function artFlowers(){   // マスに さく 小さな 花（5色）と つぼみ：drawSprite 用の スプライトに おきかえ
   // v0.19.1：小さな 花（5色）は プログラムの 絵に もどした（ChatGPTの 絵は つぼみだけ つかう）
-  { const f=ART.flowers.f[5], h=22, s2=h/f[3]; Assets.bud={img:greenBud(artFrameCanvas('flowers',5)),w:f[2]*s2,h,ax:f[4]*s2,ay:h-1}; } }
+  // v0.19.2：つぼみも プログラムの 絵に もどした
+}
 // v0.15.1：つぼみの ピンクを 黄緑に（まだ さいていない ことが わかるように。花畑と まちがえない）。茎・葉の 緑は そのまま
 function greenBud(c){ try{ const g=c.getContext('2d'), im=g.getImageData(0,0,c.width,c.height), d=im.data;
   for(let i=0;i<d.length;i+=4){ if(d[i+3]<10) continue; const r=d[i]/255, gg=d[i+1]/255, b=d[i+2]/255, mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), l=(mx+mn)/2, dl=mx-mn;
@@ -4784,7 +4786,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.19.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.19.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
