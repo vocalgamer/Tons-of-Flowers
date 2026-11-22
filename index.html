@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.18.4</title>
+<title>TONS OF FLOWERS — Prototype v0.18.7</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.18.4（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.18.7（GDD v3.8準拠・2.5D・単一HTML）
+  v0.18.7：花どんぐりの丘：いちど 木に ぶつかった Cubeは、木へ いく わりあいが ふつうに もどる（ぶつかる ことは ふつうの わりあいで ある）。
+  v0.18.5：花どんぐりの丘：3ばんめの Cubeも 木へ いきやすく。
   v0.18.4：花どんぐりの丘：出てきた 順番が 偶数の Cubeだけ 木へ いきやすい（3.4倍・ぶつかりに いく おもみ 6）。奇数の Cubeは ふつう。
   v0.18.3：大木の 根もとの 浮きを なくした（絵の ぶあつい 側面を けし、草の ふちを 地面へ ぼかし、ひし形を マスに あわせ、下の マスは ふつうの 土に）。
   v0.18.2：花どんぐりの 木の うしろの 丘の 絵を けした。
@@ -1032,7 +1034,7 @@ function chooseRoll(c){
     if(STAGE.fx==='hill'&&!(S.time-(c.bumpAt||-99)<ACORN.BUMP_CD)){ const k0=Math.hypot(c.i-1,c.j-1), k1=Math.hypot(ni-1,nj-1); if(k1<k0) w*=oakFan(c)?ACORN.EVEN_TOWARD:ACORN.TOWARD; }   // ぶつかった あとは しばらく ふつうに もどる   // v0.17.5：大木（頂点の 2×2）の ほうへ すこし ころがりやすい
     opts.push({d,w,near}); sum+=w;
   }
-  if(STAGE.fx==='hill'&&!(S.time-(c.bumpAt||-99)<ACORN.BUMP_CD)) for(const d in DIRS){ const t=tileAt(c.i+DIRS[d].dx,c.j+DIRS[d].dy); if(t&&t.type==='oak'){ const bw=oakFan(c)?ACORN.EVEN_BUMP:ACORN.BUMP; opts.push({d,w:bw,near:false}); sum+=bw; } }   // みきに ぶつかりに いく
+  if(STAGE.fx==='hill'&&!(S.time-(c.bumpAt||-99)<ACORN.BUMP_CD)) for(const d in DIRS){ const t=tileAt(c.i+DIRS[d].dx,c.j+DIRS[d].dy); if(t&&t.type==='oak'){ const bw=oakFan(c)?ACORN.EVEN_BUMP:ACORN.BUMP; opts.push({d,w:bw,near:false}); sum+=bw; } }   // みきに ぶつかりに いく   // v0.18.7：いちど ぶつかった Cubeは ふつうの わりあい（oakFanが false）で ぶつかる ことは ある
   if(!opts.length) return null;
   let r=Math.random()*sum;
   let pick=opts[opts.length-1];
@@ -3820,7 +3822,7 @@ function atmosFront(time){
 // v0.17.1：どんぐりの丘。丘の 木から どんぐりが おちて、手前へ ころころ ころがって とまる（2〜7マス）。
 // Hanaが ひろうと もちものに 入る → すきな ところで タップして つかうと、Hanaの まわり（半径1.6）の 土が つぼみに。つぎの 面へ もちこせる
 const ACORN={FIRST:6,GAP:[16,24],R:1.6,G:14,FRIC:.55,BUMP:1,TOWARD:1,BUMP_CD:9,EVEN_BUMP:6,EVEN_TOWARD:3.4};   // v0.18.4：ふつうの Cubeは 木の ほうへ いく くせなし。出てきた 順番が 偶数（2・4・6…ばんめ）の Cubeだけ 木へ いきやすい（v0.17.5と 同じ 数字）
-const oakFan=c=>c.id%2===0;   // 偶数ばんめの Cube   // v0.17.5：FIRST/GAP＝ぶつかっても おちない 時間（1プレイ 3〜4つぶ）／BUMP＝みきへ ぶつかりに いく おもみ／TOWARD＝みきの ほうへ ころがりやすさ
+const oakFan=c=>(c.id%2===0||c.id===3)&&!c.oakDone;   // 偶数ばんめ と 3ばんめの Cube（v0.18.5）。いちど ぶつかった Cubeは ふつうの わりあいに もどる（v0.18.7）   // v0.17.5：FIRST/GAP＝ぶつかっても おちない 時間（1プレイ 3〜4つぶ）／BUMP＝みきへ ぶつかりに いく おもみ／TOWARD＝みきの ほうへ ころがりやすさ
 function updateAcorn(dt){
   if(STAGE.fx!=='hill') return;
   const h=S.hana;
@@ -3906,7 +3908,7 @@ function drawOak(i,j,time){
 }
 // v0.17.5：Cubeが 大木の みきに ぶつかった：木が ゆれて、花どんぐりが 1つぶ おちる（つぎまで 30〜42秒。地面に ある とき・もっている ときは ゆれるだけ）
 function oakBump(c){
-  c.bumpAt=S.time; c.shake=.12; S.oakShake=.5; Sfx.poko();
+  c.bumpAt=S.time; c.oakDone=true; c.shake=.12; S.oakShake=.5; Sfx.poko();
   if(S.cleared||S.acorn||INV.acorn||S.acornCool>0) return;
   S.acornCool=ACORN.GAP[0]+Math.random()*(ACORN.GAP[1]-ACORN.GAP[0]);
   const L=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.i+t.j>=2&&t.i+t.j<=5&&!cubeAt(t.i,t.j)) L.push(t);   // 木の 葉の 下あたり
@@ -4755,7 +4757,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.18.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.18.7';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
