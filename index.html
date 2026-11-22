@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.18.1</title>
+<title>TONS OF FLOWERS — Prototype v0.18.2</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.18.1（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.18.2（GDD v3.8準拠・2.5D・単一HTML）
+  v0.18.2：花どんぐりの 木の うしろの 丘の 絵を けした。
   v0.18.1：Cubeが 花どんぐりの 木の ほうへ いく くせを なくした（上に かたよって クリアが むずかしく なるため）。
   v0.18.0：花どんぐりが おちると「花どんぐりが おちたよ！」の おしらせ。地面の 花どんぐりには 金色の 輪と ↓の しるし（花に うもれても わかる）。
   v0.17.9：大木の みきの つなぎめを きれいに（たてに つないでも きれめの ない がらに 作りなおし、1本の 帯に して 上下の はしを ぼかし、根もと・葉の かさに とけこませる）。
@@ -3779,16 +3780,7 @@ function atmosBack(time){
     ctx.save(); ctx.globalAlpha=.8; ctx.lineWidth=R*.036; ctx.shadowColor='rgba(255,255,255,.5)'; ctx.shadowBlur=12;
     cols.forEach((col,k)=>{ ctx.strokeStyle=col; ctx.beginPath(); ctx.arc(c.x,c.y+R*.15,R-k*R*.035,Math.PI*1.04,Math.PI*1.96); ctx.stroke(); });
     ctx.restore(); }
-  if(fx==='hill'){   // どんぐりの丘：島の おくに 大きな 丘と どんぐりの 木
-    const a=iso(0,0), b=iso(COLS,0), c=iso(-.2,-.2), w=(b.x-a.x)*.55, hh=w*.42;
-    const g=ctx.createLinearGradient(c.x-w*.3,c.y-hh,c.x+w*.4,c.y); g.addColorStop(0,'#a6e07e'); g.addColorStop(.6,'#6fbf55'); g.addColorStop(1,'#4b9a3e');
-    const kL=iso(0,ROWS*.42), kR=iso(COLS*.42,0), o0=iso(0,0);   // v0.17.3：丘の すそは 島の おくの 2辺に のせる（まっすぐな 下はしを 見せない）
-    ctx.save(); ctx.beginPath(); ctx.moveTo(kL.x,kL.y); ctx.bezierCurveTo(kL.x+(c.x-kL.x)*.2,c.y-hh*1.35,kR.x-(kR.x-c.x)*.2,c.y-hh*1.35,kR.x,kR.y); ctx.lineTo(o0.x,o0.y+4); ctx.closePath();
-    ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='#3f7d33'; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle='rgba(255,255,230,.28)'; ctx.beginPath(); ctx.ellipse(c.x-w*.25,c.y-hh*.6,w*.22,hh*.12,-.2,0,7); ctx.fill();
-    ctx.strokeStyle='rgba(63,125,51,.6)'; ctx.lineWidth=1.4; ctx.lineCap='round';
-    for(let k=0;k<14;k++){ const x=c.x+(hash2(k,21)-.5)*w*1.4, y=c.y-hh*.15-hash2(k,22)*hh*.7; ctx.beginPath(); ctx.moveTo(x-2,y); ctx.lineTo(x-3,y-5); ctx.moveTo(x+1,y); ctx.lineTo(x+1,y-6); ctx.stroke(); }
-    ctx.restore(); }
+  // v0.18.2：花どんぐりの丘の うしろの 丘の 絵は けした（木だけ）
   if(fx==='highcloud'){   // そよ風の高原：島より 下を 雲が ながれる（高い ところに いる かんじ）
     const L=iso(0,ROWS), Rr=iso(COLS,0), B=iso(COLS,ROWS), W=Rr.x-L.x+400;
     for(let k=0;k<6;k++){ const x=L.x-200+((time*(6+k*2)+k*W/6)%W), y=B.y-10+(k%3)*34; cloudPuff(x,y,130+k*18,.6); } }
@@ -4759,7 +4751,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.18.1';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.18.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
