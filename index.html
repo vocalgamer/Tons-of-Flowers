@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.18.8</title>
+<title>TONS OF FLOWERS — Prototype v0.19.0</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.18.8（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.19.0（GDD v3.8準拠・2.5D・単一HTML）
+  v0.19.0：アイテムを 見つけやすく：空から 光と ストンと おちて 着地で 光の 輪と ポン、その 場所から 空へ アイテムの 色の 光の 柱（3秒 つよく → よわく 明滅）、「〇〇が でたよ！」の おしらせ。花どんぐりの ↓と 輪も 光の 柱に。
+  v0.18.9：開花の ひろさを さいしょの いちばん ひろい 値に（花畑 半径2.9・1段階 成長 半径3.7）。忘れられた温室の 4つの 温室の うち いちばん 上の 1つを けした（むずかしすぎた）。
   v0.18.8：大木の 根もとから 土の マスへ のびていた こい 茶色の 細い 線を けした（根が 草の ふちに かぶさる 列の 側面が のこっていた）。
   v0.18.7：花どんぐりの丘：いちど 木に ぶつかった Cubeは、木へ いく わりあいが ふつうに もどる（ぶつかる ことは ふつうの わりあいで ある）。
   v0.18.5：花どんぐりの丘：3ばんめの Cubeも 木へ いきやすく。
@@ -780,8 +782,8 @@ const CFG = {
   CAMERA:false,               // 「じぶんを いれる」（インカメラ）。ストア版の しんさを かんたんに するため いまは オフ。true で もどる
   STAMP_RANGE:1.45,          // スタンプできる距離（タイル）。となり（ななめ含む）まで。1マス あいていたら とどかない（v0.8で 1.7→1.45）
   HANA_SPEED:3.4,
-  R_FLOWER:2.4,               // 開花で一気に花畑になる半径（v0.7で 2.9→1.9、v0.7.4で 中間の 2.4）
-  R_BUD:3.2,                  // 開花で1段階育つ半径（v0.7で 3.7→2.7、v0.7.4で 中間の 3.2）
+  R_FLOWER:2.9,               // 開花で一気に花畑になる半径（v0.7で 2.9→1.9、v0.7.4で 中間の 2.4、v0.18.9で さいしょの いちばん ひろい 2.9に もどす）
+  R_BUD:3.7,                  // 開花で1段階育つ半径（v0.7で 3.7→2.7、v0.7.4で 中間の 3.2、v0.18.9で 3.7に もどす）
   CLEAR:0.9,
   MAX_CUBES:3,
   SPAWN_DELAY:1.3,
@@ -853,7 +855,7 @@ const STAGES = [
   { name:'雲の上の庭', theme:'clouds', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
     map:['.....xx.....','.....xx.....','.....==.....','.....xx.....','..H..xx..C..','.....xx.....','xx=xxxxxx=xx','.....xx.....','.....xx.....','.....==.....','.....xx.....','.....xx.....']},
   { name:'忘れられた温室', theme:'garden', fx:'ivy', tip:'温室の かべを つかって ひみつの庭を つくろう。庭の中は 花が はやく そだつよ',
-    map:['...........','.GGGG......','.G..G..GGG.','.G..G..G.G.','.GG.G..G...','...........','..H....C...','.GGG.......','.G.G...GGG.','.G.....G.G.','.GGG...GGG.']},
+    map:['...........','...........','.......GGG.','.......G.G.','.......G...','...........','..H....C...','.GGG.......','.G.G...GGG.','.G.....G.G.','.GGG...GGG.']},
   { name:'黒い花粉の森', theme:'forest', fx:'gloom', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
     map:['...........','.T.......T.','...........','....T....T.','T..........','..H...C....','...........','.T....T....','.T.........','.......T..T','T..........']},
   { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって つかうと、しばらく 岩を こわせるよ。岩を 5回 たたくと こなごなに なって 土に もどるよ',
@@ -1710,7 +1712,7 @@ function spawnHoney(t){
   let best=null,bd=1e9;
   for(let j=t.j-2;j<=t.j+2;j++)for(let i=t.i-2;i<=t.i+2;i++){ const o=tileAt(i,j); if(!o||o.type!=='ground'||cubeAt(i,j)||bigAt(i,j)) continue; const d=Math.hypot(i-t.i,j-t.j)+Math.random()*.5; if(d<bd){bd=d;best=o;} }
   if(!best) return;
-  S.honey={x:best.i+.5,y:best.j+.5,t:0};
+  S.honey={x:best.i+.5,y:best.j+.5,t:0}; itemSay('honey');
   textFx(S.honey.x,S.honey.y,1.9,'はちみつが できたよ！','#b06a00',1.15,2); Sfx.poko();
 }
 function drinkHoney(){
@@ -1885,7 +1887,7 @@ function spawnCan(){
     for(let j=t.j-2;j<=t.j+2;j++)for(let i=t.i-2;i<=t.i+2;i++){ const o=tileAt(i,j); if(o&&o.type==='ground'&&o.state===0) n++; }
     if(n+Math.random()>bs){ bs=n+Math.random(); best=t; } }
   if(!best) return;
-  S.can={x:best.i+.5,y:best.j+.5,t:0};
+  S.can={x:best.i+.5,y:best.j+.5,t:0}; itemSay('can');
   textFx(S.can.x,S.can.y,1.9,S.told.can?'じょうろが あるよ！':'じょうろが あるよ！ タップで ひろおう','#2f7fbf',1.1,2); S.told.can=1; Sfx.poko();
 }
 function useCan(){
@@ -1956,7 +1958,7 @@ function spawnScoop(){
     let n=0; for(let j=t.j-2;j<=t.j+2;j++)for(let i=t.i-2;i<=t.i+2;i++){ const o=tileAt(i,j); if(o&&o.hard) n++; }
     const sc=n+Math.random()*2; if(n>0&&sc>bs){ bs=sc; best=t; } }
   if(!best) return;
-  S.scoop={x:best.i+.5,y:best.j+.5,t:0};
+  S.scoop={x:best.i+.5,y:best.j+.5,t:0}; itemSay('scoop');
   textFx(S.scoop.x,S.scoop.y,1.9,S.told.scoop?'スコップが あるよ！':'スコップが あるよ！ 荒地を たがやせるよ','#8a5a3c',1.1,2); S.told.scoop=1; Sfx.poko();
 }
 // スコップで ほれる 荒地：Hanaが 上に 立っている マスだけ（v0.10.2）
@@ -3907,6 +3909,32 @@ function drawOak(i,j,time){
   for(let k=0;k<12;k++){ const u=hash2(k,91)-.5, x=cx+u*CW*.85, y=cy+ry*.55+hash2(k,92)*4; drawAcorn(ctx,x,y,.42,Math.sin(time*1.3+k)*.15); }   // ぶらさがる どんぐり
   ctx.restore();
 }
+// v0.19.0：アイテムを 見つけやすく。①空から 光と いっしょに ストンと おちて、着地で 光の 輪と ポン ②その 場所から 空へ 光の 柱
+// （出て 3秒は つよく、そのあとは よわく ゆっくり 明滅。色で なにか わかる） ③「〇〇が でたよ！」の おしらせ
+const ITEM_FX={DROP:.45, FALL:110, H:120, STRONG:3,
+  COL:{honey:'255,200,60',can:'120,200,255',scoop:'214,150,90',pick:'205,215,225',acorn:'255,150,200'},
+  SAY:{honey:['はちみつが でたよ！','金色の 光の ところ。ひろって のむと Cubeを おせるよ'],can:['じょうろが でたよ！','水色の 光の ところ。あるいた ところに 水を まけるよ'],
+       scoop:['スコップが でたよ！','茶色の 光の ところ。荒地を たがやせるよ'],pick:['つるはしが でたよ！','灰色の 光の ところ。岩を こわせるよ'],
+       acorn:['花どんぐりが おちたよ！','ピンクの 光の ところを さがして ひろおう']}};
+const itemHop=t=>t<ITEM_FX.DROP?(1-Math.pow(t/ITEM_FX.DROP,2))*ITEM_FX.FALL:Math.abs(Math.sin(t*3))*4;   // おちてくる 高さ → 着地後は ぴょこぴょこ
+function itemSay(k){ const m=ITEM_FX.SAY[k]; if(m) UI.say(m[0],m[1],true); }
+function itemList(){ const L=[]; for(const k of ['honey','can','scoop','pick']) if(S[k]) L.push([k,S[k],S[k].t]); if(S.acorn&&S.acorn.mode!=='fall') L.push(['acorn',S.acorn,S.acorn.t]); return L; }
+function updateItemLand(){ for(const k of ['honey','can','scoop','pick']){ const o=S[k]; if(o&&!o.landed&&o.t>=ITEM_FX.DROP){ o.landed=1; ringFx(o.x,o.y,'rgb('+ITEM_FX.COL[k]+')',1.1); petalFx(o.x,o.y,.2,8,1); Sfx.poko(); } } }
+function drawItemBeams(time){
+  const L=itemList(); if(!L.length) return;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(const [k,o,t] of L){
+    const c=ITEM_FX.COL[k], land=k==='acorn'?0:ITEM_FX.DROP;
+    if(t<land){ const q=iso(o.x,o.y,(1-Math.pow(t/land,2))*ITEM_FX.FALL/CFG.ZH); const g=ctx.createRadialGradient(q.x,q.y-10,0,q.x,q.y-10,26); g.addColorStop(0,`rgba(${c},.7)`); g.addColorStop(1,`rgba(${c},0)`); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(q.x,q.y-10,26,0,7); ctx.fill(); continue; }   // おちてくる 光
+    const age=t-land, grow=Math.min(1,age/.35), k2=age<ITEM_FX.STRONG?1:.7+.2*Math.sin(time*2.4+o.x*3), H=ITEM_FX.H*grow, p=iso(o.x,o.y);
+    for(const [w,a] of [[30,.26],[14,.5],[5,.7]]){   // そと → しん
+      const g=ctx.createLinearGradient(0,p.y,0,p.y-H); g.addColorStop(0,`rgba(${c},${a*k2})`); g.addColorStop(.55,`rgba(${c},${a*k2*.45})`); g.addColorStop(1,`rgba(${c},0)`);
+      ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(p.x,p.y-H/2,w/2,H/2+2,0,0,7); ctx.fill(); }
+    const gb=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,22); gb.addColorStop(0,`rgba(${c},${.5*k2})`); gb.addColorStop(1,`rgba(${c},0)`); ctx.fillStyle=gb; ctx.beginPath(); ctx.ellipse(p.x,p.y,22,10,0,0,7); ctx.fill();   // 足もとの 光
+    for(let n=0;n<4;n++){ const u=(time*.6+n/4+o.y*.37)%1, yy=p.y-u*H*.9, xx=p.x+Math.sin(time*3+n*2)*4; ctx.fillStyle=`rgba(255,255,235,${(1-u)*.85*k2})`; ctx.beginPath(); ctx.arc(xx,yy,1.6,0,7); ctx.fill(); }   // のぼる つぶ
+  }
+  ctx.restore();
+}
 // v0.17.5：Cubeが 大木の みきに ぶつかった：木が ゆれて、花どんぐりが 1つぶ おちる（つぎまで 30〜42秒。地面に ある とき・もっている ときは ゆれるだけ）
 function oakBump(c){
   c.bumpAt=S.time; c.oakDone=true; c.shake=.12; S.oakShake=.5; Sfx.poko();
@@ -3915,7 +3943,7 @@ function oakBump(c){
   const L=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.i+t.j>=2&&t.i+t.j<=5&&!cubeAt(t.i,t.j)) L.push(t);   // 木の 葉の 下あたり
   if(!L.length) return; const t=L[Math.floor(Math.random()*L.length)];
   S.acorn={x:t.i+.2+Math.random()*.6,y:t.j+.2+Math.random()*.6,z:4.2,vx:0,vy:0,vz:0,mode:'fall',t:0,rot:0,hop:0};
-  UI.say('花どんぐりが おちたよ！','どこかに ころがったよ。↓の しるしを さがして ひろおう',true); Sfx.rare();   // v0.18.0：花に うもれて 見えなく なるので かならず しらせる
+  itemSay('acorn'); Sfx.rare();   // v0.18.0：花に うもれて 見えなく なるので かならず しらせる（v0.19.0：ほかの アイテムと おなじ おしらせ）
   if((S.told.bump|0)<1){ S.told.bump=1; textFx(c.i+.5,c.j+.5,2.3,'ドン！ 木が ゆれた！','#8a5a3c',1.05,1.8); }
 }
 function useAcorn(){
@@ -3973,7 +4001,7 @@ function spawnPick(){
     let n=0; for(const [a,b] of N8){ const o=tileAt(i+a,j+b); if(o&&o.type==='boulder') n++; }
     const sc=n-Math.hypot(i+.5-h.x,j+.5-h.y)*.25+Math.random(); if(n>0&&sc>bs){ bs=sc; best=t; } }
   if(!best) return;
-  S.pick={x:best.i+.5,y:best.j+.5,t:0};
+  S.pick={x:best.i+.5,y:best.j+.5,t:0}; itemSay('pick');
   textFx(S.pick.x,S.pick.y,1.9,S.told.pick?'つるはしが あるよ！':'つるはしが あるよ！ 岩を こわせるよ','#7a5a48',1.1,2.2); S.told.pick=1; Sfx.poko();
 }
 function usePick(){
@@ -4110,7 +4138,7 @@ function drawPickaxe(g,x,y,s,rot){
   g.restore();
 }
 function drawPickItem(time){
-  const P0=S.pick, p=iso(P0.x,P0.y), b=Math.abs(Math.sin(P0.t*3))*4;
+  const P0=S.pick, p=iso(P0.x,P0.y), b=itemHop(P0.t);
   ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,12,4.5,0,0,7); ctx.fill();
   drawPickaxe(ctx,p.x,p.y-2-b,.85,-.5);
   const k=.5+.5*Math.sin(time*5); ctx.fillStyle=`rgba(255,240,150,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+15,p.y-34-b);
@@ -4209,13 +4237,13 @@ function render(){
     else if(it.k==='mill') drawMill(it.i,it.j,time);
     else if(it.k==='queen'){ const Q=S.queen, see=hidesChar(Q.i+1,Q.j+1,3.6,1.8); if(see){ ctx.save(); ctx.globalAlpha=.45; drawQueen(time); ctx.restore(); } else drawQueen(time); }
     else if(it.k==='rare'){ const t=it.t, p=iso(t.i+.5,t.j+.5), s=easeBack(clamp(t.pop*1.4)); drawRareFlower(ctx,t.rare,p.x,p.y,s,Math.sin(time*1.5+t.i)*.05+flowerBend(t,t.i+.5,t.j+.5)*.6+windSway(time,t.j)); }
-    else if(it.k==='honey'){ const p=iso(S.honey.x,S.honey.y), b=Math.abs(Math.sin(S.honey.t*3))*4;
+    else if(it.k==='honey'){ const p=iso(S.honey.x,S.honey.y), b=itemHop(S.honey.t);
       ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,10,4,0,0,7); ctx.fill();
       drawHoneyJar(ctx,p.x,p.y-b,1); const k=.5+.5*Math.sin(S.time*5); ctx.fillStyle=`rgba(255,240,150,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+12,p.y-28-b); }
-    else if(it.k==='can'){ const p=iso(S.can.x,S.can.y), b=Math.abs(Math.sin(S.can.t*3))*4;
+    else if(it.k==='can'){ const p=iso(S.can.x,S.can.y), b=itemHop(S.can.t);
       ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,13,4.5,0,0,7); ctx.fill();
       drawCan(ctx,p.x-4,p.y-b,.95); const k=.5+.5*Math.sin(S.time*5); ctx.fillStyle=`rgba(200,235,255,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+16,p.y-30-b); }
-    else if(it.k==='scoop'){ const p=iso(S.scoop.x,S.scoop.y), b=Math.abs(Math.sin(S.scoop.t*3))*4; ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,12,4.5,0,0,7); ctx.fill(); drawScoop(ctx,p.x,p.y-b,.95,-.5); }
+    else if(it.k==='scoop'){ const p=iso(S.scoop.x,S.scoop.y), b=itemHop(S.scoop.t); ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,12,4.5,0,0,7); ctx.fill(); drawScoop(ctx,p.x,p.y-b,.95,-.5); }
     else if(it.k==='me') drawMe(time);
     else if(it.k==='onsen') drawOnsenMonkey(it.t,time);
     else if(it.k==='fish') drawFish(time);
@@ -4247,10 +4275,7 @@ function render(){
 
   for(const b of S.butterflies) drawButterfly(b);
   atmosFront(time);
-  // v0.18.0：おちた 花どんぐりの しるし（花に うもれても わかるように、いちばん 上に えがく）
-  if(S.acorn&&S.acorn.mode!=='fall'){ const a=S.acorn, g=iso(a.x,a.y), k=.5+.5*Math.sin(time*5), bo=Math.abs(Math.sin(time*4))*5, q=iso(a.x,a.y,.6);
-    ctx.save(); ctx.strokeStyle=`rgba(255,215,90,${.55+.4*k})`; ctx.lineWidth=2.2; ctx.beginPath(); ctx.ellipse(g.x,g.y,9+3*k,4.5+1.5*k,0,0,7); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(q.x-8,q.y-14-bo); ctx.lineTo(q.x+8,q.y-14-bo); ctx.lineTo(q.x,q.y-3-bo); ctx.closePath(); ctx.fillStyle='#ffc93c'; ctx.fill(); ctx.strokeStyle='#3b2f2a'; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.stroke(); ctx.restore(); }
+  drawItemBeams(time);   // v0.19.0：アイテムの 場所から 空へ のびる 光の 柱（花どんぐりも）
 
   // Cubeの上の6面インジケーター と スタンプの合図
   for(const c of S.cubes){
@@ -4758,7 +4783,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.18.8';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.19.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -5047,6 +5072,7 @@ function update(dt){
     updateExtras(dt);
     updateFalls(dt);
     updateAcorn(dt);
+    updateItemLand();
     updateRocks(dt);
     updateGarden(dt);
     updateFx(dt);
