@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.16.5</title>
+<title>TONS OF FLOWERS — Prototype v0.16.6</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.16.5（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.16.6（GDD v3.8準拠・2.5D・単一HTML）
+  v0.16.6：しずくの谷を けして「岩石の谷」を 16面（雲の上の庭の あと）に。岩が 5わり、つるはしで 5回 たたくと ヒビ→ヒビ→大きな石5こ→中くらいの石10こ→こつぶ→土。8〜16面は 1つ 前へ、マークの せつめいは 7面（迷いの生け垣）へ。
   v0.16.5：ころころ丘＝おくの 丘から たねボールが ころがってくる（タップで とめると 3×3が つぼみ）。しずくの谷＝光る しずくが おちてくる（Hanaが ひろうと まわりが そだつ）。小さな丘・はずみ・雨は とりのぞいた。
   v0.16.4：開発者画面の「オープニングに もどる」が、ステージから ひらいた ときも オープニングに もどるように（前は ステージに もどっていた）。
   v0.16.3：しずくの谷の 雨に いみを：はれ→くもり→雨（8秒）を くりかえし、雨の 間は じょうろと 同じく ぬれた 土に つぼみが でる。
@@ -809,9 +810,7 @@ const STAGES = [
     map:['..........','.R......R.','..........','..........','....FF....','....FF....','..H.......','.......C..','.R......R.','..........']},
   { name:'そよ風の高原', theme:'sky', fx:'highcloud', wind:'E', tip:'ときどき つよい かぜが ふくよ。ぽつんと さいた 花は つぼみに もどるけど、花びらが かざしもに たねを まくよ。岩の かげや かたまりの 花は だいじょうぶ',
     map:['RR........','R.........','..........','.....R....','..H....C..','..........','....W.....','....W.....','.........R','........RR']},
-  { name:'しずくの谷', theme:'water', fx:'drops', attrs:['rain','sun','leaf'], tip:'がけの 上から 光る「しずく」が おちてくるよ。Hanaが ひろうと、まわりの 土は つぼみに、つぼみは 花に なるよ。Cubeの 面の マーク（おひさま・あめ・はっぱ）は、その 面を さいごに スタンプして さかせると とくべつな ちからを だすよ',
-    map:['RR...W...R','R....W....','....WW....','....W.....','..H....C..','....W.....','...WW.....','R..W.....R','RR.W.....R','RRRW....RR']},
-  { name:'迷いの生け垣', theme:'forest', tip:'はちが 花を まわると はちみつが できるよ。のむと 30びょう Cubeを おせるよ',
+  { name:'迷いの生け垣', theme:'forest', tip:'はちが 花を まわると はちみつが できるよ。のむと 30びょう Cubeを おせるよ。Cubeの 面の マーク（おひさま・あめ・はっぱ）は、その 面を さいごに スタンプして さかせると とくべつな ちからを だすよ',
     map:['...........','.hhhhh.hhh.','.h.......h.','.h.hh.hhh..','.h.h...h.h.','...h.C.h.h.','.h.h...h.h.','.h.hhh.h.h.','.h.....H.h.','.hhh.hhhhh.','...........']},
   { name:'きらめく池', theme:'water', fx:'sparkle', tip:'池の 石は Hanaだけ わたれるよ。！マークの Cubeは こわがりさん',
     map:['...........','..R........','...WWsWW...','...WWsWW...','...sssss...','...WWsWW...','...WWsWW...','...........','.H.......C.','...........','.......R...']},
@@ -829,6 +828,8 @@ const STAGES = [
     map:['............','............','..S......S..','............','............','....C.......','.......H....','............','............','..S......S..','............','............']},
   { name:'雲の上の庭', theme:'clouds', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
     map:['.....xx.....','.....xx.....','.....==.....','.....xx.....','..H..xx..C..','.....xx.....','xx=xxxxxx=xx','.....xx.....','.....xx.....','.....==.....','.....xx.....','.....xx.....']},
+  { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって 岩を タップ。5回 たたくと こなごなに なって 土に もどるよ。岩を こわして 花の 場所を ふやそう',
+    map:['RRBBB..WBRR','RB....BWBBR','BB....BWWBB','B.B.....WBB','BB.H....W.B','B.....C.s.B','BB.B....WB.','B..BB..WB.B','BBB.B..W..B','RBBB..BWBBR','RRB.BBBWBRR']},
   { name:'黒い花粉の森', theme:'forest', fx:'gloom', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
     map:['...........','.T.......T.','...........','....T....T.','T..........','..H...C....','...........','.T....T....','.T.........','.......T..T','T..........']},
   { name:'忘れられた温室', theme:'garden', fx:'ivy', tip:'温室の かべを つかって ひみつの庭を つくろう。庭の中は 花が はやく そだつよ',
@@ -843,13 +844,13 @@ const ALL_ATTRS=['sun','rain','butterfly','leaf','star','rainbow'];
 function stageFlags(idx,st){
   const n=idx+1;
   return {
-    butterfly:n>=3, garden:n>=4, can:n>=6, scoop:n>=11, mole:n>=13, uribo:n>=14, bees:n>=8, colors:n>=10, trample:n>=12,
+    butterfly:n>=3, garden:n>=4, can:n>=6, scoop:n>=10, mole:n>=12, uribo:n>=13, bees:n>=7, colors:n>=9, trample:n>=11,   // v0.16.6：しずくの谷を けして 1つ ずれた
     giantFirst:!!st.giantFirst, giantP:st.giantP||(n>5?.06:0), rainbow:st.rainbow||.03,
-    attrs:st.attrs||(n>=10?ALL_ATTRS:n>=7?['sun','rain','leaf']:[]),
+    attrs:st.attrs||(n>=9?ALL_ATTRS:n>=7?['sun','rain','leaf']:[]),
     wind:st.wind||null, windChange:st.windChange||0, pollen:st.pollen||0, boss:!!st.boss,
     rareMul:st.rareMul||1, fastRoll:!!st.fastRoll,
-    hard:st.hard!=null?st.hard:(n>=11?Math.min(.25,.06+(n-11)*.024):0),   // 荒地の わりあい（11面 6% → 19面 約25%）
-    pers:[].concat(n>=2?['curious']:[],n>=9?['shy']:[],n>=11?['herd']:[],n>=12?['flowerhate']:[],n>=16?['flowerlove']:[])
+    hard:st.hard!=null?st.hard:(n>=10?Math.min(.25,.06+(n-10)*.024):0),   // 荒地の わりあい（10面 6% → 19面 約25%）
+    pers:[].concat(n>=2?['curious']:[],n>=8?['shy']:[],n>=10?['herd']:[],n>=11?['flowerhate']:[],n>=15?['flowerlove']:[])
   };
 }
 let STAGE=STAGES[0], ROWS=STAGE.map.length, COLS=STAGE.map[0].length;
@@ -860,7 +861,7 @@ let STAGE=STAGES[0], ROWS=STAGE.map.length, COLS=STAGE.map[0].length;
 // 地面 state: 0=土 1=つぼみ 2=花畑。t.hard＝荒地（かたい土。スコップで たがやすまで 育たない）
 // 地形 type：ground（花が さく・花率の対象）／ rock・water・hedge・tree・cloud・glass・mill・queen（通れない）
 //            stone・bridge（Hanaだけ 通れる。花率には 入らない）
-const TILE_CH={R:'rock',W:'water',s:'stone',h:'hedge',T:'tree',x:'cloud','=':'bridge',G:'glass',M:'mill',Q:'queen',F:'water',k:'rock'};
+const TILE_CH={R:'rock',W:'water',s:'stone',h:'hedge',T:'tree',x:'cloud','=':'bridge',G:'glass',M:'mill',Q:'queen',F:'water',k:'rock',B:'boulder'};   // v0.16.6：B＝岩石の谷の こわせる 岩（つるはしで 5回）
 // v0.16.0：F＝ふんすい（水）／ k＝レンガの 花壇ふち（岩と おなじ）／ S＝さいしょから さいている 巨大ひまわり
 const HANA_OK={ground:1,stone:1,bridge:1};   // 温泉（onsen）は 入れない
 let S=null;
@@ -876,11 +877,11 @@ function newState(idx){
       if(ch==='Q'&&!queen) queen={i,j};
       if(ch==='H') hana={x:i+.5,y:j+.5};
       if(ch==='C') first={i,j};
-      if(type==='ground') ground++;
+      if(type==='ground'||type==='boulder') ground++;   // こわせる 岩も 花率の 分母に 入る（こわして 花に すれば ふえる）
       const deco=[]; for(let k=0;k<5;k++) deco.push({u:.14+rnd()*.72, v:.14+rnd()*.72, c:Math.floor(rnd()*5), s:.8+rnd()*.35, ph:rnd()*6.28});
       deco.sort((a,b)=>(a.u+a.v)-(b.u+b.v));
       row.push({i,j,type,state:ch==='b'?1:ch==='S'?2:0,bf:null,pop:1,flash:0,deco,crack:[rnd(),rnd(),rnd(),rnd()],
-        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
+        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined, bhp:type==='boulder'?5:undefined});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
       if(ch==='S') suns.push({i,j});
     } tiles.push(row);
   }
@@ -918,7 +919,8 @@ function newState(idx){
     target:null, nearest:null,
     fx:{petals:[],rings:[],texts:[],stars:[],marks:[],flash:null,banner:null},
     tickN:0, falls:[], fallT:4,
-    balls:[], ballT:5, drops:[], dropT:4   // v0.16.5：ころころ丘の たねボール／しずくの谷の しずく
+    balls:[], ballT:5,   // v0.16.5：ころころ丘の たねボール
+    pick:null, hasPick:false, swingT:0, rockGoal:null, rocksBroken:0   // v0.16.6：岩石の谷の つるはし
   };
   for(const q of suns){ st.bigFlowers.push({i:q.i,j:q.j,t:9,c:0,ph:rnd()*6,wt:9,wd:1,inside:false,kind:'sunflower',shape:'daisy',pre:true}); st.flowerCount++; }   // v0.16.0：巨大ひまわりの庭は さいしょから さいている
   return st;
@@ -2143,7 +2145,7 @@ const Input={
   tap(cx,cy){
     const h=S.hana;
     if(hitBall(cx,cy)) return;   // v0.16.5：ころがる たねボールを とめる
-    if(dropAt(cx,cy)) return;    // v0.16.5：しずくを ひろいに いく
+    if(rockTap(cx,cy)) return;   // v0.16.6：岩石の谷：岩を たたく・つるはしを ひろう
     // モグラの さきっぽ・ウリ坊：タップすると おいかけて さわる
     if(S.mole&&S.mole.mode==='dig'){ const m=moleHead(); if(this.scrDist(cx,cy,m.x,m.y,.15)<48){ if(pokeAnimal('mole')) return; setGoalPoint(m.x,m.y); h.want='mole'; if(h.goal) h.goal.mole=true; return; } }
     if(S.uribo&&S.uribo.mode!=='leave'&&S.uribo.mode!=='happy'&&this.scrDist(cx,cy,S.uribo.x,S.uribo.y,.3)<38){ if(pokeAnimal('uribo')) return; setGoalPoint(S.uribo.x,S.uribo.y); h.want='uribo'; if(h.goal) h.goal.uribo=true; return; }
@@ -2175,7 +2177,7 @@ const Input={
       if(e.target&&e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter')) return;
       if(!document.getElementById('stageOv').hidden&&STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat) UI.stClose(false,true); return; }   // ステージ名カード：キーで すぐ はじめる
       if(MOVE.includes(e.code)){ this.keys.add(e.code); e.preventDefault(); Sfx.ensure(); }
-      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); } }
+      else if(STAMP.includes(e.code)){ e.preventDefault(); if(!e.repeat){ if(Op.on) Op.tap(); else if(!S.started) UI.start(); else if(rockNear()){ hitRock(rockNear()); } else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); } }
       else if(e.code==='KeyE'||e.code==='KeyH'){ if(!e.repeat) useItem(); }
       else if(e.code==='KeyR'){ UI.restart(); }
       else if(e.code==='KeyM'){ UI.toggleSound(); }
@@ -2219,7 +2221,7 @@ const Pad={vec:{x:0,y:0},prev:[],
     let x=gp.axes[0]||0, y=gp.axes[1]||0; if(Math.hypot(x,y)<.25){ x=0; y=0; }
     if(B(14)) x=-1; if(B(15)) x=1; if(B(12)) y=-1; if(B(13)) y=1;
     const l=Math.hypot(x,y); this.vec=l>1?{x:x/l,y:y/l}:{x,y};
-    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(false,true); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
+    if(edge(0)){ if(Op.on) Op.tap(); else if(!document.getElementById('stageOv').hidden) UI.stClose(false,true); else if(!S.started||!document.getElementById('startOv').hidden) UI.start(); else if(rockNear()){ hitRock(rockNear()); } else if(pokeAnimal()){} else if(digTarget()) tryDig(digTarget()); else if(moundUnderHana()) stompMound(moundUnderHana()); else if(S.target) interactCube(S.target); else tryStamp(); Sfx.ensure(); }
     if(edge(1)) useItem();
     if(edge(9)) document.getElementById('helpBtn').click();
     this.prev=gp.buttons.map(b=>b.pressed);
@@ -2705,7 +2707,7 @@ function drawBoard(time){
       const c=iso(i+.5,j+.5), k=.5+.5*Math.sin(time*1.6+i*2+j);
       ctx.strokeStyle=`rgba(255,255,255,${.35+.3*k})`; ctx.lineWidth=1.3; ctx.beginPath(); ctx.ellipse(c.x-4,c.y-1,9+3*k,3.2+k,0,0,7); ctx.stroke();
       shore(i,j,P); continue; }
-    if(t.type==='rock'){ ctx.fillStyle=alt?'#b7a79a':'#b0a093'; ctx.fill(); continue; }
+    if(t.type==='rock'||t.type==='boulder'){ ctx.fillStyle=alt?'#b7a79a':'#b0a093'; ctx.fill(); continue; }
     if(t.type==='stone'){ ctx.fillStyle='#8fd3e6'; ctx.fill(); if(artOk('ground')){ artWater(i,j,P); shore(i,j,P); const c=iso(i+.5,j+.5); ctx.save(); ctx.translate(c.x,c.y+2); ctx.scale(1,.6); artDraw(ctx,'ground',3,0,0,0,{w:46,cx:1,center:1}); ctx.restore(); continue; } shore(i,j,P);   // 池の 飛び石
       const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(59,47,42,.18)'; ctx.beginPath(); ctx.ellipse(c.x+1,c.y+2,20,9,0,0,7); ctx.fill();
       ctx.fillStyle='#c9c2b8'; ctx.beginPath(); ctx.ellipse(c.x,c.y,19,8.5,0,0,7); ctx.fill(); ctx.strokeStyle='#8a8079'; ctx.lineWidth=1.2; ctx.stroke();
@@ -2732,6 +2734,7 @@ function drawBoard(time){
     // 地面の しつかんは、マスの 種類ごとに 1回だけ 絵を つくって はる（毎フレーム えがかない＝スマホでも かるい）
     { const kind=t.hard?'hard'+Math.max(1,t.hardHP||CFG.HARD_HP):['soil','bud','flower'][t.state], q=iso(i,j);
       ctx.drawImage(tileSprite(kind,alt,(i*7+j*13)%4),q.x-CFG.TW/2,q.y,CFG.TW,CFG.TH); }
+    if(t.grainT>0) drawGrains(i,j,t.grainT);   // v0.16.6：こわした 岩の こつぶ（すぐ 土に なじむ）
     if(t.shade){ const c=iso(i+.5,j+.5); ctx.fillStyle='rgba(40,70,40,.13)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,26,12,0,0,7); ctx.fill(); }   // 木かげ
     if(t.wet>0){ poly(P); ctx.fillStyle=`rgba(70,50,40,${Math.min(.2,t.wet*.14)})`; ctx.fill(); }   // じょうろで ぬれた 地面
     if(t.garden){ poly(P); ctx.fillStyle=t.garden.kind==='royal'?'rgba(255,215,120,.22)':'rgba(255,240,170,.2)'; ctx.fill(); }   // ひみつの庭
@@ -3738,7 +3741,7 @@ function atmosFront(time){
   if(fx==='sunset') atmosTint((()=>{ const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'rgba(255,120,40,.40)'); g.addColorStop(.6,'rgba(255,150,70,.30)'); g.addColorStop(1,'rgba(200,70,120,.26)'); return g; })());
   if(fx==='sleep'||fx==='stars') atmosTint('rgba(30,40,110,.30)');
   if(fx==='gloom') atmosTint('rgba(50,30,70,.40)');
-  if(fx==='sparkle'||fx==='drops'){   // 水面の きらめき・しずくの 波紋
+  if(fx==='sparkle'){   // 水面の きらめき
     for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.type!=='water'&&t.type!=='stone') continue;
       for(let q=0;q<2;q++){ const h=hash2(i*3+q,j), u=(time*(fx==='drops'?.35:.45)+h*7)%1, x=i+.15+hash2(j,i+q)*.7, y=j+.15+h*.7, p=iso(x,y);
         if(fx==='drops'){ if(q) continue; ctx.strokeStyle=`rgba(255,255,255,${.55*(1-u)})`; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(p.x,p.y,2+u*9,1+u*4.5,0,0,7); ctx.stroke(); }
@@ -3807,62 +3810,101 @@ function drawBall(b,time){
   ctx.fillStyle='#6fbf55'; ctx.beginPath(); ctx.ellipse(q.x+4.5,q.y-r-6,3.2,1.8,-.5,0,7); ctx.fill();
   ctx.restore();
 }
-// v0.16.5：しずくの谷の しずく。がけの 上から ときどき 光る しずくが おちてきて、しばらく 地面で ひかる（影で おちる 場所が わかる）。
-// Hanaが ひろうと まわり（半径1.6）の 土→つぼみ、つぼみ→花
-const DROP={FIRST:4,GAP:[7,10],MAX:2,FALL:1.4,SIT:12,R:1.6};
-function updateDrops(dt){
-  if(STAGE.fx!=='drops') return;
-  if(!S.cleared){ S.dropT-=dt;
-    if(S.dropT<=0&&S.drops.length<DROP.MAX){ S.dropT=DROP.GAP[0]+Math.random()*(DROP.GAP[1]-DROP.GAP[0]);
-      const reach=walkMap(Math.floor(S.hana.x),Math.floor(S.hana.y)), L=[];
-      for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&!cubeAt(t.i,t.j)&&!bigAt(t.i,t.j)&&reach.has(t.j*COLS+t.i)&&Math.hypot(t.i+.5-S.hana.x,t.j+.5-S.hana.y)>1.5&&!S.drops.some(d=>d.i===t.i&&d.j===t.j)) L.push(t);
-      if(L.length){ const t=L[Math.floor(Math.random()*L.length)]; S.drops.push({i:t.i,j:t.j,x:t.i+.5,y:t.j+.5,mode:'fall',t:0}); } } }
+// v0.16.6：岩石の谷。岩（boulder）は つるはしで 5回 たたくと 土に もどる：
+// 5 そのまま → 4 ヒビ → 3 ヒビが ふえる → 2 大きな 石 5こ → 1 中くらいの 石 10こ → 0 こつぶ → 土
+const ROCKV={REACH:1.55,SWING:.32};   // REACH：ななめ となり（1.41）からも とどく
+function updateRocks(dt){
+  if(!STAGE.rockv) return;
+  if(S.swingT>0) S.swingT-=dt;
+  for(const row of S.tiles) for(const t of row){ if(t.hitT>0) t.hitT-=dt; if(t.grainT>0) t.grainT-=dt; }
+  if(S.cleared) return;
   const h=S.hana;
-  for(const d of S.drops){ d.t+=dt;
-    if(S.cleared){ d.dead=1; continue; }
-    if(d.mode==='fall'){ if(d.t>=DROP.FALL){ d.mode='sit'; d.t=0; ringFx(d.x,d.y,'#bfe6ff',.7); petalFx(d.x,d.y,.1,8,1);
-        if((S.told.drop|0)<2){ S.told.drop=(S.told.drop|0)+1; textFx(d.x,d.y,1.9,'しずくが おちたよ！ ひろいに いこう','#2f7fbf',1.05,2.4); } } continue; }
-    if(Math.hypot(d.x-h.x,d.y-h.y)<.55){ pickDrop(d); continue; }
-    if(d.t>=DROP.SIT){ d.dead=1; ringFx(d.x,d.y,'#e0f4ff',.4); }   // じょうはつ
-  }
-  S.drops=S.drops.filter(d=>!d.dead);
+  if(!S.hasPick&&!S.pick&&S.started){   // さいしょに Hanaの となりに つるはしを おく
+    let best=null,bd=1e9; const prev=walkMap(Math.floor(h.x),Math.floor(h.y));
+    for(const k of prev.keys()){ const i=k%COLS, j=Math.floor(k/COLS), t=tileAt(i,j), d=Math.hypot(i+.5-h.x,j+.5-h.y); if(t.type==='ground'&&d>.9&&d<bd&&!cubeAt(i,j)){ bd=d; best=t; } }
+    if(best){ S.pick={x:best.i+.5,y:best.j+.5,t:0}; textFx(S.pick.x,S.pick.y,1.9,'つるはしが あるよ！ ひろおう','#7a5a48',1.05,2.4); } }
+  if(S.pick){ S.pick.t+=dt; if(Math.hypot(S.pick.x-h.x,S.pick.y-h.y)<.6){ S.pick=null; S.hasPick=true; Sfx.get();
+      const T=document.body.classList.contains('touch')?'タップ':'クリック'; textFx(h.x,h.y,2.2,'つるはし ゲット！ 岩を '+T+'で たたこう','#7a5a48',1.15,2.6); if(h.goal&&h.goal.pick) h.goal=null; } }
+  if(S.rockGoal){ const t=S.rockGoal;
+    if(t.type!=='boulder'){ S.rockGoal=null; }
+    else if(Math.hypot(t.i+.5-h.x,t.j+.5-h.y)<ROCKV.REACH){ S.rockGoal=null; h.goal=null; hitRock(t); }
+    else if(!h.goal) S.rockGoal=null; }   // とちゅうで ほかの 場所を タップした
 }
-function pickDrop(d){
-  d.dead=1; const h=S.hana; let n=0;
-  for(let j=Math.floor(h.y)-2;j<=Math.floor(h.y)+2;j++)for(let i=Math.floor(h.x)-2;i<=Math.floor(h.x)+2;i++){ const t=tileAt(i,j);
-    if(!t||t.type!=='ground'||t.hard||t.mole||Math.hypot(i+.5-h.x,j+.5-h.y)>DROP.R) continue;
-    t.wet=1.6; if(t.state<2){ setTile(t,t.state+1); n++; } }
-  ringFx(h.x,h.y,'#9fd6ff',DROP.R+.3); petalFx(h.x,h.y,.3,16,1.6); Sfx.water();
-  textFx(h.x,h.y,2.2,'しずく ゲット！'+(n?' 花が そだったよ':''),'#2f7fbf',1.15,2);
-  if(h.goal&&h.goal.drop) h.goal=null;
+function rockNear(){
+  if(!STAGE.rockv||!S.hasPick||S.cleared) return null; const h=S.hana; let best=null,bd=ROCKV.REACH;
+  for(let j=Math.floor(h.y)-2;j<=Math.floor(h.y)+2;j++)for(let i=Math.floor(h.x)-2;i<=Math.floor(h.x)+2;i++){ const t=tileAt(i,j); if(!t||t.type!=='boulder') continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
+  return best;
 }
-function dropAt(cx,cy){   // タップした ところに しずくが あれば あるいて いく
-  if(STAGE.fx!=='drops') return false;
-  for(const d of S.drops) if(d.mode==='sit'&&Input.scrDist(cx,cy,d.x,d.y,.2)<36){ setGoalPoint(d.x,d.y); if(S.hana.goal) S.hana.goal.drop=true; return true; }
-  return false;
+function hitRock(t){
+  if(!S.hasPick||S.swingT>0||t.type!=='boulder') return false;
+  const h=S.hana; S.swingT=ROCKV.SWING; h.stampT=.28; h.sx=(t.i+.5-h.x)-(t.j+.5-h.y)>=0?1:-1;
+  t.bhp--; t.hitT=.25; Sfx.dig();
+  rockDust(t.i+.5,t.j+.5,t.bhp<=0?22:8);
+  if(t.bhp<=0){ t.type='ground'; t.state=0; t.pop=1; t.grainT=1.4; t.flash=1; S.rocksBroken++; S.gardenDirty=true;
+    ringFx(t.i+.5,t.j+.5,'#e8dccb',.9); if((S.told.rockBreak|0)<3){ S.told.rockBreak=(S.told.rockBreak|0)+1; textFx(t.i+.5,t.j+.5,1.9,'こなごな！ 土に なった','#7a5a48',1.05,1.8); } }
+  else if((S.told.rockHit|0)<2){ S.told.rockHit=(S.told.rockHit|0)+1; textFx(t.i+.5,t.j+.5,2.2,'カン！ あと '+t.bhp+'かい','#7a5a48',1,1.4); }
+  return true;
 }
-function drawDrop(d,time){
-  const p=iso(d.x,d.y);
-  ctx.save();
-  if(d.mode==='fall'){ const u=clamp(d.t/DROP.FALL);
-    ctx.fillStyle=`rgba(40,80,120,${.12+.25*u})`; ctx.beginPath(); ctx.ellipse(p.x,p.y,4+8*u,2+3.5*u,0,0,7); ctx.fill();   // おちる 場所の かげ
-    ctx.strokeStyle=`rgba(255,255,255,${.4+.4*u})`; ctx.lineWidth=1.2; ctx.beginPath(); ctx.ellipse(p.x,p.y,13-5*u,5.5-2*u,0,0,7); ctx.stroke();
-    const q=iso(d.x,d.y,.25+(1-u*u)*7); teardrop(q.x,q.y,1); ctx.restore(); return; }
-  const fade=d.t>DROP.SIT-2?(DROP.SIT-d.t)/2:1, bob=Math.sin(time*3+d.i)*2, gl=.5+.5*Math.sin(time*4+d.j);
-  ctx.globalAlpha=fade;
-  ctx.fillStyle='rgba(40,80,120,.22)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,9,3.6,0,0,7); ctx.fill();
-  const q=iso(d.x,d.y,.35); const g=ctx.createRadialGradient(q.x,q.y-bob,0,q.x,q.y-bob,24); g.addColorStop(0,`rgba(200,240,255,${.55+.3*gl})`); g.addColorStop(1,'rgba(200,240,255,0)');
-  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(q.x,q.y-bob,24,0,7); ctx.fill();
-  teardrop(q.x,q.y-bob,1.15);
+function rockDust(x,y,n){ for(let k=0;k<n;k++){ const a=Math.random()*6.283, v=.4+Math.random()*.8; S.fx.petals.push({x,y,z:.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v,vz:1+Math.random()*1.2,life:0,max:.5+Math.random()*.3,c:['#a89b8f','#8c8077','#c9bdb0'][k%3],rot:Math.random()*6,vr:(Math.random()-.5)*12,s:1.6+Math.random()*1.6}); } }
+function rockTap(cx,cy){
+  if(!STAGE.rockv) return false; const h=S.hana;
+  if(S.pick&&Input.scrDist(cx,cy,S.pick.x,S.pick.y,.2)<36){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; return true; }
+  let best=null,bd=34;   // 岩の 絵は 高さが あるので、マスの 中心より すこし 上で くらべる
+  for(const row of S.tiles) for(const t of row){ if(t.type!=='boulder') continue; const d=Input.scrDist(cx,cy,t.i+.5,t.j+.5,.35); if(d<bd){ bd=d; best=t; } }
+  if(!best) return false;
+  if(!S.hasPick){ textFx(h.x,h.y,2.1,S.pick?'さきに つるはしを ひろおう':'つるはしが ないと こわせないよ','#7a5a48',1,1.8); if(S.pick){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; } return true; }
+  if(Math.hypot(best.i+.5-h.x,best.j+.5-h.y)<ROCKV.REACH){ h.goal=null; S.rockGoal=null; hitRock(best); return true; }
+  const prev=walkMap(Math.floor(h.x),Math.floor(h.y)); let tg=null,td=1e9;   // となりの 行ける マスまで あるく
+  for(const [di,dj] of N8){ const i=best.i+di, j=best.j+dj; if(!prev.has(j*COLS+i)) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y)+(di&&dj?.6:0); if(d<td){ td=d; tg={i,j}; } }   // たて・よこの となりを えらびやすく
+  if(!tg){ textFx(h.x,h.y,2.1,'そこまで いけないよ','#7a5a48',1,1.6); return true; }
+  setGoalPoint(tg.i+.5,tg.j+.5); S.rockGoal=best; ringFx(best.i+.5,best.j+.5,'#ffffff',.45);
+  return true;
+}
+function drawBoulder(i,j,time){
+  const t=tileAt(i,j), hp=t.bhp, sh=t.hitT>0?Math.sin(t.hitT*80)*2*t.hitT/.25:0, p=iso(i+.5,j+.5); p.x+=sh;
+  const H=hash2(i,j);
+  const rockAt=(x,y,w)=>{ if(artOk('props')) artDraw(ctx,'props',2,x,y,0,{w,cx:1}); else { ctx.fillStyle='#a49a90'; ctx.strokeStyle='#6f665e'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(x,y-w*.3,w*.5,w*.36,0,0,7); ctx.fill(); ctx.stroke(); } };
+  if(hp>=3){
+    ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+4,26,10,0,0,7); ctx.fill();
+    rockAt(p.x,p.y+9,58);
+    if(hp<=4){ ctx.save(); ctx.strokeStyle='rgba(55,42,36,.85)'; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.lineJoin='round';   // ヒビ
+      const cracks=hp===4?2:5;
+      for(let k=0;k<cracks;k++){ let x=p.x+(hash2(i*7+k,j)-.5)*22, y=p.y-30+hash2(j*7+k,i)*14, a=hash2(i+k,j*3)*6.28; ctx.beginPath(); ctx.moveTo(x,y);
+        for(let q=0;q<4;q++){ a+=(hash2(i*13+k*5+q,j)-.5)*1.6; x+=Math.cos(a)*6; y+=Math.sin(a)*5+1.5; ctx.lineTo(x,y); } ctx.stroke(); }
+      ctx.restore(); }
+    return; }
+  // こなごなに なりかけ：大きな 石 5こ（hp2）／中くらいの 石 10こ（hp1）
+  const n=hp===2?5:10, w=hp===2?26:16, R=hp===2?.28:.34;
+  ctx.fillStyle='rgba(59,47,42,.18)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y+2,24,10,0,0,7); ctx.fill();
+  const L=[]; for(let k=0;k<n;k++){ const a=k/n*6.283+H*3, r=(k%2?R:R*.45)+hash2(k,i+j)*.08; L.push({x:i+.5+Math.cos(a)*r,y:j+.5+Math.sin(a)*r}); }
+  L.sort((a,b)=>(a.x+a.y)-(b.x+b.y));
+  for(const q of L){ const s=iso(q.x,q.y); rockAt(s.x+sh,s.y+w*.18,w*(.85+hash2(Math.round(q.x*10),Math.round(q.y*10))*.3)); }
+}
+function drawGrains(i,j,k){   // こつぶ：だんだん 土に なじむ
+  const a=clamp(k/1.4); ctx.save(); ctx.globalAlpha=a;
+  for(let q=0;q<26;q++){ const p=iso(i+.12+hash2(i*31+q,j)*.76,j+.12+hash2(j*31+q,i)*.76); ctx.fillStyle=q%3?'#a89b8f':'#8c8077'; ctx.beginPath(); ctx.ellipse(p.x,p.y,1.6+(q%3)*.6,1.1+(q%3)*.4,0,0,7); ctx.fill(); }
   ctx.restore();
 }
-function teardrop(x,y,k){
-  ctx.save(); ctx.translate(x,y); ctx.scale(k,k);
-  const g=ctx.createLinearGradient(-6,-14,6,8); g.addColorStop(0,'#e8f8ff'); g.addColorStop(.5,'#7fd0f5'); g.addColorStop(1,'#3b9fd8');
-  ctx.beginPath(); ctx.moveTo(0,-15); ctx.bezierCurveTo(3,-8,8,-3,8,2); ctx.arc(0,2,8,0,Math.PI); ctx.bezierCurveTo(-8,-3,-3,-8,0,-15); ctx.closePath();
-  ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='#2f7fbf'; ctx.lineWidth=1.2; ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,.8)'; ctx.beginPath(); ctx.ellipse(-3,0,1.8,3.4,.3,0,7); ctx.fill();
-  ctx.restore();
+function drawPickaxe(g,x,y,s,rot){
+  g.save(); g.translate(x,y); g.scale(s,s); g.rotate(rot||0); g.lineCap='round'; g.lineJoin='round';
+  g.strokeStyle='#5d3b26'; g.lineWidth=5; g.beginPath(); g.moveTo(0,4); g.lineTo(0,-30); g.stroke();
+  g.strokeStyle='#a5744a'; g.lineWidth=3; g.beginPath(); g.moveTo(0,4); g.lineTo(0,-30); g.stroke();
+  g.fillStyle='#b9c4cc'; g.strokeStyle='#59646d'; g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(-17,-22); g.quadraticCurveTo(-8,-35,0,-35); g.quadraticCurveTo(8,-35,17,-22); g.quadraticCurveTo(8,-30,0,-29); g.quadraticCurveTo(-8,-30,-17,-22); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-5,-32,4,1.2,-.2,0,7); g.fill();
+  g.restore();
+}
+function drawPickItem(time){
+  const P0=S.pick, p=iso(P0.x,P0.y), b=Math.abs(Math.sin(P0.t*3))*4;
+  ctx.fillStyle='rgba(59,47,42,.2)'; ctx.beginPath(); ctx.ellipse(p.x,p.y,12,4.5,0,0,7); ctx.fill();
+  drawPickaxe(ctx,p.x,p.y-2-b,.85,-.5);
+  const k=.5+.5*Math.sin(time*5); ctx.fillStyle=`rgba(255,240,150,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+15,p.y-34-b);
+}
+function drawHanaPick(time){
+  if(!S.hasPick) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1;
+  const u=S.swingT>0?1-S.swingT/ROCKV.SWING:-1;   // ふりあげて → ふりおろす
+  const a=u<0?-.35+(h.moving?Math.sin(time*10)*.12:0):u<.4?-.35-1.5*(u/.4):-1.85+2.6*((u-.4)/.6);
+  ctx.save(); ctx.translate(p.x+sd*10,p.y-14); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore();
 }
 // v0.16.0：ながれぼし（星降る原っぱ）。おちた マスの 花が そだつ（土→つぼみ、つぼみ→花）
 function updateFalls(dt){
@@ -3899,6 +3941,7 @@ function render(){
   for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
     const t=S.tiles[j][i];
     if(t.type==='rock'){ items.push({d:i+j+1,k:'r',i,j}); continue; }
+    if(t.type==='boulder'){ items.push({d:i+j+1,k:'bould',i,j}); continue; }
     if(t.type==='hedge'||t.type==='tree'||t.type==='glass'||t.type==='mill'){ items.push({d:i+j+1,k:t.type,i,j}); continue; }
     if(t.type!=='ground'||t.state===0) continue;
     const big=bigAt(i,j), n=t.state===1?3:5;
@@ -3907,7 +3950,7 @@ function render(){
   }
   for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){ const t=S.tiles[j][i]; if(t.fount&&!(tileAt(i-1,j)||{}).fount&&!(tileAt(i,j-1)||{}).fount) items.push({d:i+j+1.2,k:'fount',i,j}); }
   for(const b of S.balls) items.push({d:b.x+b.y+.05,k:'ball',b});
-  for(const d of S.drops) items.push({d:d.x+d.y+.02,k:'drop',dr:d});
+  if(S.pick) items.push({d:S.pick.x+S.pick.y+.02,k:'pick'});
   if(S.queen) items.push({d:S.queen.i+S.queen.j+2.6,k:'queen'});
   if(S.honey) items.push({d:S.honey.x+S.honey.y+.02,k:'honey'});
   if(S.can) items.push({d:S.can.x+S.can.y+.02,k:'can'});
@@ -3935,7 +3978,8 @@ function render(){
     else if(it.k==='r') drawRock(it.i,it.j);
     else if(it.k==='fount') drawFountain(it.i,it.j,time);
     else if(it.k==='ball') drawBall(it.b,time);
-    else if(it.k==='drop') drawDrop(it.dr,time);
+    else if(it.k==='pick') drawPickItem(time);
+    else if(it.k==='bould') drawBoulder(it.i,it.j,time);
     else if(it.k==='hedge') drawHedge(it.i,it.j);
     else if(it.k==='tree') drawTree(it.i,it.j,time);
     else if(it.k==='glass') drawGlass(it.i,it.j);
@@ -3957,7 +4001,7 @@ function render(){
     else if(it.k==='uribo') withAlpha(uriAlpha(S.uribo),()=>drawUribo(time));
     else if(it.k==='b') drawBigFlower(it.b,time);
     else if(it.k==='c'){ const A=armInfo(it.c)||[]; for(const a of A) if(!a.front) drawArm(a); geo.set(it.c,drawCube(it.c,time)); for(const a of A) if(a.front) drawArm(a); }
-    else { drawHanaAura(time); drawHana(time); drawHanaCan(time); drawHanaScoop(time); }
+    else { drawHanaAura(time); drawHana(time); drawHanaCan(time); drawHanaScoop(time); drawHanaPick(time); }
   }
   // 蜂・黒い花粉・かぜの すじ
   for(const b of S.bees) withAlpha(fadeIn(b.age,.7),()=>drawBee(b));
@@ -4485,7 +4529,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.16.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.16.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4774,7 +4818,7 @@ function update(dt){
     updateExtras(dt);
     updateFalls(dt);
     updateBalls(dt);
-    updateDrops(dt);
+    updateRocks(dt);
     updateGarden(dt);
     updateFx(dt);
   }
