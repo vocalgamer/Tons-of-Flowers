@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.15.2</title>
+<title>TONS OF FLOWERS — Prototype v0.15.4</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.15.2（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.15.4（GDD v3.8準拠・2.5D・単一HTML）
+  v0.15.4：かき分けで 花を 外へ たおすのを やめ、もとの たおれ方に もどす（小さく・手前は うすく は のこす）。
+  v0.15.3：HanaとCubeの 白い ふち取りを 半分の 太さに（2.2→1.1）。
   v0.15.2：HanaとCubeが 手描きの 花に うもれないよう、白い ふち取り＋まわりの 花の かき分け（小さく・外へ たおれ・手前は うすく）。
   v0.15.1：つぼみの 絵の ピンクを 黄緑に（花が さいている ように 見えて 画面が うるさかった）。
   v0.15.0：音の 対策を 強化（無音の <audio> ループで iPhoneの マナースイッチ・中断に つよく、指を はなした とき・クリックでも 再開、イヤホン 切りかえで 作りなおし、「おと」OFF→ONで 音の 装置を 作りなおす＋あそびかたに 案内）。エンディングの 配置を 画面の 形に あわせて 自動調整（キャラは 字幕の わくの 上・「とばす」の 下、さいごの 場面は ロゴ→文字→Hana→「おわる」を つめて ならべ、高さが たりない ときは Hanaを ボタンの よこに）。
@@ -2474,7 +2476,7 @@ const JUMP_ANIM={F:.75, P:.52,
 // ジャンプを 描く（s＝HANA_SPRの 1コマに 対する 倍率、hp＝跳ぶ 高さpx、loop＝くり返しの 秒数：最後は 立って万歳で ひと休み）
 // v0.15.2：Hanaを 花の 絵に うもれさせない 白い ふち取り。コマごとに（となりの コマが はみ出さないよう）よはくを つけて、
 // シルエットを ふくらませて 白く ぬった シートを 1回だけ つくる。 drawOutlined() で 本体の うしろに しく
-const OUTLINE_PX=2.2;   // 画面上の ふちの 太さ（ゲームの 座標で）
+const OUTLINE_PX=1.1;   // v0.15.3：太すぎたので 半分に（2.2→1.1）   // 画面上の ふちの 太さ（ゲームの 座標で）
 function outlineSheet(o,scale){
   if(o.ol!==undefined) return o.ol; o.ol=null;
   try{ const im=o.img, w=im.naturalWidth||im.width, h=im.naturalHeight||im.height; if(!w){ o.ol=undefined; return null; }
@@ -3688,7 +3690,7 @@ function render(){
       const pt=flowerPart(t.i+de.u,t.j+de.v), ps=pt?1-.42*pt.k:1, pa=pt&&pt.front?1-.45*pt.k:1;   // かき分け（v0.15.2）
       ctx.fillStyle='rgba(59,47,42,.16)'; ctx.beginPath(); ctx.ellipse(p.x+1,p.y,5*s*ps,2*s*ps,0,0,7); ctx.fill();
       if(pa<1) ctx.globalAlpha=pa;
-      drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*ps*(t.state===1?.95:.9),rot+(pt?pt.bend*.45*pt.k:0));
+      drawSprite(ctx,t.state===1?Assets.bud:Assets.flower[de.c],p.x,p.y,s*ps*(t.state===1?.95:.9),rot);   // v0.15.4：かき分けで 外へ たおすのは やめた（もとの たおれ方 flowerBend だけ）
       if(pa<1) ctx.globalAlpha=1; }
     else if(it.k==='r') drawRock(it.i,it.j);
     else if(it.k==='hedge') drawHedge(it.i,it.j);
@@ -4239,7 +4241,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.15.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.15.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
