@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.16.6</title>
+<title>TONS OF FLOWERS — Prototype v0.16.9</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.16.6（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.16.9（GDD v3.8準拠・2.5D・単一HTML）
+  v0.16.9：Cubeは 地面の アイテムを よけて ころがる。モグラ・ウリ坊は Cubeが 1つ さいてから。花率の まどを 右上の いちばん 上の 段（ボタンの 左）へ、もちものの まどを その ぶん 上へ。
+  v0.16.8：岩の ヒビが 絵の 外に はみださないように。岩石の谷の 四すみの 岩も こわせるように。つるはしは 30秒・つぎまで 6秒。
+  v0.16.7：つるはしを ほかの アイテムと おなじ しくみに（ひろう→もちもの→タップで 20秒・専用BGM・つぎの 面へ もちこし）。岩の 当たり判定を 絵の 形で、Hanaが 岩の ほうを むいて ふる、キーボードは むいている ほうの 岩。
   v0.16.6：しずくの谷を けして「岩石の谷」を 16面（雲の上の庭の あと）に。岩が 5わり、つるはしで 5回 たたくと ヒビ→ヒビ→大きな石5こ→中くらいの石10こ→こつぶ→土。8〜16面は 1つ 前へ、マークの せつめいは 7面（迷いの生け垣）へ。
   v0.16.5：ころころ丘＝おくの 丘から たねボールが ころがってくる（タップで とめると 3×3が つぼみ）。しずくの谷＝光る しずくが おちてくる（Hanaが ひろうと まわりが そだつ）。小さな丘・はずみ・雨は とりのぞいた。
   v0.16.4：開発者画面の「オープニングに もどる」が、ステージから ひらいた ときも オープニングに もどるように（前は ステージに もどっていた）。
@@ -559,6 +562,7 @@
     <button class="itm" data-k="honey" aria-label="はちみつ" hidden><canvas width="112" height="112"></canvas><span></span></button>
     <button class="itm" data-k="can" aria-label="じょうろ" hidden><canvas width="112" height="112"></canvas><span></span></button>
     <button class="itm" data-k="scoop" aria-label="スコップ" hidden><canvas width="112" height="112"></canvas><span></span></button>
+    <button class="itm" data-k="pick" aria-label="つるはし" hidden><canvas width="112" height="112"></canvas><span></span></button>
   </div>
 </div>
 <div id="questBox" class="panel" hidden><b id="questTitle"></b><span id="questText"></span></div>
@@ -770,6 +774,7 @@ const CFG = {
   HONEY_T:30,                 // はちみつの こうか（秒）：Cubeを なんかいでも おせる
   HONEY_COOL:12,              // こうかが きれてから つぎの はちみつが できるまで（秒）
   CAN_T:12, CAN_FIRST:15, CAN_COOL:25,
+  PICK_T:30, PICK_FIRST:2, PICK_COOL:6,   // v0.16.7：つるはし（使える秒数＝歩いている間と ふっている 間だけ へる／最初に 出るまで／使いおわってから 次まで）
   SCOOP_T:22, SCOOP_FIRST:8, SCOOP_COOL:20, HARD_HP:3, ONSEN:.01,   // スコップ（荒地は 3回 ほると 土）／温泉が わく かくりつ（荒地を たがやしきった とき）   // スコップ：使える秒数（歩いている間だけ へる）／最初に出るまで／使いおわってから次まで
   DIG_T:.5,
   MOLE_STEP:4.2, MOLE_FIRST:18, MOLE_COOL:30, MOLE_MAX:14,   // モグラ：1マス すすむ秒数（v0.7.2で 1.9→2.8、v0.13.3で 2.8→4.2 ゆっくりに）／最初に出るまで／つぎまで／（MOLE_MAXは v0.13.2から 未使用）
@@ -828,8 +833,8 @@ const STAGES = [
     map:['............','............','..S......S..','............','............','....C.......','.......H....','............','............','..S......S..','............','............']},
   { name:'雲の上の庭', theme:'clouds', tip:'雲の 橋は Hanaだけ わたれるよ。はなれた 島の 花畑を つなごう。✿の Cubeは 花が すき',
     map:['.....xx.....','.....xx.....','.....==.....','.....xx.....','..H..xx..C..','.....xx.....','xx=xxxxxx=xx','.....xx.....','.....xx.....','.....==.....','.....xx.....','.....xx.....']},
-  { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって 岩を タップ。5回 たたくと こなごなに なって 土に もどるよ。岩を こわして 花の 場所を ふやそう',
-    map:['RRBBB..WBRR','RB....BWBBR','BB....BWWBB','B.B.....WBB','BB.H....W.B','B.....C.s.B','BB.B....WB.','B..BB..WB.B','BBB.B..W..B','RBBB..BWBBR','RRB.BBBWBRR']},
+  { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって つかうと、しばらく 岩を こわせるよ。岩を 5回 たたくと こなごなに なって 土に もどるよ',
+    map:['BBBBB..WBBB','BB....BWBBB','BB....BWWBB','B.B.....WBB','BB.H....W.B','B.....C.s.B','BB.B....WB.','B..BB..WB.B','BBB.B..W..B','BBBB..BWBBB','BBB.BBBWBBB']},
   { name:'黒い花粉の森', theme:'forest', fx:'gloom', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
     map:['...........','.T.......T.','...........','....T....T.','T..........','..H...C....','...........','.T....T....','.T.........','.......T..T','T..........']},
   { name:'忘れられた温室', theme:'garden', fx:'ivy', tip:'温室の かべを つかって ひみつの庭を つくろう。庭の中は 花が はやく そだつよ',
@@ -920,7 +925,7 @@ function newState(idx){
     fx:{petals:[],rings:[],texts:[],stars:[],marks:[],flash:null,banner:null},
     tickN:0, falls:[], fallT:4,
     balls:[], ballT:5,   // v0.16.5：ころころ丘の たねボール
-    pick:null, hasPick:false, swingT:0, rockGoal:null, rocksBroken:0   // v0.16.6：岩石の谷の つるはし
+    pick:null, pickT:0, pickCool:CFG.PICK_FIRST, swingT:0, swingTile:null, rockGoal:null, rocksBroken:0   // v0.16.7：つるはし（ほかの アイテムと おなじ：ひろう→もちもの→タップで つかう）
   };
   for(const q of suns){ st.bigFlowers.push({i:q.i,j:q.j,t:9,c:0,ph:rnd()*6,wt:9,wd:1,inside:false,kind:'sunflower',shape:'daisy',pre:true}); st.flowerCount++; }   // v0.16.0：巨大ひまわりの庭は さいしょから さいている
   return st;
@@ -979,7 +984,9 @@ function restTime(c){
 const grownCount=c=>c.grown.reduce((n,g)=>n+(g?1:0),0);
 const cubeAt=(i,j,except)=>S.cubes.find(c=>c!==except&&c.i===i&&c.j===j);
 const bigAt=(i,j)=>S.bigFlowers.find(b=>b.i===i&&b.j===j);
-function cubeFree(i,j,c){ const t=tileAt(i,j), u=S.uribo; return !!t&&t.type==='ground'&&!t.hard&&!cubeAt(i,j,c)&&!(u&&u.mode!=='leave'&&Math.floor(u.x)===i&&Math.floor(u.y)===j); }   // ウリ坊の いる マスにも ころがらない
+// v0.16.9：地面に おちている アイテム（はちみつ・じょうろ・スコップ・つるはし）の マスにも Cubeは ころがらない（よけて とおる）
+const itemAt=(i,j)=>[S.honey,S.can,S.scoop,S.pick].some(o=>o&&Math.floor(o.x)===i&&Math.floor(o.y)===j);
+function cubeFree(i,j,c){ const t=tileAt(i,j), u=S.uribo; return !!t&&t.type==='ground'&&!t.hard&&!cubeAt(i,j,c)&&!itemAt(i,j)&&!(u&&u.mode!=='leave'&&Math.floor(u.x)===i&&Math.floor(u.y)===j); }   // ウリ坊の いる マスにも ころがらない
 const hanaOn=(i,j)=>Math.floor(S.hana.x)===i&&Math.floor(S.hana.y)===j;
 function cubeCanEnter(i,j,c){ return cubeFree(i,j,c)&&!hanaOn(i,j); }
 // Cubeの転がる方向は基本ランダム。軽い傾向として、たねの面が上に来る方向・花のない場所を少し選びやすい。
@@ -1278,7 +1285,7 @@ function updateGarden(dt){
   if(!S.cleared){ S.growT+=dt; if(S.growT>=1){ S.growT-=1; slowGrowth(); } }
   if(S.flags.garden&&S.gardenDirty&&(S.gardenT+=dt)>=.4){ S.gardenT=0; detectGardens(); }
   const goalOk=S.flags.boss?(S.queen&&S.queen.pure&&S.queen.pureT>2.2):flowerRate()>=CFG.CLEAR;   // 女王戦は 女王を じょうかしたら クリア
-  if(!S.cleared && goalOk){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); S.honey=null; S.honeyT=0; S.can=null; S.waterT=0; S.scoop=null; S.digT=0; S.dig=null;   // 落ちている アイテムと こうかは おわり。もっている ものは つぎへ もちこす
+  if(!S.cleared && goalOk){ S.cleared=true; S.clearAt=S.time; Sfx.clear(); S.honey=null; S.honeyT=0; S.can=null; S.waterT=0; S.scoop=null; S.digT=0; S.dig=null; S.pick=null; S.pickT=0;   // 落ちている アイテムと こうかは おわり。もっている ものは つぎへ もちこす
     startJoy(); }   // Hanaが ぴょんぴょん跳ねて よろこぶ
 }
 const flowerRate=()=>S.groundCount?S.flowerCount/S.groundCount:0;
@@ -1414,6 +1421,7 @@ function updateHana(dt){
   if((mx||my)&&m>0){
     const l=Math.hypot(mx,my); mx/=l; my/=l;
     const vx=mx-my, vy=(mx+my)/2;   // 画面上の向き（顔の向きに使う）
+    h.fdx=mx; h.fdy=my;   // v0.16.7：むいている むき（キーボードで 岩を えらぶ）
     if(Math.abs(vx)>.05) h.sx=vx>0?1:-1;
     h.face=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up');
     h.face8=((Math.round((90-Math.atan2(vy,vx)*180/Math.PI)/45)%8)+8)%8;   // 8方向：0前 1右前 2右 3右後 4後 5左後 6左 7左前
@@ -1736,7 +1744,7 @@ function updateMole(dt){
   if(!S.flags.mole||S.cleared){ if(S.mole&&S.cleared) moleEnd(); return; }
   const h=S.hana;
   if(h.stomp&&h.stampT<=.04){ const t=h.stomp, m0=S.mole; h.stomp=null; if(t.mole&&!(m0&&m0.mode==='dig'&&t.i===m0.i&&t.j===m0.j)) moleFlatten(t); }   // ジャンプの 着地で 土に もどる（モグラが いなくても）
-  if(!S.mole){ S.moleCool-=dt; if(S.moleCool<=0) spawnMole(); return; }
+  if(!S.mole){ if(S.blooms<1) return; S.moleCool-=dt; if(S.moleCool<=0) spawnMole(); return; }   // v0.16.9：Cubeが 1つ さいてから
   const m=S.mole;
   if(m.mode==='pop'){ m.popT+=dt; if(m.popT>=MOLE_POP.T[3]&&!m.tehe){ m.tehe=1; textFx(m.px,m.py,2.2,'てへっ♪','#e0569a',1.3,1.8); } if(m.popT>=MOLE_POP.END) moleEnd(); return; }      // は？ → テヘペロ → もぐる（v0.13.0）
   if(m.mode==='sink'){ m.popT+=dt; if(m.popT>=.6) moleEnd(); return; }      // しずかに いなくなる
@@ -1782,7 +1790,7 @@ function uriTarget(u){
 function updateUribo(dt){
   if(!S.flags.uribo||S.cleared){ if(S.cleared) S.uribo=null; return; }
   const h=S.hana;
-  if(!S.uribo){ S.uriCool-=dt; if(S.uriCool>0) return;
+  if(!S.uribo){ if(S.blooms<1) return; S.uriCool-=dt; if(S.uriCool>0) return;   // v0.16.9：Cubeが 1つ さいてから
     const edge=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&(t.i===0||t.j===0||t.i===COLS-1||t.j===ROWS-1)) edge.push(t);
     if(!edge.length){ S.uriCool=10; return; }
     const t=edge[Math.floor(Math.random()*edge.length)], ox=t.i===0?-.8:t.i===COLS-1?.8:0, oy=ox?0:(t.j===0?-.8:.8);
@@ -1861,10 +1869,10 @@ function useCan(){
   return true;
 }
 function useItem(k){   // もちもの（右上）を タップしたとき。k を 指定しなければ、もっている ものの さいしょ
-  k=k||(INV.honey?'honey':INV.can?'can':INV.scoop?'scoop':null);
-  return k==='honey'?drinkHoney():k==='can'?useCan():k==='scoop'?useScoop():false;
+  k=k||(INV.honey?'honey':INV.can?'can':INV.scoop?'scoop':INV.pick?'pick':null);
+  return k==='honey'?drinkHoney():k==='can'?useCan():k==='scoop'?useScoop():k==='pick'?usePick():false;
 }
-const INV={honey:false,can:false,scoop:false};
+const INV={honey:false,can:false,scoop:false,pick:false};
 function invSet(k,v){ INV[k]=v; Save.data.inv=Object.assign({},INV); Save.save(); }
 function invClear(){ for(const k in INV) INV[k]=false; Save.data.inv={}; Save.save(); }
 
@@ -2353,7 +2361,10 @@ const Bgm={
       root:[36,45,41,43,36,45,41,43]},
     itemDig:{bpm:144,tr:0,lead:'triangle',clap:1,kick:1,bell:0,
       mel:[72,72,0,72,74,74,0,74, 76,76,0,76,79,0,79,0, 77,77,0,77,76,76,0,76, 74,0,74,0,72,0,0,0, 79,79,0,79,77,77,0,77, 76,76,0,76,74,0,74,0, 72,74,76,77,79,0,76,0, 72,0,67,0,72,0,0,0],
-      root:[36,43,41,43,36,43,41,36]}},
+      root:[36,43,41,43,36,43,41,36]},
+    itemPick:{bpm:138,tr:-2,lead:'square',clap:1,kick:1,bell:1,   // v0.16.7：つるはし（カン！カン！と はずむ）
+      mel:[79,0,79,0,76,0,79,0, 81,0,79,0,76,0,72,0, 74,0,74,0,77,0,74,0, 72,0,71,0,72,0,0,0, 79,0,79,0,84,0,79,0, 81,79,77,76,74,0,77,0, 76,0,74,0,72,0,67,0, 72,0,0,72,72,0,0,0],
+      root:[36,36,41,43,36,36,41,36]}},
   mod(m){ const th=this.th||this.THEMES.meadow; if(th.minor&&[4,9,11].includes(((m%12)+12)%12)) m-=1; return m+th.tr; },
   mtof:m=>440*Math.pow(2,(m-69)/12),
   init(){ Object.assign(this.THEMES,this.ITEM); },
@@ -2564,13 +2575,33 @@ function fit(){
   const w=window.innerWidth,h=window.innerHeight,dpr=Math.min(window.devicePixelRatio||1,2.5);
   const touch=document.body.classList.contains('touch');
   const span=COLS+ROWS, DW=span*CFG.TW/2+FIT.SIDE, DH=span*CFG.TH/2+FIT.TOP+FIT.BOT;
-  const top=FIT.MARGIN, bottom=(!touch&&h>520)?52:FIT.MARGIN;     // PCは下に操作ヒントの帯がある
-  const availH=Math.max(120,h-top-bottom);
-  const sc=clamp(Math.min((w-FIT.MARGIN*2)/DW,availH/DH),.25,FIT.MAX);
+  let top=FIT.MARGIN; const bottom=(!touch&&h>520)?52:FIT.MARGIN;     // PCは下に操作ヒントの帯がある
   canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
-  View.scale=sc; View.dpr=dpr; View.w=w; View.h=h;
-  View.ox=w/2 - ((COLS-ROWS)*CFG.TW/4)*sc;
-  View.oy=top+(availH-DH*sc)/2+FIT.TOP*sc;
+  layoutHud();
+  const rr=document.getElementById('rate').getBoundingClientRect();
+  for(let k=0;k<3;k++){   // v0.16.9：右上の 花率の まどに 島の 上の はしが かからないよう、かかる ぶんだけ 島を 下げる（スマホ・iPad）
+    const availH=Math.max(120,h-top-bottom), sc=clamp(Math.min((w-FIT.MARGIN*2)/DW,availH/DH),.25,FIT.MAX);
+    View.scale=sc; View.dpr=dpr; View.w=w; View.h=h;
+    View.ox=w/2 - ((COLS-ROWS)*CFG.TW/4)*sc;
+    View.oy=top+(availH-DH*sc)/2+FIT.TOP*sc;
+    if(!rr.width||document.body.classList.contains('photo')) break;
+    const need=rr.bottom+4-(View.oy-FIT.TOP*sc*.8);   // 島の 上の はしを 左へ ずらして よける（左は あいている）。たりなければ 小さく する
+    if(need>1&&rr.bottom+4-(View.oy-FIT.TOP*sc*.8+Math.max(0,rr.left-View.ox)*.5)>1){ const want=View.ox-(rr.left-2*need), room=View.ox-ROWS*CFG.TW/2*sc-FIT.MARGIN; View.ox-=clamp(want,0,Math.max(0,room)); }
+    const edge=View.oy-FIT.TOP*sc*.8+Math.max(0,rr.left-View.ox)*.5, over=rr.bottom+4-edge;
+    if(over<=1) break; top+=over;
+  }
+}
+// v0.16.9：花率の まどは 右上の ボタンの ならびの 左どなり（いちばん 上の 段）。もちものの まどは ボタンの すぐ 下へ あげる。
+// PCで 上の まんなかに 出る お知らせは、左上の まどと 花率の まどの あいだに おさめる
+function layoutHud(){
+  const B=document.getElementById('btns'), R=document.getElementById('rate'), I=document.getElementById('itemBox'), T=document.getElementById('toast'), Q=document.getElementById('questBox');
+  if(!B||!R) return; const b=B.getBoundingClientRect(); if(!b.width) return;
+  R.style.top=b.top+'px'; R.style.right=Math.round(window.innerWidth-b.left+8)+'px';
+  if(I) I.style.top=Math.round(b.bottom+8)+'px';
+  if(T){ T.style.left=''; T.style.maxWidth='';
+    if(!matchMedia('(max-height:520px)').matches){   // スマホ（低い 画面）では お知らせは 下に 出るので そのまま
+      const r=R.getBoundingClientRect(), qr=Q&&!Q.hidden?Q.getBoundingClientRect().right:0, L=Math.max(qr,10)+8, Rr=r.left-8;
+      T.style.left=Math.round((L+Rr)/2)+'px'; T.style.maxWidth=Math.round(Math.min(440,Rr-L))+'px'; } }
 }
 // ブラウザの拡大を元に戻す（viewport の指定を書き直すと、iPhoneなどで等倍に戻る）
 let zoomResetT=0;
@@ -3812,32 +3843,56 @@ function drawBall(b,time){
 }
 // v0.16.6：岩石の谷。岩（boulder）は つるはしで 5回 たたくと 土に もどる：
 // 5 そのまま → 4 ヒビ → 3 ヒビが ふえる → 2 大きな 石 5こ → 1 中くらいの 石 10こ → 0 こつぶ → 土
-const ROCKV={REACH:1.55,SWING:.32};   // REACH：ななめ となり（1.41）からも とどく
+const ROCKV={REACH:1.55,SWING:.3};   // REACH：ななめ となり（1.41）からも とどく
 function updateRocks(dt){
-  if(!STAGE.rockv) return;
   if(S.swingT>0) S.swingT-=dt;
+  if(!STAGE.rockv&&!(S.pickT>0)) return;
   for(const row of S.tiles) for(const t of row){ if(t.hitT>0) t.hitT-=dt; if(t.grainT>0) t.grainT-=dt; }
   if(S.cleared) return;
-  const h=S.hana;
-  if(!S.hasPick&&!S.pick&&S.started){   // さいしょに Hanaの となりに つるはしを おく
-    let best=null,bd=1e9; const prev=walkMap(Math.floor(h.x),Math.floor(h.y));
-    for(const k of prev.keys()){ const i=k%COLS, j=Math.floor(k/COLS), t=tileAt(i,j), d=Math.hypot(i+.5-h.x,j+.5-h.y); if(t.type==='ground'&&d>.9&&d<bd&&!cubeAt(i,j)){ bd=d; best=t; } }
-    if(best){ S.pick={x:best.i+.5,y:best.j+.5,t:0}; textFx(S.pick.x,S.pick.y,1.9,'つるはしが あるよ！ ひろおう','#7a5a48',1.05,2.4); } }
-  if(S.pick){ S.pick.t+=dt; if(Math.hypot(S.pick.x-h.x,S.pick.y-h.y)<.6){ S.pick=null; S.hasPick=true; Sfx.get();
-      const T=document.body.classList.contains('touch')?'タップ':'クリック'; textFx(h.x,h.y,2.2,'つるはし ゲット！ 岩を '+T+'で たたこう','#7a5a48',1.15,2.6); if(h.goal&&h.goal.pick) h.goal=null; } }
+  const h=S.hana, left=S.tiles.some(r=>r.some(t=>t.type==='boulder'));
+  // 岩が のこっている 面だけ、つるはしが おちてくる（スコップと おなじ）
+  if(left&&!S.pick&&!INV.pick&&!(S.pickT>0)&&S.started){ S.pickCool-=dt; if(S.pickCool<=0){ S.pickCool=CFG.PICK_COOL; spawnPick(); } }
+  if(S.pick){ S.pick.t+=dt; if(Math.hypot(S.pick.x-h.x,S.pick.y-h.y)<.6){ S.pick=null; invSet('pick',true); Sfx.get(); textFx(h.x,h.y,2.1,'つるはし ゲット！','#7a5a48',1.2,2); if(h.goal&&h.goal.pick) h.goal=null; } }
   if(S.rockGoal){ const t=S.rockGoal;
-    if(t.type!=='boulder'){ S.rockGoal=null; }
+    if(t.type!=='boulder'||!(S.pickT>0)) S.rockGoal=null;
     else if(Math.hypot(t.i+.5-h.x,t.j+.5-h.y)<ROCKV.REACH){ S.rockGoal=null; h.goal=null; hitRock(t); }
     else if(!h.goal) S.rockGoal=null; }   // とちゅうで ほかの 場所を タップした
+  if(S.pickT>0){ if(h.moving||S.swingT>0) S.pickT-=dt;   // 歩いている 間と ふっている 間だけ へる
+    if(S.pickT<=0){ S.pickT=0; S.pickCool=CFG.PICK_COOL; S.rockGoal=null; textFx(h.x,h.y,2,'つるはしを しまったよ','#7a5a48',1,2); } }
 }
+function spawnPick(){
+  const h=S.hana, reach=walkMap(Math.floor(h.x),Math.floor(h.y)); let best=null,bs=-1;
+  for(const k of reach.keys()){ const i=k%COLS, j=Math.floor(k/COLS), t=tileAt(i,j);
+    if(t.type!=='ground'||cubeAt(i,j)||bigAt(i,j)||hanaOn(i,j)) continue;
+    let n=0; for(const [a,b] of N8){ const o=tileAt(i+a,j+b); if(o&&o.type==='boulder') n++; }
+    const sc=n-Math.hypot(i+.5-h.x,j+.5-h.y)*.25+Math.random(); if(n>0&&sc>bs){ bs=sc; best=t; } }
+  if(!best) return;
+  S.pick={x:best.i+.5,y:best.j+.5,t:0};
+  textFx(S.pick.x,S.pick.y,1.9,S.told.pick?'つるはしが あるよ！':'つるはしが あるよ！ 岩を こわせるよ','#7a5a48',1.1,2.2); S.told.pick=1; Sfx.poko();
+}
+function usePick(){
+  if(!INV.pick||!S.started||S.cleared) return false;
+  if(!S.tiles.some(r=>r.some(t=>t.type==='boulder'))){ Sfx.buzzer(); textFx(S.hana.x,S.hana.y,2.1,'岩が ないから つかえないよ！','#7a5a48',1.05,1.8); return false; }
+  invSet('pick',false); S.pickT=CFG.PICK_T; Sfx.dig();
+  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'クリック'; textFx(h.x,h.y,2.2,'岩を '+T+'！ 5かいで こなごな','#7a5a48',1.1,2.4);
+  return true;
+}
+function faceTo(dx,dy){   // Hanaを グリッドの (dx,dy) の むきへ むける
+  const h=S.hana, vx=dx-dy, vy=(dx+dy)/2; if(Math.abs(vx)>.05) h.sx=vx>0?1:-1;
+  h.face=Math.abs(vx)>Math.abs(vy)?(vx>0?'right':'left'):(vy>0?'down':'up');
+  h.face8=((Math.round((90-Math.atan2(vy,vx)*180/Math.PI)/45)%8)+8)%8; h.fdx=dx; h.fdy=dy;
+}
+// キーボード・パッド：とどく 岩の うち、むいている ほうの 岩を えらぶ（うしろの 岩は えらびにくい）
 function rockNear(){
-  if(!STAGE.rockv||!S.hasPick||S.cleared) return null; const h=S.hana; let best=null,bd=ROCKV.REACH;
-  for(let j=Math.floor(h.y)-2;j<=Math.floor(h.y)+2;j++)for(let i=Math.floor(h.x)-2;i<=Math.floor(h.x)+2;i++){ const t=tileAt(i,j); if(!t||t.type!=='boulder') continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y); if(d<bd){ bd=d; best=t; } }
+  if(!(S.pickT>0)||S.cleared) return null; const h=S.hana, fl=Math.hypot(h.fdx||0,h.fdy||0)||1; let best=null,bs=1e9;
+  for(let j=Math.floor(h.y)-2;j<=Math.floor(h.y)+2;j++)for(let i=Math.floor(h.x)-2;i<=Math.floor(h.x)+2;i++){ const t=tileAt(i,j); if(!t||t.type!=='boulder') continue;
+    const dx=i+.5-h.x, dy=j+.5-h.y, d=Math.hypot(dx,dy); if(d>=ROCKV.REACH) continue;
+    const dot=((h.fdx||0)*dx+(h.fdy||0)*dy)/(fl*d), sc=d-dot*.9; if(sc<bs){ bs=sc; best=t; } }
   return best;
 }
 function hitRock(t){
-  if(!S.hasPick||S.swingT>0||t.type!=='boulder') return false;
-  const h=S.hana; S.swingT=ROCKV.SWING; h.stampT=.28; h.sx=(t.i+.5-h.x)-(t.j+.5-h.y)>=0?1:-1;
+  if(!(S.pickT>0)||S.swingT>0||t.type!=='boulder') return false;
+  const h=S.hana; S.swingT=ROCKV.SWING; S.swingTile=t; h.stampT=.28; faceTo(t.i+.5-h.x,t.j+.5-h.y);   // 岩の ほうを むいて ふる
   t.bhp--; t.hitT=.25; Sfx.dig();
   rockDust(t.i+.5,t.j+.5,t.bhp<=0?22:8);
   if(t.bhp<=0){ t.type='ground'; t.state=0; t.pop=1; t.grainT=1.4; t.flash=1; S.rocksBroken++; S.gardenDirty=true;
@@ -3845,14 +3900,21 @@ function hitRock(t){
   else if((S.told.rockHit|0)<2){ S.told.rockHit=(S.told.rockHit|0)+1; textFx(t.i+.5,t.j+.5,2.2,'カン！ あと '+t.bhp+'かい','#7a5a48',1,1.4); }
   return true;
 }
-function rockDust(x,y,n){ for(let k=0;k<n;k++){ const a=Math.random()*6.283, v=.4+Math.random()*.8; S.fx.petals.push({x,y,z:.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v,vz:1+Math.random()*1.2,life:0,max:.5+Math.random()*.3,c:['#a89b8f','#8c8077','#c9bdb0'][k%3],rot:Math.random()*6,vr:(Math.random()-.5)*12,s:1.6+Math.random()*1.6}); } }
+// タップした 岩：絵の 形（高さが ある）で きめる。手前の 岩から しらべて、絵の 中に はいって いれば その 岩
+function rockAtScreen(cx,cy){
+  const r=canvas.getBoundingClientRect(), lx=(cx-r.left-View.ox)/View.scale, ly=(cy-r.top-View.oy)/View.scale, L=[];
+  for(const row of S.tiles) for(const t of row) if(t.type==='boulder') L.push(t);
+  L.sort((a,b)=>(b.i+b.j)-(a.i+a.j));
+  for(const t of L){ const p=iso(t.i+.5,t.j+.5), dx=(lx-p.x)/27, dy=(ly-(p.y-14))/25; if(dx*dx+dy*dy<=1) return t; }
+  let best=null,bd=22; for(const t of L){ const p=iso(t.i+.5,t.j+.5), d=Math.hypot(lx-p.x,ly-p.y); if(d<bd){ bd=d; best=t; } }
+  return best;
+}
 function rockTap(cx,cy){
-  if(!STAGE.rockv) return false; const h=S.hana;
+  if(!STAGE.rockv&&!(S.pickT>0)&&!S.pick) return false; const h=S.hana;
   if(S.pick&&Input.scrDist(cx,cy,S.pick.x,S.pick.y,.2)<36){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; return true; }
-  let best=null,bd=34;   // 岩の 絵は 高さが あるので、マスの 中心より すこし 上で くらべる
-  for(const row of S.tiles) for(const t of row){ if(t.type!=='boulder') continue; const d=Input.scrDist(cx,cy,t.i+.5,t.j+.5,.35); if(d<bd){ bd=d; best=t; } }
-  if(!best) return false;
-  if(!S.hasPick){ textFx(h.x,h.y,2.1,S.pick?'さきに つるはしを ひろおう':'つるはしが ないと こわせないよ','#7a5a48',1,1.8); if(S.pick){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; } return true; }
+  const best=rockAtScreen(cx,cy); if(!best) return false;
+  if(!(S.pickT>0)){ textFx(h.x,h.y,2.1,INV.pick?'もちものの つるはしを タップで つかおう':S.pick?'さきに つるはしを ひろおう':'つるはしが ないと こわせないよ','#7a5a48',1,1.8);
+    if(S.pick&&!INV.pick){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; } return true; }
   if(Math.hypot(best.i+.5-h.x,best.j+.5-h.y)<ROCKV.REACH){ h.goal=null; S.rockGoal=null; hitRock(best); return true; }
   const prev=walkMap(Math.floor(h.x),Math.floor(h.y)); let tg=null,td=1e9;   // となりの 行ける マスまで あるく
   for(const [di,dj] of N8){ const i=best.i+di, j=best.j+dj; if(!prev.has(j*COLS+i)) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y)+(di&&dj?.6:0); if(d<td){ td=d; tg={i,j}; } }   // たて・よこの となりを えらびやすく
@@ -3860,18 +3922,24 @@ function rockTap(cx,cy){
   setGoalPoint(tg.i+.5,tg.j+.5); S.rockGoal=best; ringFx(best.i+.5,best.j+.5,'#ffffff',.45);
   return true;
 }
+function rockDust(x,y,n){ for(let k=0;k<n;k++){ const a=Math.random()*6.283, v=.4+Math.random()*.8; S.fx.petals.push({x,y,z:.3,vx:Math.cos(a)*v,vy:Math.sin(a)*v,vz:1+Math.random()*1.2,life:0,max:.5+Math.random()*.3,c:['#a89b8f','#8c8077','#c9bdb0'][k%3],rot:Math.random()*6,vr:(Math.random()-.5)*12,s:1.6+Math.random()*1.6}); } }
 function drawBoulder(i,j,time){
   const t=tileAt(i,j), hp=t.bhp, sh=t.hitT>0?Math.sin(t.hitT*80)*2*t.hitT/.25:0, p=iso(i+.5,j+.5); p.x+=sh;
   const H=hash2(i,j);
   const rockAt=(x,y,w)=>{ if(artOk('props')) artDraw(ctx,'props',2,x,y,0,{w,cx:1}); else { ctx.fillStyle='#a49a90'; ctx.strokeStyle='#6f665e'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(x,y-w*.3,w*.5,w*.36,0,0,7); ctx.fill(); ctx.stroke(); } };
   if(hp>=3){
     ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+4,26,10,0,0,7); ctx.fill();
-    rockAt(p.x,p.y+9,58);
-    if(hp<=4){ ctx.save(); ctx.strokeStyle='rgba(55,42,36,.85)'; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.lineJoin='round';   // ヒビ
+    if(hp>4||!artOk('props')){ rockAt(p.x,p.y+9,58); return; }
+    // v0.16.8：ヒビは 岩の 絵の 中だけに（べつの キャンバスに 岩を えがき、その 上に source-atop で ヒビを かく。岩ごと・こさ ごとに 1回だけ）
+    const K=Math.max(1,Math.round((View.dpr||1)*(View.scale||1)*2)/2), key=hp+'_'+K;
+    if(t.crackKey!==key){ const W=84, Hh=84, c=t.crackCv||(t.crackCv=document.createElement('canvas')); c.width=W*K; c.height=Hh*K; const g=c.getContext('2d'); g.setTransform(K,0,0,K,0,0);
+      artDraw(g,'props',2,W/2,Hh-6,0,{w:58,cx:1});
+      g.globalCompositeOperation='source-atop'; g.strokeStyle='rgba(55,42,36,.85)'; g.lineWidth=1.6; g.lineCap='round'; g.lineJoin='round';
       const cracks=hp===4?2:5;
-      for(let k=0;k<cracks;k++){ let x=p.x+(hash2(i*7+k,j)-.5)*22, y=p.y-30+hash2(j*7+k,i)*14, a=hash2(i+k,j*3)*6.28; ctx.beginPath(); ctx.moveTo(x,y);
-        for(let q=0;q<4;q++){ a+=(hash2(i*13+k*5+q,j)-.5)*1.6; x+=Math.cos(a)*6; y+=Math.sin(a)*5+1.5; ctx.lineTo(x,y); } ctx.stroke(); }
-      ctx.restore(); }
+      for(let k=0;k<cracks;k++){ let x=W/2+(hash2(i*7+k,j)-.5)*22, y=Hh-6-9-30+hash2(j*7+k,i)*14, a=hash2(i+k,j*3)*6.28; g.beginPath(); g.moveTo(x,y);
+        for(let q=0;q<4;q++){ a+=(hash2(i*13+k*5+q,j)-.5)*1.6; x+=Math.cos(a)*6; y+=Math.sin(a)*5+1.5; g.lineTo(x,y); } g.stroke(); }
+      t.crackKey=key; }
+    ctx.drawImage(t.crackCv,p.x-42,p.y+9-78,84,84);
     return; }
   // こなごなに なりかけ：大きな 石 5こ（hp2）／中くらいの 石 10こ（hp1）
   const n=hp===2?5:10, w=hp===2?26:16, R=hp===2?.28:.34;
@@ -3901,9 +3969,13 @@ function drawPickItem(time){
   const k=.5+.5*Math.sin(time*5); ctx.fillStyle=`rgba(255,240,150,${.5+.5*k})`; ctx.font=`800 ${10+3*k}px ${FONT}`; ctx.textAlign='center'; ctx.fillText('✦',p.x+15,p.y-34-b);
 }
 function drawHanaPick(time){
-  if(!S.hasPick) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1;
-  const u=S.swingT>0?1-S.swingT/ROCKV.SWING:-1;   // ふりあげて → ふりおろす
-  const a=u<0?-.35+(h.moving?Math.sin(time*10)*.12:0):u<.4?-.35-1.5*(u/.4):-1.85+2.6*((u-.4)/.6);
+  if(!(S.pickT>0)) return; const h=S.hana, p=iso(h.x,h.y);
+  if(S.swingT>0&&S.swingTile){   // 岩に むかって ふりあげて → ふりおろす
+    const t=S.swingTile, q=iso(t.i+.5,t.j+.5), dx=q.x-p.x, dy=q.y-p.y, l=Math.hypot(dx,dy)||1, sd=Math.abs(dx)>4?(dx>0?1:-1):(h.sx||1);
+    const u=1-S.swingT/ROCKV.SWING, a=u<.4?-.35-1.5*(u/.4):-1.85+2.6*((u-.4)/.6), reach=u<.4?0:(u-.4)/.6;
+    const x=p.x+dx/l*(8+10*reach), y=p.y-16+dy/l*(5+6*reach);
+    ctx.save(); ctx.translate(x,y); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore(); return; }
+  const sd=h.sx||1, a=-.35+(h.moving?Math.sin(time*10)*.12:0);
   ctx.save(); ctx.translate(p.x+sd*10,p.y-14); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore();
 }
 // v0.16.0：ながれぼし（星降る原っぱ）。おちた マスの 花が そだつ（土→つぼみ、つぼみ→花）
@@ -4174,7 +4246,7 @@ const UI={
   // もちもの（はちみつ）：右上。もっているときは「タップで つかえるよ！」、のんだら 残り時間（びんの中身が へっていく）
   itemKey:'',
   updItem(touch){
-    const T=touch?'タップ':'クリック', act={honey:S.honeyT,can:S.waterT,scoop:S.digT}, MAX={honey:CFG.HONEY_T,can:CFG.CAN_T,scoop:CFG.SCOOP_T}, NAME={honey:'はちみつ',can:'じょうろ',scoop:'スコップ'};
+    const T=touch?'タップ':'クリック', act={honey:S.honeyT,can:S.waterT,scoop:S.digT,pick:S.pickT}, MAX={honey:CFG.HONEY_T,can:CFG.CAN_T,scoop:CFG.SCOOP_T,pick:CFG.PICK_T}, NAME={honey:'はちみつ',can:'じょうろ',scoop:'スコップ',pick:'つるはし'};
     let any=false, held=false, tip='';
     for(const b of document.querySelectorAll('.itm')){
       const k=b.dataset.k, on=act[k]>0, has=INV[k], show=on||has; any=any||show; held=held||has;
@@ -4182,14 +4254,15 @@ const UI={
       if(b._k===key) continue; b._k=key; b.hidden=!show; if(!show) continue;
       const g=b.querySelector('canvas').getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,112,112);
       const f=has?1:act[k]/MAX[k];
-      if(artOk('items')){   // v0.14.1：絵は はこ（112×112）に おさまる 大きさで、まんなかに（スコップは かたむけない）
+      if(k==='pick') drawPickaxe(g,52,98,2.05,-.4);   // v0.16.7：つるはしは プログラムの 絵
+      else if(artOk('items')){   // v0.14.1：絵は はこ（112×112）に おさまる 大きさで、まんなかに（スコップは かたむけない）
         const ix={honey:4,can:3,scoop:2}[k], fr=ART.items.f[ix], sc=Math.min(92/fr[2],92/fr[3]);
         artDraw(g,'items',ix,56,56,fr[3]*sc,{cx:1,center:1}); }
       else if(k==='honey') drawHoneyJar(g,56,104,3.1,f); else if(k==='can') drawCan(g,46,98,2.5,f); else drawScoop(g,56,104,2.6,-.5);
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
-    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
+    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.pickT>0) tip='岩を '+(touch?'タップ':'クリック')+'！ 5かいで こなごな'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
     if(tip!==this.itemTip){ this.itemTip=tip; $('itemTip').textContent=tip; }
     if($('itemBox').hidden===any) $('itemBox').hidden=!any;
   },
@@ -4529,7 +4602,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.16.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.16.9';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -4790,7 +4863,7 @@ const Dev={
   active:false,   // v0.16.1：開発者画面から ステージを はじめたら true（ページを よみなおすまで）。右上に「開発者」ボタンが 出る
   init(){ $('devBack').onclick=()=>{ $('devOv').hidden=true;
       if(!Op.on){   // v0.16.4：ステージから ひらいた ときも オープニングに もどる（前は 画面を とじる だけで ステージに もどっていた）
-        this.active=false; $('devRet').hidden=true; S.started=false; $('stageOv').hidden=true; $('startOv').hidden=true;
+        this.active=false; $('devRet').hidden=true; layoutHud(); S.started=false; $('stageOv').hidden=true; $('startOv').hidden=true;
         Op.show(()=>{ $('startOv').hidden=false; $('startBtn').focus(); }); } };
     $('devRet').onclick=e=>{ e.stopPropagation(); this.open(); };
     $('devEnding').onclick=()=>{ Sfx.ensure(); $('devOv').hidden=true; Ending.play(()=>{ $('devOv').hidden=false; }); }; },   // セーブは かえない
@@ -4800,7 +4873,7 @@ const Dev={
       b.onclick=()=>this.pick(i); G.appendChild(b); });
     Op.hold=null; $('devOv').hidden=false; },
   pick(i){ $('devOv').hidden=true; Op.kill(); Sfx.ensure(); goLandscape();
-    UI.load(i); S.started=true; $('startOv').hidden=true; UI.toast(); this.active=true; $('devRet').hidden=false; }
+    UI.load(i); S.started=true; $('startOv').hidden=true; UI.toast(); this.active=true; $('devRet').hidden=false; layoutHud(); }
 };
 const paused=()=>!$('devOv').hidden||Op.on||Ending.on||!$('albumOv').hidden||!$('pvOv').hidden||!$('camOv').hidden||!$('startOv').hidden||!$('stageOv').hidden||!$('storyOv').hidden||!$('selectOv').hidden||!$('dexOv').hidden;
 
@@ -4824,7 +4897,7 @@ function update(dt){
   }
   // BGM：あそんでいる間だけ流す（クリア直後はファンファーレを聞かせるため5秒休む）
   // アイテムを つかっている 間は アイテムの 曲（はちみつ＞スコップ＞じょうろ）。おわったら ステージの 曲に もどす
-  if(!Ending.on){ const it=S.honeyT>0?'itemHoney':S.dig||S.digT>0?'itemDig':S.waterT>0?'itemWater':null, th=it||STAGE.theme; if(Bgm.cur!==th) Bgm.setTheme(th); }
+  if(!Ending.on){ const it=S.honeyT>0?'itemHoney':S.dig||S.digT>0?'itemDig':S.pickT>0?'itemPick':S.waterT>0?'itemWater':null, th=it||STAGE.theme; if(Bgm.cur!==th) Bgm.setTheme(th); }
   const want=Sfx.on&&!document.hidden&&(Ending.on||(S.started&&!paused()&&!PORTRAIT.matches&&!(S.cleared&&S.time-S.clearAt<5)));
   if(want&&!Bgm.playing) Bgm.start(); else if(!want&&Bgm.playing) Bgm.stop();
 }
