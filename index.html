@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.19.4</title>
+<title>TONS OF FLOWERS — Prototype v0.19.6</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.19.4（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.19.6（GDD v3.8準拠・2.5D・単一HTML）
+  v0.19.6：岩の ちかくを タップした ときの 不具合を なおした（つるはしを つかって いない ときは ふつうに あるく・Cubeの タップを 岩より 先に）。
+  v0.19.5：岩は 4かいで こわれる（1かいめで いきなり 大きな ヒビ → 大きな石5こ → 中くらいの石10こ → 土）。大きな ヒビを リアルに（当たった 点から ジグザグに 枝わかれ・先ほど 細く・かどの 光・えぐれ）。
   v0.19.4：岩石の谷の こわせる 岩を 約5わり→約35%に（59→39こ）。飛び石の すぐ 手前の 岩を けして 飛び石が 見える ように。
   v0.19.3：ふつうの 岩を つるはしで たたいた とき、こわれる 前から 花率の 分母に 入っていたのを なおした（こわして 土に なってから 入る）。
   v0.19.2：つぼみも プログラムの 絵に もどした。
@@ -862,7 +864,7 @@ const STAGES = [
     map:['...........','...........','.......GGG.','.......G.G.','.......G...','...........','..H....C...','.GGG.......','.G.G...GGG.','.G.....G.G.','.GGG...GGG.']},
   { name:'黒い花粉の森', theme:'forest', fx:'gloom', pollen:9, tip:'黒い 花粉が 花を よわらせるよ。Hanaで さわると はらえるよ',
     map:['...........','.T.......T.','...........','....T....T.','T..........','..H...C....','...........','.T....T....','.T.........','.......T..T','T..........']},
-  { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって つかうと、しばらく 岩を こわせるよ。岩を 5回 たたくと こなごなに なって 土に もどるよ',
+  { name:'岩石の谷', theme:'water', rockv:true, hard:0, tip:'がけくずれで 谷が 岩だらけ！ つるはしを ひろって つかうと、しばらく 岩を こわせるよ。岩を 4回 たたくと こなごなに なって 土に もどるよ',
     map:['BB..B..WBBB','BB.....WB.B','BB.....WWBB','B.......WBB','B..H....W.B','......C.s.B','B.......W..','B......WB.B','BB.....W..B','BB.....WBBB','BBB...BWBBB']},
   { name:'女王の庭園', theme:'garden', pollen:10, giantP:.12, tip:'これまでの ちからを ぜんぶ つかって、女王の 庭園を 花で いっぱいに しよう',
     map:['............','.hh.T..T.hh.','............','.h........h.','.h..R..R..h.','.....FF.....','.....FF.....','.h..R..R..h.','.h........h.','....H...C...','.hh.T..T.hh.','............']},
@@ -911,7 +913,7 @@ function newState(idx){
       const deco=[]; for(let k=0;k<5;k++) deco.push({u:.14+rnd()*.72, v:.14+rnd()*.72, c:Math.floor(rnd()*5), s:.8+rnd()*.35, ph:rnd()*6.28});
       deco.sort((a,b)=>(a.u+a.v)-(b.u+b.v));
       row.push({i,j,type,state:ch==='b'?1:ch==='S'?2:0,bf:null,pop:1,flash:0,deco,crack:[rnd(),rnd(),rnd(),rnd()],
-        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined, bhp:type==='boulder'?5:undefined});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
+        wt:9, wd:1, fount:ch==='F'||undefined, brick:ch==='k'||undefined, bhp:type==='boulder'?4:undefined});   // wt＝Hanaが通ってからの秒数（花のなびき）、wd＝なびく向き
       if(ch==='S') suns.push({i,j});
     } tiles.push(row);
   }
@@ -4013,7 +4015,7 @@ function usePick(){
   if(!INV.pick||!S.started||S.cleared) return false;
   if(!S.tiles.some(r=>r.some(breakable))){ Sfx.buzzer(); textFx(S.hana.x,S.hana.y,2.1,'岩が ないから つかえないよ！','#7a5a48',1.05,1.8); return false; }
   invSet('pick',false); S.pickT=CFG.PICK_T; Sfx.dig();
-  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'クリック'; textFx(h.x,h.y,2.2,'岩を '+T+'！ 5かいで こなごな','#7a5a48',1.1,2.4);
+  const h=S.hana, T=document.body.classList.contains('touch')?'タップ':'クリック'; textFx(h.x,h.y,2.2,'岩を '+T+'！ 4かいで こなごな','#7a5a48',1.1,2.4);
   return true;
 }
 function faceTo(dx,dy){   // Hanaを グリッドの (dx,dy) の むきへ むける
@@ -4031,7 +4033,7 @@ function rockNear(){
 }
 function hitRock(t){
   if(!(S.pickT>0)||S.swingT>0||!breakable(t)) return false;
-  if(t.type==='rock'){ t.type='boulder'; t.bhp=5; t.wasRock=true; }   // ふつうの 岩：こわせる 岩に かわる（v0.19.3：花率の 分母に 入るのは こわして 土に なってから）
+  if(t.type==='rock'){ t.type='boulder'; t.bhp=4; t.wasRock=true; }   // ふつうの 岩：こわせる 岩に かわる（v0.19.3：花率の 分母に 入るのは こわして 土に なってから）
   const h=S.hana; S.swingT=ROCKV.SWING; S.swingTile=t; h.stampT=.28; faceTo(t.i+.5-h.x,t.j+.5-h.y);   // 岩の ほうを むいて ふる
   t.bhp--; t.hitT=.25; Sfx.dig();
   rockDust(t.i+.5,t.j+.5,t.bhp<=0?22:8);
@@ -4053,9 +4055,10 @@ function rockAtScreen(cx,cy){
 function rockTap(cx,cy){
   if(!STAGE.rockv&&!(S.pickT>0)&&!S.pick) return false; const h=S.hana;
   if(S.pick&&Input.scrDist(cx,cy,S.pick.x,S.pick.y,.2)<36){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; return true; }
+  if(Input.pickCube(cx,cy)) return false;   // v0.19.6：Cubeの タップを 先に（岩の 絵と かさなっていても Cubeを えらぶ）
   const best=rockAtScreen(cx,cy); if(!best) return false;
-  if(!(S.pickT>0)){ textFx(h.x,h.y,2.1,INV.pick?'もちものの つるはしを タップで つかおう':S.pick?'さきに つるはしを ひろおう':'つるはしが ないと こわせないよ','#7a5a48',1,1.8);
-    if(S.pick&&!INV.pick){ setGoalPoint(S.pick.x,S.pick.y); if(h.goal) h.goal.pick=true; } return true; }
+  if(!(S.pickT>0)){ if((S.told.noPick|0)<3){ S.told.noPick=(S.told.noPick|0)+1; textFx(h.x,h.y,2.1,INV.pick?'もちものの つるはしを タップで つかおう':S.pick?'さきに つるはしを ひろおう':'つるはしが ないと こわせないよ','#7a5a48',1,1.8); }
+    return false; }   // v0.19.6：つるはしを つかって いない ときは ふつうに あるく（前は タップが 岩に とられて 動けなかった）
   if(Math.hypot(best.i+.5-h.x,best.j+.5-h.y)<ROCKV.REACH){ h.goal=null; S.rockGoal=null; hitRock(best); return true; }
   const prev=walkMap(Math.floor(h.x),Math.floor(h.y)); let tg=null,td=1e9;   // となりの 行ける マスまで あるく
   for(const [di,dj] of N8){ const i=best.i+di, j=best.j+dj; if(!prev.has(j*COLS+i)) continue; const d=Math.hypot(i+.5-h.x,j+.5-h.y)+(di&&dj?.6:0); if(d<td){ td=d; tg={i,j}; } }   // たて・よこの となりを えらびやすく
@@ -4109,15 +4112,25 @@ function drawBoulder(i,j,time){
   const rockAt=(x,y,w)=>{ if(artOk('props')) artDraw(ctx,'props',2,x,y,0,{w,cx:1}); else { ctx.fillStyle='#a49a90'; ctx.strokeStyle='#6f665e'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(x,y-w*.3,w*.5,w*.36,0,0,7); ctx.fill(); ctx.stroke(); } };
   if(hp>=3){
     ctx.fillStyle='rgba(59,47,42,.24)'; ctx.beginPath(); ctx.ellipse(p.x+2,p.y+4,26,10,0,0,7); ctx.fill();
-    if(hp>4||!artOk('props')){ rockAt(p.x,p.y+9,58); return; }
+    if(hp>3||!artOk('props')){ rockAt(p.x,p.y+9,58); return; }   // v0.19.5：4かいで こわれる（4 そのまま → 3 大きな ヒビ → 2 大きな石5こ → 1 中くらいの石10こ → 土）
     // v0.16.8：ヒビは 岩の 絵の 中だけに（べつの キャンバスに 岩を えがき、その 上に source-atop で ヒビを かく。岩ごと・こさ ごとに 1回だけ）
     const K=Math.max(1,Math.round((View.dpr||1)*(View.scale||1)*2)/2), key=hp+'_'+K;
     if(t.crackKey!==key){ const W=84, Hh=84, c=t.crackCv||(t.crackCv=document.createElement('canvas')); c.width=W*K; c.height=Hh*K; const g=c.getContext('2d'); g.setTransform(K,0,0,K,0,0);
       artDraw(g,'props',2,W/2,Hh-6,0,{w:58,cx:1});
-      g.globalCompositeOperation='source-atop'; g.strokeStyle='rgba(55,42,36,.85)'; g.lineWidth=1.6; g.lineCap='round'; g.lineJoin='round';
-      const cracks=hp===4?2:5;
-      for(let k=0;k<cracks;k++){ let x=W/2+(hash2(i*7+k,j)-.5)*22, y=Hh-6-9-30+hash2(j*7+k,i)*14, a=hash2(i+k,j*3)*6.28; g.beginPath(); g.moveTo(x,y);
-        for(let q=0;q<4;q++){ a+=(hash2(i*13+k*5+q,j)-.5)*1.6; x+=Math.cos(a)*6; y+=Math.sin(a)*5+1.5; g.lineTo(x,y); } g.stroke(); }
+      g.globalCompositeOperation='source-atop'; g.lineCap='round'; g.lineJoin='round';
+      // v0.19.5：リアルな 大きな ヒビ。つるはしが 当たった 点から 太い われめが 四方へ ジグザグに はしり、先へ いくほど 細く、とちゅうで 枝わかれ。
+      // われめの 下がわに 明るい ふち（かどの 光）を つけて ふかさを 出す。当たった 点は 小さく えぐれる
+      let sd=i*977+j*131; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+      const ix=W/2+(rnd()-.5)*12, iy=Hh-6-40+rnd()*8;
+      const crack=(x,y,a,len,w0,lv)=>{ const pts=[[x,y]]; let L=0; while(L<len){ const st=3.5+rnd()*3; a+=(rnd()-.5)*.9; x+=Math.cos(a)*st; y+=Math.sin(a)*st*.85; L+=st; pts.push([x,y]); }
+        for(let q=1;q<pts.length;q++){ const u=q/pts.length, w=Math.max(.5,w0*(1-u*.85)), [x0,y0]=pts[q-1], [x1,y1]=pts[q];
+          g.strokeStyle='rgba(255,246,230,.55)'; g.lineWidth=w*.7; g.beginPath(); g.moveTo(x0+.8,y0+1); g.lineTo(x1+.8,y1+1); g.stroke();   // かどの 光
+          g.strokeStyle='#2b201a'; g.lineWidth=w; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke(); }
+        if(lv<2) for(let q=2;q<pts.length-1;q+=2+Math.floor(rnd()*2)) if(rnd()<.6) crack(pts[q][0],pts[q][1],a+(rnd()<.5?-1:1)*(.5+rnd()*.5),len*.45,w0*(1-q/pts.length)*.8,lv+1); };
+      const n=4+Math.floor(rnd()*2), a0=rnd()*6.28;
+      for(let k=0;k<n;k++) crack(ix,iy,a0+k*6.283/n+(rnd()-.5)*.6,20+rnd()*14,2.8,0);
+      g.fillStyle='#2b201a'; g.beginPath(); for(let k=0;k<7;k++){ const a=k/7*6.283, r=2.6+rnd()*2; k?g.lineTo(ix+Math.cos(a)*r,iy+Math.sin(a)*r*.8):g.moveTo(ix+Math.cos(a)*r,iy+Math.sin(a)*r*.8); } g.closePath(); g.fill();   // えぐれ
+      g.fillStyle='rgba(255,246,230,.6)'; for(let k=0;k<5;k++){ const a=rnd()*6.283, r=5+rnd()*6; g.beginPath(); g.arc(ix+Math.cos(a)*r,iy+Math.sin(a)*r*.8,.8+rnd()*.7,0,7); g.fill(); }   // かけらの 白い 点
       t.crackKey=key; }
     ctx.drawImage(t.crackCv,p.x-42,p.y+9-78,84,84);
     return; }
@@ -4448,7 +4461,7 @@ const UI={
       b.querySelector('span').textContent=has?NAME[k]:Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
-    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.pickT>0) tip='岩を '+(touch?'タップ':'クリック')+'！ 5かいで こなごな'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
+    if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.pickT>0) tip='岩を '+(touch?'タップ':'クリック')+'！ 4かいで こなごな'; else if(S.honeyT>0) tip='Cubeを '+T+'で おせるよ';
     if(tip!==this.itemTip){ this.itemTip=tip; $('itemTip').textContent=tip; }
     if($('itemBox').hidden===any) $('itemBox').hidden=!any;
   },
@@ -4788,7 +4801,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.19.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.19.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
