@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.8</title>
+<title>TONS OF FLOWERS — Prototype v0.20.11</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.8（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.11（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.11：道具（じょうろ・スコップ・つるはし・はちみつ・大槌・アミ）を Hanaの 手の 位置で もつ ように（8方向ごとに 手の 場所を はかった）。スタンプの ジャンプにも ついてくる。後ろむきの ときは 体の むこうがわに えがく。
+  v0.20.10：もちものが ふえると まどから はみでて いた。下の 段へ おりかえして まどが 下へ のびる。島に かかる ときは 島を 左へ ずらすか、下げて 小さく する。
+  v0.20.9：大槌で Cubeが 反応しない ことが おおかった バグを 修正（ころがって いる・着地中の Cubeは むし されて いた）。とどいた Cubeは 止まった しゅんかんに かならず まわる。とどく はんいも すこし ひろく（2.2→2.5）。
   v0.20.8：ドレミの スタンプ（4秒 いないに つぎの スタンプで 音が 上がる。高い ドまで 8回で「花の 音楽隊」：音符 8こが あちこちに ちいさな 花畑）。ラストスパート（花率 80%で BGMが もりあがり、おいかぜ、Hana 1.25倍・Cube 1.4倍 テンポ）。風の デメリット（花が つぼみに もどる）を なくした。
   v0.20.7：4面「ひみつの花壇」＝花壇の 球根（花畑が とどくと 5しゅるいの どれかが さき、まわりに 花と つぼみが こぼれる。図鑑に 5種 追加）。16面「忘れられた温室」＝温室の ぬくもり（四すみの ガラスの 温室で やすむ Cubeは 4秒ごとに 面が 1つ さく）。マップも かえた。
   v0.20.6：ひみつの庭を なくした（できない ように した）。4面・16面の ヒントを かえた（新しい しかけは 検討中）。
@@ -304,7 +307,7 @@
 
   /* もちもの（はちみつ・じょうろ）：右上の花率パネルの下 */
   #itemBox{top:calc(max(10px,env(safe-area-inset-top)) + 132px);right:max(10px,env(safe-area-inset-right));padding:5px 6px 6px;text-align:center;max-width:230px}
-  #itemRow{display:flex;gap:4px;justify-content:center}
+  #itemRow{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}   /* v0.20.10：ふえたら 下の 段へ おりかえす */
   .itm{padding:0;background:none;border:none;width:62px;display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:800;line-height:1.2}
   .itm[hidden]{display:none}
   .itm canvas{width:56px;height:56px;display:block}
@@ -2799,7 +2802,13 @@ function fit(){
     const need=rr.bottom+4-(View.oy-FIT.TOP*sc*.8);   // 島の 上の はしを 左へ ずらして よける（左は あいている）。たりなければ 小さく する
     if(need>1&&rr.bottom+4-(View.oy-FIT.TOP*sc*.8+Math.max(0,rr.left-View.ox)*.5)>1){ const want=View.ox-(rr.left-2*need), room=View.ox-ROWS*CFG.TW/2*sc-FIT.MARGIN; View.ox-=clamp(want,0,Math.max(0,room)); }
     const edge=View.oy-FIT.TOP*sc*.8+Math.max(0,rr.left-View.ox)*.5, over=rr.bottom+4-edge;
-    if(over<=1) break; top+=over;
+    // v0.20.10：もちものの まど（下へ のびる）にも 島が かからないように。まず 島を 左へ ずらし、たりなければ 下げて 小さく する
+    let overI=0; const IB=document.getElementById('itemBox');
+    if(IB&&!IB.hidden){ const ir=IB.getBoundingClientRect(), rightX=View.ox+COLS*CFG.TW/2*sc;
+      const eI=()=>View.oy-FIT.TOP*sc*.8+Math.max(0,ir.left-View.ox)*.5;
+      if(ir.width&&ir.left<rightX){ overI=ir.bottom+4-eI();
+        if(overI>1){ const room=View.ox-ROWS*CFG.TW/2*sc-FIT.MARGIN; View.ox-=clamp(overI*2,0,Math.max(0,room)); overI=ir.bottom+4-eI(); } } }
+    if(over<=1&&overI<=1) break; top+=Math.max(over,overI,0);
   }
 }
 // v0.16.9：花率の まどは 右上の ボタンの ならびの 左どなり（いちばん 上の 段）。もちものの まどは ボタンの すぐ 下へ あげる。
@@ -3504,8 +3513,8 @@ function drawCan(g,x,y,s,fill=1,tilt=0){
 // じょうろを 持った Hana：そそぎ口から 水が 地面へ ながれる
 function drawHanaCan(time){
   if(!(S.waterT>0)) return;
-  const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1;
-  ctx.save(); ctx.translate(p.x+sd*11,p.y-15); ctx.scale(sd,1);
+  const h=S.hana, H=hanaHand(), sd=H.sd;
+  ctx.save(); ctx.translate(H.x+sd*2,H.y-2); ctx.scale(sd,1);   // v0.20.11：手で もつ
   const pour=h.moving;   // 歩いている間だけ 水を そそぐ。止まると そそぎ口を 上に むける
   drawCan(ctx,0,0,.62,S.waterT/CFG.CAN_T,pour?.35:-.45);
   if(pour) for(let k=0;k<7;k++){ const u=(time*2.6+k/7)%1; ctx.fillStyle=`rgba(110,185,255,${.9-u*.5})`; ctx.beginPath(); ctx.arc(17+u*9+(k%2)*2.5,-9+u*u*26,1.7,0,7); ctx.fill(); }
@@ -3517,11 +3526,11 @@ function drawHanaScoop(time){
   if(S.dig){   // ふりあげて（ジャンプ中）→ ザクッと 地面に つきさす → 土を ほりかえす
     const u=S.dig.t/CFG.DIG_T, t=S.dig.tile, q=iso(t.i+.5,t.j+.5);
     let x,y,a,sc=.75;
-    if(u<.55){ const k=u/.55, hop=Math.sin(k*Math.PI)*13; x=p.x+sd*10; y=p.y-18-hop-8*k; a=-1.1+.3*k; }
+    if(u<.55){ const k=u/.55, H=hanaHand(); x=H.x; y=H.y-4-8*k; a=-1.1+.3*k; }   // v0.20.11：手で もって ふりあげる
     else { const k=(u-.55)/.45; x=lerp(q.x,q.x+sd*4,k); y=q.y+2-4*k; a=.15-.6*k; }
     ctx.save(); ctx.translate(x,y); ctx.scale(sd,1); drawScoop(ctx,0,0,sc,a); ctx.restore(); return;
   }
-  ctx.save(); ctx.translate(p.x+sd*12,p.y-4); ctx.scale(sd,1); drawScoop(ctx,0,0,.62,h.moving?.5+Math.sin(time*10)*.15:-.2); ctx.restore();
+  { const H=hanaHand(); ctx.save(); ctx.translate(H.x,H.y+8); ctx.scale(sd,1); drawScoop(ctx,0,0,.62,h.moving?.5+Math.sin(time*10)*.15:-.2); ctx.restore(); }   // v0.20.11：手で もつ
 }
 function drawHanaAura(time){
   const h=S.hana, p=iso(h.x,h.y);
@@ -3905,12 +3914,22 @@ function drawButterfly(b,gold){
   ctx.restore(); }
   if(b.mode==='work'&&b.tile){ const k=clamp(b.t/(gold?.7:CFG.BF_WORK)); ctx.strokeStyle='rgba(255,201,60,.9)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(g.x,g.y-4,7,-1.57,-1.57+6.283*k); ctx.stroke(); }
 }
+// v0.20.11：スタンプの 小さな ジャンプ・スコップの ジャンプ（道具も いっしょに うごかす）
+function hanaHop(){ const h=S.hana; let hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;
+  if(S.dig){ const u=S.dig.t/CFG.DIG_T; hop=Math.max(hop,u<.55?Math.sin(u/.55*Math.PI)*13:0); } return hop; }
+// v0.20.11：Hanaの 手の 位置（絵の 8方向ごとに 手の 場所を はかった 値。絵の 1コマ 100×138・足もと 50,131 からの ずれ）。
+// 道具は 画面で 道具が ある がわ（sx）の 手に もつ。後ろむき（右後・後・左後）の ときは 体の むこうがわ → Hanaより 先に えがく
+const HAND={X:[[-17,20],[-10,21],[4,4],[19,19],[-19,22],[-17,-17],[-4,-4],[-19,16]], Y:-30};
+function hanaHand(){
+  const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, f=h.face8|0, s=HANA_SPR.ok?HANA_SPR.scale:.46, X=HAND.X[f];
+  return {x:p.x+(sd>0?X[1]:X[0])*s, y:p.y-hanaHop()+HAND.Y*s, sd, behind:f>=3&&f<=5};
+}
+function drawHanaTools(time){ drawHanaCan(time); drawHanaScoop(time); drawHanaPick(time); drawHanaHoney(time); drawHanaHammer(time); drawHanaNet(time); }
 function drawHana(time){
   const H=HANA_SPR;
   if(!H.ok||!H.img) return drawHanaVector(time);   // 画像が使えないときは従来の描画
   const h=S.hana, p=iso(h.x,h.y);
-  let hop=h.stampT>0?Math.sin((1-h.stampT/.28)*Math.PI)*7:0;   // スタンプ時の小さなジャンプ
-  if(S.dig){ const u=S.dig.t/CFG.DIG_T; hop=Math.max(hop,u<.55?Math.sin(u/.55*Math.PI)*13:0); }   // スコップ：ぴょんと とんで つきさす
+  let hop=hanaHop();
   let row=(h.moving?8:0)+(h.face8|0);
   let fr=h.moving?Math.floor(h.walk*H.walkFps)%H.walkFrames:H.idleSeq[Math.floor(time*H.idleFps)%H.idleSeq.length];
   let kx=1, ky=1, tilt=0;
@@ -4142,7 +4161,7 @@ function drawItemBeams(time){
 // v0.19.7：はちみつを たらす ところ（さいしょの 1.1秒）：Hanaが びんを かたむけて、とろ〜っと 足もとへ たらす（Hanaの 手前に えがく）
 function drawHanaHoney(time){
   const P=S.honeyPool; if(!P||P.t>1.1) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, u=P.t/1.1, tilt=Math.min(1,P.t/.25)*(u>.8?1-(u-.8)/.2:1);
-  const jx=p.x+sd*14, jy=p.y-30, mx=jx+sd*6*tilt, my=jy-6, q=iso(P.x,P.y);
+  const Hh=hanaHand(), jx=Hh.x+sd*3, jy=Hh.y-12, mx=jx+sd*6*tilt, my=jy-6, q=iso(P.x,P.y);   // v0.20.11：手で もって かたむける
   if(P.t>.2&&P.t<1){ const flow=Math.min(1,(P.t-.2)/.15); ctx.save(); ctx.strokeStyle='rgba(240,170,30,.95)'; ctx.lineWidth=3.2*(P.t<.85?1:(1-P.t)/.15)+.6; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(mx,my); ctx.quadraticCurveTo(mx+sd*4,my+8,q.x+sd*3+Math.sin(P.t*12)*1.2,my+(q.y-2-my)*flow); ctx.stroke(); ctx.restore(); }
   ctx.save(); ctx.translate(jx,jy); ctx.rotate(sd*(-.2-1.3*tilt)); drawHoneyJar(ctx,0,10,.62); ctx.restore();
@@ -4165,6 +4184,7 @@ const HAMMER={R:2.2, USES:3, FLIP:.5, SWING:.42, OFTEN:[12,20], RARE:[30,45]};
 function updateHammer(dt){
   if(S.hamT>0) S.hamT-=dt;
   if(S.hamHit&&S.hamT<=HAMMER.SWING*.4){ S.hamHit=false; hammerHit(); }
+  for(const c of S.cubes) if(c.hamPend){ if(S.time>c.hamPend||c.pendingBloom||c.state==='gone'||c.state==='bloom') c.hamPend=0; else if(c.state==='idle'||c.state==='prep') hamFlip(c); }   // v0.20.9：ころがり おわったら まわす
   if(!S.flags.hammer||S.cleared) return;
   const h=S.hana;
   if(!S.hammer&&!INV.hammer&&S.started&&S.cubes.length){ S.hammerCool-=dt;
@@ -4187,11 +4207,19 @@ function hammerHit(){
   const h=S.hana; Sfx.zak(); Sfx.land(); ringFx(h.x,h.y,'#c8a074',HAMMER.R+.2); ringFx(h.x,h.y,'#fff0d0',HAMMER.R*.6,0,.08);
   for(let k=0;k<18&&S.fx.petals.length<420;k++){ const a=Math.random()*6.283, sp=.8+Math.random()*1.4; S.fx.petals.push({x:h.x,y:h.y,z:.05,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,vz:1.6+Math.random()*1.4,life:0,max:.6,c:k%3?'#a0805e':'#c9a77e',rot:Math.random()*6,vr:(Math.random()-.5)*10,s:2+Math.random()*1.6}); }
   let n=0;
-  for(const c of S.cubes){ if(c.state!=='idle'&&c.state!=='prep') continue; if(c.pendingBloom) continue; const p=cubePos(c); if(Math.hypot(p.x-h.x,p.y-h.y)>HAMMER.R) continue;
-    let best=null; for(const d in DIRS){ const o=rolledOri(c.ori,d), sc=(!c.grown[o.T]?3:0)+(!c.grown[o.B]?.5:0)+Math.random(); if(!best||sc>best.sc) best={d,sc}; }
-    c.prevOri=c.ori; c.ori=rolledOri(c.ori,best.d); c.dir=best.d; c.state='flip'; c.t=0; c.armBack=null; n++; }
+  // v0.20.9：前は 止まって いる Cubeしか まわらなかった（ころがって いる 途中・着地した ばかりの Cubeは むし → 「反応しない」の 原因）。
+  // ころがって いる・はねて いる Cubeは「ゆれが とどいた」しるしを つけて、止まった しゅんかんに まわす（1.5秒 いない）
+  for(const c of S.cubes){ if(c.pendingBloom||c.state==='gone'||c.state==='bloom') continue; const p=cubePos(c); if(Math.hypot(p.x-h.x,p.y-h.y)>HAMMER.R+.3) continue;
+    if(c.state==='idle'||c.state==='prep') hamFlip(c); else c.hamPend=S.time+1.5;
+    n++; }
   textFx(h.x,h.y,2.4,n?'ドスン！ ころん！':'ドスン！','#a0522d',1.2,1.4);
   if(!n&&(S.told.hamMiss|0)<2){ S.told.hamMiss=(S.told.hamMiss|0)+1; textFx(h.x,h.y,1.8,'Cubeの そばで たたこう','#7a5a48',1,1.8); }
+}
+function hamFlip(c){
+  c.hamPend=0;
+  let best=null; for(const d in DIRS){ const o=rolledOri(c.ori,d), sc=(!c.grown[o.T]?3:0)+(!c.grown[o.B]?.5:0)+Math.random(); if(!best||sc>best.sc) best={d,sc}; }
+  c.prevOri=c.ori; c.ori=rolledOri(c.ori,best.d); c.dir=best.d; c.state='flip'; c.t=0; c.armBack=null;
+  const p=cubePos(c); dustFx(p.x,p.y);
 }
 function drawHammer(g,x,y,s,rot){   // 大槌（木の 柄＋大きな 木づちの 頭）
   g.save(); g.translate(x,y); g.scale(s,s); g.rotate(rot||0); g.lineJoin='round'; g.lineCap='round';
@@ -4206,7 +4234,7 @@ function drawHammer(g,x,y,s,rot){   // 大槌（木の 柄＋大きな 木づち
 function drawHanaHammer(time){
   if(!(S.hamT>0)) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, u=1-S.hamT/HAMMER.SWING;
   const a=u<.55?-.3-1.6*(u/.55):-1.9+2.5*Math.min(1,(u-.55)/.25);   // ふりかぶって → ふりおろす
-  ctx.save(); ctx.translate(p.x+sd*10,p.y-12); ctx.scale(sd,1); drawHammer(ctx,0,0,.62,a+.3); ctx.restore();
+  const H=hanaHand(), lift=u<.55?14*(u/.55):14*(1-Math.min(1,(u-.55)/.25)); ctx.save(); ctx.translate(H.x-sd*3*lift/14,H.y-lift); ctx.scale(sd,1); drawHammer(ctx,0,0,.62,a+.3); ctx.restore();   // v0.20.11：手で もつ（ふりかぶる 間は 手を あげる）
 }
 // v0.20.3：魚と アミ。アミ（30秒）を つかって いる 間、はねた 魚を タップ（キーボードは スペース）。いちばん 高い あたり（はねて 30〜75%）で つかまえると 成功、
 // はやすぎ・おそすぎは にげられる。Hanaから 3.2マス いないの 魚だけ。ステージで 出る 魚が ちがう。つかまえた 魚は「すいそう」（図鑑の となり）で 見られる
@@ -4323,8 +4351,8 @@ function drawFishNet(g,x,y,s,rot){   // アミ（木の 柄＋わっか＋あみ
   g.restore();
 }
 function drawHanaNet(time){
-  if(!(S.netT>0)) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, u=S.netSwing>0?1-S.netSwing/.35:-1, a=u<0?-.25+Math.sin(time*2)*.05:-1.2+1.6*Math.sin(u*Math.PI);
-  ctx.save(); ctx.translate(p.x+sd*10,p.y-12); ctx.scale(sd,1); drawFishNet(ctx,0,0,.6,a+.3); ctx.restore();
+  if(!(S.netT>0)) return; const h=S.hana, p=iso(h.x,h.y), sd=h.sx||1, u=S.netSwing>0?1-S.netSwing/.35:-1, a=u<0?.25+Math.sin(time*2)*.05:-1.2+1.6*Math.sin(u*Math.PI);
+  const H=hanaHand(), lift=u<0?0:6*Math.sin(u*Math.PI); ctx.save(); ctx.translate(H.x,H.y-lift); ctx.scale(sd,1); drawFishNet(ctx,0,0,.6,a+.3); ctx.restore();   // v0.20.11：手で もつ
 }
 // すいそう（図鑑の となり）：つかまえた 魚が およぐ。下に 全種類（まだの 魚は シルエットと どこに いるかの ヒント）
 const Aqua={on:false,fish:[],
@@ -4572,10 +4600,10 @@ function drawHanaPick(time){
   if(S.swingT>0&&S.swingTile){   // 岩に むかって ふりあげて → ふりおろす
     const t=S.swingTile, q=iso(t.i+.5,t.j+.5), dx=q.x-p.x, dy=q.y-p.y, l=Math.hypot(dx,dy)||1, sd=Math.abs(dx)>4?(dx>0?1:-1):(h.sx||1);
     const u=1-S.swingT/ROCKV.SWING, a=u<.4?-.35-1.5*(u/.4):-1.85+2.6*((u-.4)/.6), reach=u<.4?0:(u-.4)/.6;
-    const x=p.x+dx/l*(8+10*reach), y=p.y-16+dy/l*(5+6*reach);
+    const H=hanaHand(), lift=u<.4?12*(u/.4):12*(1-reach), x=H.x+dx/l*(8*reach), y=H.y+dy/l*(5*reach)-lift;   // v0.20.11：手から ふりおろす（ふりあげる 間は 手を あげる）
     ctx.save(); ctx.translate(x,y); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore(); return; }
-  const sd=h.sx||1, a=-.35+(h.moving?Math.sin(time*10)*.12:0);
-  ctx.save(); ctx.translate(p.x+sd*10,p.y-14); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore();
+  const sd=h.sx||1, a=.2+(h.moving?Math.sin(time*10)*.12:0);   // v0.20.11：外がわに かたむけて もつ（顔に かからない）
+  const H=hanaHand(); ctx.save(); ctx.translate(H.x,H.y); ctx.scale(sd,1); drawPickaxe(ctx,0,0,.62,a+.35); ctx.restore();   // v0.20.11：手で もつ
 }
 // v0.20.1：月あかりの花畑。月の 光の 輪（半径1.7マス）が 盤面を ゆっくり めぐり、光の 中の つぼみが 1.4秒ごとに 1つずつ 目を さまして 花に なる
 const MOON={R:1.7,EVERY:1.4};
@@ -4703,7 +4731,7 @@ function render(){
     else if(it.k==='uribo') withAlpha(uriAlpha(S.uribo),()=>drawUribo(time));
     else if(it.k==='b') drawBigFlower(it.b,time);
     else if(it.k==='c'){ const A=armInfo(it.c)||[]; for(const a of A) if(!a.front) drawArm(a); geo.set(it.c,drawCube(it.c,time)); for(const a of A) if(a.front) drawArm(a); }
-    else { drawHanaAura(time); drawHana(time); drawHanaCan(time); drawHanaScoop(time); drawHanaPick(time); drawHanaHoney(time); drawHanaHammer(time); drawHanaNet(time); }
+    else { drawHanaAura(time); const bk=hanaHand().behind; if(bk) drawHanaTools(time); drawHana(time); if(!bk) drawHanaTools(time); }   // v0.20.11：後ろむきは 道具が 体の むこう
   }
   // 蜂・黒い花粉・かぜの すじ
   for(const b of S.bees) withAlpha(fadeIn(b.age,.7),()=>drawBee(b));
@@ -4877,7 +4905,7 @@ const UI={
   // v0.15.0：ONに したときは 音の 装置を まるごと 作りなおす（音が 出なく なったら「おと」を OFF→ON で なおせる）
   toggleSound(){ Sfx.on=!Sfx.on; $('soundBtn').textContent=Sfx.on?'おと ON':'おと OFF'; if(Sfx.on){ Sfx.rebuild(); Sfx.keepAlive(); } else { Bgm.stop(.1); Sfx.keepStop(); } Save.data.sound=Sfx.on; Save.save(); },
   // もちもの（はちみつ）：右上。もっているときは「タップで つかえるよ！」、のんだら 残り時間（びんの中身が へっていく）
-  itemKey:'',
+  itemKey:'', itemH:-1,
   updItem(touch){
     const T=touch?'タップ':'クリック', act={honey:S.honeyT,can:S.waterT,scoop:S.digT,pick:S.pickT,acorn:0,hammer:0,net:S.netT}, MAX={honey:CFG.HONEY_T,can:CFG.CAN_T,scoop:CFG.SCOOP_T,pick:CFG.PICK_T,acorn:1,hammer:1,net:CFG.NET_T}, NAME={honey:'はちみつ',can:'じょうろ',scoop:'スコップ',pick:'つるはし',acorn:'花どんぐり',hammer:'大槌',net:'アミ'};
     let any=false, held=false, tip='';
@@ -4901,6 +4929,7 @@ const UI={
     if(held) tip=T+'で つかえるよ！'; else if(S.waterT>0) tip='あるくと 水が でるよ'; else if(S.digT>0) tip='荒地の 上で '+(touch?'その 荒地を タップ':'スペース')+'！ 3かいで 土に'; else if(S.netT>0) tip='はねた 魚を '+(touch?'タップ':'クリック')+'！ いちばん 高い ところで つかまえよう'; else if(S.pickT>0) tip='岩を '+(touch?'タップ':'クリック')+'！ 4かいで こなごな'; else if(S.honeyT>0) tip='Cubeが はちみつに よってくるよ';
     if(tip!==this.itemTip){ this.itemTip=tip; $('itemTip').textContent=tip; }
     if($('itemBox').hidden===any) $('itemBox').hidden=!any;
+    { const IB=$('itemBox'), hk=IB.hidden?0:Math.round(IB.offsetHeight/20); if(hk!==this.itemH){ this.itemH=hk; fit(); } }   // v0.20.10：まどの 高さが かわったら 島を よけなおす
   },
   infoKey:'',
   cubeInfo(c,T){   // えらんだ Cubeの 色・大きさ・性格・マーク
@@ -5243,7 +5272,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.8';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.11';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
