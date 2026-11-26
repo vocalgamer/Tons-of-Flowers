@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.11</title>
+<title>TONS OF FLOWERS — Prototype v0.20.13</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.11（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.13（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.13：魚の 絵を かわいく（まるっこい からだ・大きな きらきら目・ほっぺ・にっこり口・ハート形の しっぽ）。ステージの はねる 魚も この 絵に して、しぶきを 水色に（前は しぶきまで 魚の 色だった）。
+  v0.20.12：魚つりを むずかしく：アミの 間に 魚が はねる ペースを 半分に。とれるのは Hanaの マスに となりあう 水の マスの 魚だけ（前は 3.2マス はなれても とれた）。とどかない 魚には 合図の 輪を 出さない。
   v0.20.11：道具（じょうろ・スコップ・つるはし・はちみつ・大槌・アミ）を Hanaの 手の 位置で もつ ように（8方向ごとに 手の 場所を はかった）。スタンプの ジャンプにも ついてくる。後ろむきの ときは 体の むこうがわに えがく。
   v0.20.10：もちものが ふえると まどから はみでて いた。下の 段へ おりかえして まどが 下へ のびる。島に かかる ときは 島を 左へ ずらすか、下げて 小さく する。
   v0.20.9：大槌で Cubeが 反応しない ことが おおかった バグを 修正（ころがって いる・着地中の Cubeは むし されて いた）。とどいた Cubeは 止まった しゅんかんに かならず まわる。とどく はんいも すこし ひろく（2.2→2.5）。
@@ -2118,12 +2120,12 @@ function makeOnsen(t){
 // 池の 魚：ときどき ぴょんと はねる
 function updateFish(dt){
   if(S.fish){ S.fish.t+=dt; if(S.fish.t>=1.1){ ringFx(S.fish.x2,S.fish.y2,'#ffffff',.35); S.fish=null; } return; }
-  if(Math.random()>=dt*(S.netT>0?.55:.12)) return;   // v0.20.3：アミを つかって いる 間は よく はねる
+  if(Math.random()>=dt*(S.netT>0?FISHING.RATE:.12)) return;   // v0.20.3：アミを つかって いる 間は よく はねる（v0.20.12：.55→.275）
   const W=[]; for(const row of S.tiles) for(const t of row) if(t.type==='water') W.push(t);
   if(!W.length) return;
-  const h=S.hana, near=S.netT>0?W.filter(t=>Math.hypot(t.i+.5-h.x,t.j+.5-h.y)<FISHING.RANGE):[];   // アミの 間は Hanaの ちかくで はねやすい
+  const h=S.hana, near=S.netT>0?W.filter(t=>Math.hypot(t.i+.5-h.x,t.j+.5-h.y)<FISHING.NEAR):[];   // アミの 間は Hanaの ちかくで はねやすい
   const L=near.length&&Math.random()<.8?near:W, t=L[Math.floor(Math.random()*L.length)], a=Math.random()*6.283, d=.25, sp=pickFish();
-  S.fish={x1:t.i+.5-Math.cos(a)*d,y1:t.j+.5-Math.sin(a)*d,x2:t.i+.5+Math.cos(a)*d,y2:t.j+.5+Math.sin(a)*d,t:0,sp,c:sp.body==='rainbow'?'#ff8fb1':sp.body};
+  S.fish={ti:t.i,tj:t.j,x1:t.i+.5-Math.cos(a)*d,y1:t.j+.5-Math.sin(a)*d,x2:t.i+.5+Math.cos(a)*d,y2:t.j+.5+Math.sin(a)*d,t:0,sp,c:sp.body==='rainbow'?'#ff8fb1':sp.body};
   ringFx(S.fish.x1,S.fish.y1,'#ffffff',.3); Sfx.splash();
 }
 function spawnScoop(){
@@ -4238,18 +4240,18 @@ function drawHanaHammer(time){
 }
 // v0.20.3：魚と アミ。アミ（30秒）を つかって いる 間、はねた 魚を タップ（キーボードは スペース）。いちばん 高い あたり（はねて 30〜75%）で つかまえると 成功、
 // はやすぎ・おそすぎは にげられる。Hanaから 3.2マス いないの 魚だけ。ステージで 出る 魚が ちがう。つかまえた 魚は「すいそう」（図鑑の となり）で 見られる
-const FISHING={RANGE:3.2, WIN:[.3,.75]};
+const FISHING={NEAR:2.5, WIN:[.3,.75], RATE:.275};   // v0.20.12：とれるのは Hanaの マスに となりあう（ななめ ふくむ）水の マスの 魚だけ。アミの 間の はねる ペースは 半分（.55→.275）
 const FISH=[   // where：all どこでも／meadow 草原／garden 庭／water 池・川の 面／rock 岩石の谷／sky 高原／night 夜／rainbow 虹の庭／sparkle きらめく池／hill 花どんぐりの丘／village ハチの里
-  {id:'medaka',name:'メダカ',r:1,body:'#c9b48a',size:.75,where:'all',d:'どこの 水にも いる 小さな 魚'},
-  {id:'funa',name:'フナ',r:1,body:'#8a9a7a',size:1,where:'all',d:'のんびり 池に すむ'},
+  {id:'medaka',name:'メダカ',r:1,body:'#f2d79a',size:.75,where:'all',d:'どこの 水にも いる 小さな 魚'},
+  {id:'funa',name:'フナ',r:1,body:'#a8c48a',size:1,where:'all',d:'のんびり 池に すむ'},
   {id:'kingyo',name:'きんぎょ',r:1,body:'#ff6a2c',size:.85,where:'meadow,garden',d:'まっかな 人気もの'},
   {id:'himedaka',name:'ヒメダカ',r:1,body:'#ffb347',size:.75,where:'meadow,hill,village',d:'オレンジ色の メダカ'},
-  {id:'ayu',name:'アユ',r:1,body:'#b8c8b4',size:1,where:'water,rock',d:'きれいな 川が すき'},
-  {id:'demekin',name:'デメキン',r:2,body:'#4a3a5e',size:.9,where:'garden,meadow',d:'目が ぽっこり'},
+  {id:'ayu',name:'アユ',r:1,body:'#a8dcc4',size:1,where:'water,rock',d:'きれいな 川が すき'},
+  {id:'demekin',name:'デメキン',r:2,body:'#6a4f8e',size:.9,where:'garden,meadow',d:'目が ぽっこり'},
   {id:'koi_w',name:'しろコイ',r:2,body:'#f6f2ea',pat:'spots',pc:'#e0442c',size:1.25,where:'garden,water',d:'あかい もようの 大きな コイ'},
-  {id:'yamame',name:'ヤマメ',r:2,body:'#c4bca4',pat:'marks',pc:'#6a7a9a',size:1,where:'rock,water',d:'よこに だえんの もよう'},
-  {id:'iwana',name:'イワナ',r:2,body:'#7c8472',pat:'dots',pc:'#f6ecd0',size:1.1,where:'rock',d:'岩の すきまに かくれる'},
-  {id:'nijimasu',name:'ニジマス',r:2,body:'#b4bcac',pat:'stripe',pc:'#ff8fb1',size:1.1,where:'water,sky',d:'からだに にじいろの すじ'},
+  {id:'yamame',name:'ヤマメ',r:2,body:'#d8c8f0',pat:'marks',pc:'#6a7a9a',size:1,where:'rock,water',d:'よこに だえんの もよう'},
+  {id:'iwana',name:'イワナ',r:2,body:'#8fb3a0',pat:'dots',pc:'#f6ecd0',size:1.1,where:'rock',d:'岩の すきまに かくれる'},
+  {id:'nijimasu',name:'ニジマス',r:2,body:'#c8dcf0',pat:'stripe',pc:'#ff8fb1',size:1.1,where:'water,sky',d:'からだに にじいろの すじ'},
   {id:'sora',name:'そらいろメダカ',r:2,body:'#8ec9f5',size:.8,where:'sky',d:'空の 色を うつした メダカ'},
   {id:'hotaru',name:'ほたるメダカ',r:2,body:'#d4e48a',glow:1,size:.8,where:'night',d:'夜に ぼんやり 光る'},
   {id:'yozora',name:'よぞらブナ',r:2,body:'#3a4680',pat:'dots',pc:'#fff6a0',size:1,where:'night',d:'からだに 星の もよう'},
@@ -4282,42 +4284,47 @@ function fishCanvas(sp){   // ChatGPTの 魚の 絵を 種類の 色に ぬり�
       g.globalAlpha=1; g.globalCompositeOperation='source-over'; }
     FishSpr[sp.id]=c; return c; }catch(_){ return null; }
 }
-function drawFishIcon(g,sp,x,y,h,dir,time){   // v0.20.3：すいそう・一覧の 魚（よこむきに およぐ 絵。種類ごとに 色・もよう・ひれ・目）
-  time=time||0; const L=h*1.1, R=h*.34, tw=Math.sin(time*7+x*.05)*.18;
+function drawFishIcon(g,sp,x,y,h,dir,time){   // v0.20.13：まるっこい かわいい 魚（大きな 目・ほっぺ・にっこり口・まるい ひれ）。すいそう・一覧・ステージの はねる 魚で つかう
+  time=time||0; const L=h*.95, R=h*.4, tw=Math.sin(time*7+x*.05)*.22, fl=Math.sin(time*9+x*.03)*.15;
   if(sp.glow){ const gl=g.createRadialGradient(x,y,0,x,y,h*1.1); gl.addColorStop(0,'rgba(255,250,190,.6)'); gl.addColorStop(1,'rgba(255,250,190,0)'); g.fillStyle=gl; g.beginPath(); g.arc(x,y,h*1.1,0,7); g.fill(); }
   g.save(); g.translate(x,y); if(dir<0) g.scale(-1,1); g.lineJoin='round'; g.lineCap='round';
-  const base=sp.body==='rainbow'?'#ff8fb1':sp.body, ink='rgba(59,47,42,.75)', lw=Math.max(1,h*.045);
+  const base=sp.body==='rainbow'?'#ff8fb1':sp.body, ink='rgba(80,55,50,.8)', lw=Math.max(1,h*.05);
   const body=g.createLinearGradient(0,-R,0,R);
-  if(sp.body==='rainbow'){ body.addColorStop(0,'#ff6b6b'); body.addColorStop(.25,'#ffd43b'); body.addColorStop(.5,'#69db7c'); body.addColorStop(.75,'#74c0fc'); body.addColorStop(1,'#b197fc'); }
-  else { body.addColorStop(0,'#ffffff'); body.addColorStop(.25,base); body.addColorStop(1,base); }
-  // しっぽ（ふりふり）
-  const long=sp.id==='kingyo'||sp.id==='niji'||sp.id==='hanabira'||sp.id==='hoshi'||sp.id==='guppy';
-  g.save(); g.translate(-L*.42,0); g.rotate(tw); g.fillStyle=base; g.strokeStyle=ink; g.lineWidth=lw;
-  g.beginPath(); g.moveTo(0,0); g.quadraticCurveTo(-L*(long?.35:.22),-R*(long?1.6:1.1),-L*(long?.5:.3),-R*(long?1.3:.95)); g.quadraticCurveTo(-L*(long?.3:.2),0,-L*(long?.5:.3),R*(long?1.3:.95)); g.quadraticCurveTo(-L*(long?.35:.22),R*(long?1.6:1.1),0,0); g.fill(); g.stroke(); g.restore();
-  // せびれ
-  g.fillStyle=base; g.strokeStyle=ink; g.lineWidth=lw; g.beginPath(); g.moveTo(-L*.15,-R*.85); g.quadraticCurveTo(L*.02,-R*(sp.id==='hoshi'?2.2:1.55),L*.18,-R*.8); g.closePath(); g.fill(); g.stroke();
-  // からだ
+  if(sp.body==='rainbow'){ body.addColorStop(0,'#ff8a8a'); body.addColorStop(.25,'#ffe066'); body.addColorStop(.5,'#8ce99a'); body.addColorStop(.75,'#91c9ff'); body.addColorStop(1,'#c3a6ff'); }
+  else { body.addColorStop(0,'#ffffff'); body.addColorStop(.3,base); body.addColorStop(1,base); }
+  const long=sp.id==='kingyo'||sp.id==='niji'||sp.id==='hanabira'||sp.id==='hoshi'||sp.id==='guppy'||sp.id==='demekin';
+  // しっぽ（ふりふり・まるい ハート形）
+  g.save(); g.translate(-L*.44,0); g.rotate(tw); g.fillStyle=base; g.strokeStyle=ink; g.lineWidth=lw; const tl=long?.42:.28, th=long?1.25:.95;
+  g.beginPath(); g.moveTo(L*.04,0); g.bezierCurveTo(-L*tl*.3,-R*th*1.25,-L*tl*1.15,-R*th*1.1,-L*tl,-R*th*.25); g.quadraticCurveTo(-L*tl*.8,0,-L*tl,R*th*.25); g.bezierCurveTo(-L*tl*1.15,R*th*1.1,-L*tl*.3,R*th*1.25,L*.04,0); g.closePath(); g.fill(); g.stroke(); g.restore();
+  // せびれ（まるい）
+  g.fillStyle=base; g.strokeStyle=ink; g.lineWidth=lw; g.beginPath(); g.moveTo(-L*.2,-R*.8); g.quadraticCurveTo(-L*.1,-R*(sp.id==='hoshi'?2.1:1.5),L*.14,-R*.88); g.closePath(); g.fill(); g.stroke();
+  // からだ（まるっこい たまご形）
   g.fillStyle=body; g.beginPath(); g.ellipse(0,0,L*.5,R,0,0,7); g.fill();
-  if(sp.pat){ g.save(); g.beginPath(); g.ellipse(0,0,L*.5,R,0,0,7); g.clip(); g.fillStyle=sp.pc; g.globalAlpha=.7;   // もよう
-    if(sp.pat==='stripe') for(let k=0;k<3;k++){ g.beginPath(); g.ellipse(-L*.18+k*L*.17,0,L*.035,R*1.1,0,0,7); g.fill(); }
-    else if(sp.pat==='dots') for(let k=0;k<9;k++){ g.beginPath(); g.arc(-L*.3+((k*37)%60)/100*L*.75,-R*.6+((k*53)%100)/100*R*1.2,Math.max(1,h*.05),0,7); g.fill(); }
-    else if(sp.pat==='spots') for(let k=0;k<3;k++){ g.beginPath(); g.ellipse(-L*.22+k*L*.2,-R*.25+(k%2)*R*.45,L*.09,R*.35,k,0,7); g.fill(); }
-    else if(sp.pat==='marks') for(let k=0;k<5;k++){ g.beginPath(); g.ellipse(-L*.3+k*L*.13,R*.05,L*.03,R*.42,0,0,7); g.fill(); }
+  if(sp.pat){ g.save(); g.beginPath(); g.ellipse(0,0,L*.5,R,0,0,7); g.clip(); g.fillStyle=sp.pc; g.globalAlpha=.65;   // もよう（顔には かからない）
+    if(sp.pat==='stripe') for(let k=0;k<3;k++){ g.beginPath(); g.ellipse(-L*.3+k*L*.15,0,L*.035,R*1.1,0,0,7); g.fill(); }
+    else if(sp.pat==='dots') for(let k=0;k<7;k++){ g.beginPath(); g.arc(-L*.38+((k*37)%60)/100*L*.6,-R*.55+((k*53)%100)/100*R*1.1,Math.max(1,h*.055),0,7); g.fill(); }
+    else if(sp.pat==='spots') for(let k=0;k<2;k++){ g.beginPath(); g.ellipse(-L*.25+k*L*.2,-R*.3+k*R*.45,L*.1,R*.32,k,0,7); g.fill(); }
+    else if(sp.pat==='marks') for(let k=0;k<4;k++){ g.beginPath(); g.ellipse(-L*.36+k*L*.11,R*.05,L*.03,R*.4,0,0,7); g.fill(); }
     g.restore(); }
   g.strokeStyle=ink; g.lineWidth=lw; g.beginPath(); g.ellipse(0,0,L*.5,R,0,0,7); g.stroke();
-  g.fillStyle='rgba(255,255,255,.45)'; g.beginPath(); g.ellipse(-L*.05,-R*.5,L*.22,R*.16,-.1,0,7); g.fill();   // つや
-  g.fillStyle=base; g.strokeStyle=ink; g.beginPath(); g.ellipse(L*.02,R*.35,L*.1,R*.22,.6+tw,0,7); g.fill(); g.stroke();   // むなびれ
-  const er=sp.id==='demekin'?R*.42:R*.24, ex=L*.3, ey=-R*.15;   // 目（デメキンは おおきい）
-  g.fillStyle='#fff'; g.beginPath(); g.arc(ex,ey,er,0,7); g.fill(); g.strokeStyle=ink; g.stroke(); g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(ex+er*.2,ey,er*.55,0,7); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(ex+er*.35,ey-er*.25,er*.2,0,7); g.fill();
-  g.strokeStyle=ink; g.lineWidth=lw*.8; g.beginPath(); g.arc(L*.46,R*.15,R*.15,.3,1.6); g.stroke();   // くち
+  g.fillStyle='rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-L*.08,-R*.55,L*.2,R*.15,-.15,0,7); g.fill();   // つや
+  g.fillStyle=base; g.strokeStyle=ink; g.beginPath(); g.ellipse(-L*.16,R*.38,L*.11,R*.19,.9+fl,0,7); g.fill(); g.stroke();   // むなびれ（ぱたぱた。口に 見えない よう うしろへ）
+  // 目（大きく きらきら。デメキンは もっと 大きい）
+  const er=sp.id==='demekin'?R*.5:R*.38, ex=L*.2, ey=-R*.12;
+  g.fillStyle='#fff'; g.beginPath(); g.arc(ex,ey,er,0,7); g.fill(); g.strokeStyle=ink; g.lineWidth=lw*.8; g.stroke();
+  g.fillStyle='#2e2230'; g.beginPath(); g.ellipse(ex+er*.12,ey+er*.05,er*.68,er*.76,0,0,7); g.fill();
+  g.fillStyle='#fff'; g.beginPath(); g.arc(ex+er*.32,ey-er*.28,er*.3,0,7); g.fill(); g.beginPath(); g.arc(ex-er*.12,ey+er*.32,er*.13,0,7); g.fill();
+  g.fillStyle='rgba(255,120,150,.45)'; g.beginPath(); g.ellipse(L*.27,R*.42,R*.2,R*.12,0,0,7); g.fill();   // ほっぺ
+  g.strokeStyle=ink; g.lineWidth=lw*1.1; g.beginPath(); g.moveTo(L*.31,R*.24); g.quadraticCurveTo(L*.385,R*.46,L*.465,R*.2); g.stroke();   // にっこり 口
   if(sp.r>=4){ g.fillStyle='rgba(255,255,255,.9)'; for(let k=0;k<3;k++){ const a=time*3+k*2.1; g.beginPath(); g.arc(Math.cos(a)*L*.55,Math.sin(a)*R*1.3,h*.04,0,7); g.fill(); } }   // ぬしは きらきら
   g.restore();
 }
 function aquaAdd(id){ const A=Save.data.aqua||(Save.data.aqua={}), nw=!A[id]; A[id]=(A[id]|0)+1; Save.save(); return nw; }
+const fishReach=F=>!!F&&F.ti!=null&&Math.max(Math.abs(F.ti-Math.floor(S.hana.x)),Math.abs(F.tj-Math.floor(S.hana.y)))<=1;   // v0.20.12：Hanaの マスの となり（ななめ ふくむ）
 function tryCatch(){
   const F=S.fish; if(!F||F.tried||!(S.netT>0)) return false; F.tried=true;
   const h=S.hana, u=clamp(F.t/1.1), x=lerp(F.x1,F.x2,u), y=lerp(F.y1,F.y2,u); S.netSwing=.35; h.goal=null; faceTo(x-h.x,y-h.y);   // v0.20.5：魚の ほうを むいて ふる
-  if(Math.hypot(x-h.x,y-h.y)>FISHING.RANGE){ textFx(h.x,h.y,2.1,'とおくて とどかない…','#7a5a48',1,1.4); return true; }
+  if(!fishReach(F)){ textFx(h.x,h.y,2.1,'とおくて とどかない… 水の となりで ふろう','#7a5a48',1,1.6); return true; }   // v0.20.12：となりの マスだけ
   if(u<FISHING.WIN[0]||u>FISHING.WIN[1]){ ringFx(x,y,'#ffffff',.5); Sfx.splash(); textFx(x,y,1.8,u<FISHING.WIN[0]?'はやい！ にげられた':'おそい！ にげられた','#5a7fa0',1,1.4); S.fish=null; return true; }
   const sp=F.sp||FISH[0], nw=aquaAdd(sp.id); S.fish=null; S.catchN++; Sfx.get(); if(sp.r>=3||nw) Sfx.rare();
   ringFx(x,y,'#9fe8ff',.9); petalFx(x,y,.6,10,1.2);
@@ -5159,19 +5166,16 @@ function drawOnsenMonkey(t,time){
   ctx.fillStyle='rgba(143,216,208,.7)'; ctx.beginPath(); ctx.ellipse(0,-2,13,4,0,0,7); ctx.fill();   // お湯の おもて
   ctx.restore();
 }
-function drawFish(time){
-  const F=S.fish, u=clamp(F.t/1.1), x=lerp(F.x1,F.x2,u), y=lerp(F.y1,F.y2,u), z=Math.sin(u*Math.PI)*.75, p=iso(x,y,z), q=iso(F.x2,F.y2,0);
-  const ang=Math.atan2(iso(F.x2,F.y2).y-iso(F.x1,F.y1).y, iso(F.x2,F.y2).x-iso(F.x1,F.y1).x)+(u-.5)*1.6;
-  if(artOk('fish')){ const a0=iso(F.x1,F.y1), b0=iso(F.x2,F.y2), fc=F.sp&&fishCanvas(F.sp), x=lerp(a0.x,b0.x,u), y=lerp(a0.y,b0.y,u)-z*16+4;
-    if(fc){ const hh=24*(F.sp.size||1), ww=hh*fc.width/fc.height; ctx.save(); ctx.globalAlpha=Math.min(1,Math.sin(u*Math.PI)*3); ctx.translate(x,y-hh*.5); if(b0.x<a0.x) ctx.scale(-1,1); ctx.rotate((u-.5)*.8); ctx.drawImage(fc,-ww/2,-hh/2,ww,hh); ctx.restore();
-      if(S.netT>0&&!F.tried){ const ok=u>FISHING.WIN[0]&&u<FISHING.WIN[1]; ctx.save(); ctx.strokeStyle=ok?'rgba(255,240,120,.95)':'rgba(255,255,255,.45)'; ctx.lineWidth=ok?2.6:1.4; ctx.beginPath(); ctx.ellipse(x,y-hh*.5,ww*.65,hh*.75,0,0,7); ctx.stroke(); ctx.restore(); }   // いまだ！の 合図
-      return; }
-    artDraw(ctx,'fish',0,x,y,24,{flip:b0.x<a0.x,alpha:Math.min(1,Math.sin(u*Math.PI)*3)}); return; }
-  ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(ang);
-  ctx.fillStyle=F.c; ctx.strokeStyle='rgba(59,47,42,.6)'; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(0,0,7,3.4,0,0,7); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-6,0); ctx.lineTo(-11,-3.5); ctx.lineTo(-11,3.5); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#3b2f2a'; ctx.beginPath(); ctx.arc(4,-.8,.9,0,7); ctx.fill(); ctx.restore();
-  if(u<.25||u>.8){ ctx.fillStyle='rgba(255,255,255,.8)'; for(let k=0;k<4;k++){ const a=k*1.6+u*4; ctx.beginPath(); ctx.arc((u<.5?iso(F.x1,F.y1).x:q.x)+Math.cos(a)*5,(u<.5?iso(F.x1,F.y1).y:q.y)-Math.abs(Math.sin(a))*5,1.3,0,7); ctx.fill(); } }
+function drawFish(time){   // v0.20.13：はねる 魚は プログラムの かわいい 魚（ChatGPTの 絵を ぬりかえると しぶきまで 魚の 色に なっていた）。しぶきは 水色
+  const F=S.fish, u=clamp(F.t/1.1), a0=iso(F.x1,F.y1), b0=iso(F.x2,F.y2), z=Math.sin(u*Math.PI)*.75, x=lerp(a0.x,b0.x,u), y=lerp(a0.y,b0.y,u)-z*16;
+  const sp=F.sp||FISH[0], hh=15*(sp.size||1), dir=b0.x<a0.x?-1:1;
+  // しぶき（とびだす ところ・おちる ところ）：水色と 白の しずく
+  const splash=(px,py,k)=>{ if(k<=0) return; for(let n=0;n<7;n++){ const a=-Math.PI/2+(n-3)*.42, r=3+9*(1-k), lift=Math.sin((1-k)*Math.PI)*8;
+      ctx.fillStyle=n%3?`rgba(140,210,255,${.9*k})`:`rgba(255,255,255,${.95*k})`; ctx.beginPath(); ctx.arc(px+Math.cos(a)*r,py+Math.sin(a)*r*.6-lift*(1-Math.abs(n-3)/4),1.6+(n%2)*.7,0,7); ctx.fill(); }
+    ctx.strokeStyle=`rgba(170,225,255,${.8*k})`; ctx.lineWidth=1.4; ctx.beginPath(); ctx.ellipse(px,py+1,6+8*(1-k),2.5+3*(1-k),0,0,7); ctx.stroke(); };
+  splash(a0.x,a0.y,u<.3?1-u/.3:0); splash(b0.x,b0.y,u>.7?(u-.7)/.3*(1-(u-.7)/.3)*4:0);
+  ctx.save(); ctx.globalAlpha=Math.min(1,Math.sin(u*Math.PI)*3); ctx.translate(x,y-hh*.3); ctx.rotate(dir*(u-.5)*1.1); drawFishIcon(ctx,sp,0,0,hh,dir,time); ctx.restore();
+  if(S.netT>0&&!F.tried&&fishReach(F)){ const ok=u>FISHING.WIN[0]&&u<FISHING.WIN[1]; ctx.save(); ctx.strokeStyle=ok?'rgba(255,240,120,.95)':'rgba(255,255,255,.45)'; ctx.lineWidth=ok?2.6:1.4; ctx.beginPath(); ctx.ellipse(x,y-hh*.3,hh*1.05,hh*.8,0,0,7); ctx.stroke(); ctx.restore(); }   // いまだ！の 合図（とどく 魚だけ）
 }
 function drawMe(time){
   const m=Photo.me, p=iso(m.x,m.y), b=Math.sin(time*2.2)*1;
@@ -5272,7 +5276,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.11';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.13';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
