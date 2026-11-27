@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.16</title>
+<title>TONS OF FLOWERS — Prototype v0.20.17</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.16（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.17（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.17：2面からは さいしょから Cubeが 2体（1面は 1体のまま）。1回 さかせると 3体。
   v0.20.16：花率の まどを 左上へ（Cubeの せつめいの まどは なし）。女王戦の クエストは その 下。島は 左上の まどに かからない ように 画面の 大きさで 1回だけ きめる。
   v0.20.15：もちものの まどで 島を ちぢめたり ずらしたり しない（ステージの 大きさは いつも おなじ）。アイテムを 小さく（PC 62→48px・スマホ 52→40px）。島に かからない ように、1段の かずと 大きさ（ふつう／小さめ）を じどうで えらぶ。
   v0.20.14：ドレミを よわく：つぎの 音までの 時間 4→3秒。音楽隊の 音符は まん中 1マスを 花に するだけ（まわりの 成長は なし）。大きい Cubeは 1面 さいて 1音（3回 スタンプで 1音）。
@@ -1169,10 +1170,10 @@ function updateCubes(dt){
   }
   S.cubes=S.cubes.filter(c=>c.state!=='gone');
 
-  // Cubeの補充：最初は1体。開花するたびに同時数が増え、最大3体
+  // Cubeの補充：1面は 最初 1体、2面からは 最初 2体（v0.20.17）。開花するたびに同時数が増え、最大3体
   if(!S.cleared){
-    const want=Math.min(CFG.MAX_CUBES,1+S.blooms);
-    if(S.cubes.length<want){ S.spawnT+=dt; if(S.spawnT>=CFG.SPAWN_DELAY||S.cubes.length===0&&S.blooms===0){ S.spawnT=0; spawnCube(); } }
+    const start=S.stage===0?1:2, want=Math.min(CFG.MAX_CUBES,start+S.blooms);
+    if(S.cubes.length<want){ S.spawnT+=dt; if(S.spawnT>=CFG.SPAWN_DELAY||S.blooms===0&&(S.cubes.length===0||S.cubes.length<start&&S.spawnT>=.6)){ S.spawnT=0; spawnCube(); } }   // はじめの 2体目は 0.6秒 おくれて ふってくる
     else S.spawnT=0;
   }
 }
@@ -5289,7 +5290,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.16';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.17';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
