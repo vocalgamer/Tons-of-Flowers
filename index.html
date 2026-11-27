@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.21</title>
+<title>TONS OF FLOWERS — Prototype v0.20.22</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.21（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.22（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.22：ドレミの 音を 長さ・音量 1.25倍に（聞こえやすく）。
   v0.20.21：モグラの すすむ スピードを 半分に（1マス 4.2→8.4秒）。
   v0.20.20：モグラと ウリ坊の 出現率を 半分に（出る 間隔を 2倍）。
   v0.20.19：アミ・大槌・つるはし・化石2つ・花壇の 球根の 花5つ・レンガの ブロックを ChatGPTの 絵に。
@@ -1740,7 +1741,7 @@ function scaleStamp(){
   if(S.cleared) return;
   S.scaleN=S.scaleT>0?S.scaleN+1:1; S.scaleT=SCALE.WIN;
   const n=S.scaleN, h=S.hana;
-  Sfx.tone(SCALE.HZ[n-1],.32,{delay:.1,vol:.12,type:'triangle'}); Sfx.tone(SCALE.HZ[n-1]*2,.22,{delay:.13,vol:.04});
+  Sfx.tone(SCALE.HZ[n-1],.4,{delay:.1,vol:.15,type:'triangle'}); Sfx.tone(SCALE.HZ[n-1]*2,.275,{delay:.13,vol:.05});   // v0.20.22：長さ・音量 1.25倍（聞こえやすく）
   textFx(h.x+(n%2?.3:-.3),h.y,2.3+n*.05,'♪'+SCALE.NOTES[n-1],n>=8?'#d98a00':'#7a5ad8',.9+n*.04,1.1);
   if(n===2&&!S.told.scale){ S.told.scale=1; UI.say('ドレミの スタンプ','3びょう いないに つぎの 面を さかせると 音が 上がるよ。高い ドまで いくと…？'); }
   if(n>=8){ S.scaleN=0; S.scaleT=0; S.scaleDone=(S.scaleDone|0)+1; flowerBand(); }
@@ -5318,7 +5319,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.21';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.22';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
