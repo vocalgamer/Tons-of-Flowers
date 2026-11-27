@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.13</title>
+<title>TONS OF FLOWERS — Prototype v0.20.14</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.13（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.14（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.14：ドレミを よわく：つぎの 音までの 時間 4→3秒。音楽隊の 音符は まん中 1マスを 花に するだけ（まわりの 成長は なし）。大きい Cubeは 1面 さいて 1音（3回 スタンプで 1音）。
   v0.20.13：魚の 絵を かわいく（まるっこい からだ・大きな きらきら目・ほっぺ・にっこり口・ハート形の しっぽ）。ステージの はねる 魚も この 絵に して、しぶきを 水色に（前は しぶきまで 魚の 色だった）。
   v0.20.12：魚つりを むずかしく：アミの 間に 魚が はねる ペースを 半分に。とれるのは Hanaの マスに となりあう 水の マスの 魚だけ（前は 3.2マス はなれても とれた）。とどかない 魚には 合図の 輪を 出さない。
   v0.20.11：道具（じょうろ・スコップ・つるはし・はちみつ・大槌・アミ）を Hanaの 手の 位置で もつ ように（8方向ごとに 手の 場所を はかった）。スタンプの ジャンプにも ついてくる。後ろむきの ときは 体の むこうがわに えがく。
@@ -1238,7 +1239,7 @@ function tryStamp(pick){   // pick：タップ／クリックで えらんだCub
   else if(c.giant&&!done) textFx(p.x,p.y,2.3,c.prog[f]===1?'あと 2かい！':'あと 1かい！','#c2355f');
   else textFx(p.x,p.y,1.9+(c.giant?.4:0),extra||(n===5?'あと 1めん！':'ぽん！'),extra?'#d98a00':'#c2355f',1);
   if(n===5&&c.attr[c.grown.indexOf(false)]) textFx(p.x,p.y,2.6+(c.giant?.4:0),'さいごは マークの 面で！','#4f7fd6',1.05,2);   // のこり1面が マーク：さいごに スタンプすると ちから
-  scaleStamp();   // v0.20.8：ドレミの スタンプ
+  if(done) scaleStamp(); else if(S.scaleT>0) S.scaleT=SCALE.WIN;   // v0.20.8：ドレミの スタンプ（v0.20.14：大きい Cubeは 1面 さいて 1音。とちゅうの スタンプは 時間だけ つなぐ）
   return {ok:true,face:f};
 }
 // はちみつの こうか中：Cubeを タップすると、スタンプしてから Hanaの むこうがわへ 1マス おす（GDD 18.5）
@@ -1727,14 +1728,14 @@ function drawWarm(time){
 }
 // v0.20.8：ドレミの スタンプ。スタンプが きまるたびに ド・レ・ミ…と 音が 上がる。つぎの スタンプまで SCALE.WIN 秒。
 // 高い ドまで 8回 つづくと「花の 音楽隊」：音符が 8こ とびだして、あちこちの 土に ちいさな 花畑を つくる
-const SCALE={WIN:4, NOTES:['ド','レ','ミ','ファ','ソ','ラ','シ','ド'], HZ:[523,587,659,698,784,880,988,1047], BAND:8, R1:.5, R2:1.5};   // 音符 1こ＝まん中 1マスが 花・まわり 1.5マスが 1だん そだつ
+const SCALE={WIN:3, NOTES:['ド','レ','ミ','ファ','ソ','ラ','シ','ド'], HZ:[523,587,659,698,784,880,988,1047], BAND:8, R1:.5, R2:0};   // 音符 1こ＝まん中 1マスが 花だけ（v0.20.14：まわりの 1だん 成長は なくした）
 function scaleStamp(){
   if(S.cleared) return;
   S.scaleN=S.scaleT>0?S.scaleN+1:1; S.scaleT=SCALE.WIN;
   const n=S.scaleN, h=S.hana;
   Sfx.tone(SCALE.HZ[n-1],.32,{delay:.1,vol:.12,type:'triangle'}); Sfx.tone(SCALE.HZ[n-1]*2,.22,{delay:.13,vol:.04});
   textFx(h.x+(n%2?.3:-.3),h.y,2.3+n*.05,'♪'+SCALE.NOTES[n-1],n>=8?'#d98a00':'#7a5ad8',.9+n*.04,1.1);
-  if(n===2&&!S.told.scale){ S.told.scale=1; UI.say('ドレミの スタンプ','4びょう いないに つぎの スタンプを きめると 音が 上がるよ。高い ドまで いくと…？'); }
+  if(n===2&&!S.told.scale){ S.told.scale=1; UI.say('ドレミの スタンプ','3びょう いないに つぎの 面を さかせると 音が 上がるよ。高い ドまで いくと…？'); }
   if(n>=8){ S.scaleN=0; S.scaleT=0; S.scaleDone=(S.scaleDone|0)+1; flowerBand(); }
 }
 function flowerBand(){
@@ -5276,7 +5277,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.13';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.14';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
