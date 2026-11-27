@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>TONS OF FLOWERS — Prototype v0.20.19</title>
+<title>TONS OF FLOWERS — Prototype v0.20.21</title>
 <!--
-  TONS OF FLOWERS  Prototype v0.20.19（GDD v3.8準拠・2.5D・単一HTML）
+  TONS OF FLOWERS  Prototype v0.20.21（GDD v3.8準拠・2.5D・単一HTML）
+  v0.20.21：モグラの すすむ スピードを 半分に（1マス 4.2→8.4秒）。
+  v0.20.20：モグラと ウリ坊の 出現率を 半分に（出る 間隔を 2倍）。
   v0.20.19：アミ・大槌・つるはし・化石2つ・花壇の 球根の 花5つ・レンガの ブロックを ChatGPTの 絵に。
   v0.20.18：ミツバチの 巣を ChatGPTの 絵に（わらの スケップ・切りかぶ・はちみつ・葉っぱ・花）。まわりを とぶ はちは そのまま。Hanaが うしろに いると すける。
   v0.20.17：2面からは さいしょから Cubeが 2体（1面は 1体のまま）。1回 さかせると 3体。
@@ -843,9 +845,9 @@ const CFG = {
   PICK_T:30, PICK_FIRST:2, PICK_COOL:6,   // v0.16.7：つるはし（使える秒数＝歩いている間と ふっている 間だけ へる／最初に 出るまで／使いおわってから 次まで）
   SCOOP_T:22, SCOOP_FIRST:8, SCOOP_COOL:20, HARD_HP:3, ONSEN:.01,   // スコップ（荒地は 3回 ほると 土）／温泉が わく かくりつ（荒地を たがやしきった とき）   // スコップ：使える秒数（歩いている間だけ へる）／最初に出るまで／使いおわってから次まで
   DIG_T:.5,
-  MOLE_STEP:4.2, MOLE_FIRST:18, MOLE_COOL:30, MOLE_MAX:14,   // モグラ：1マス すすむ秒数（v0.7.2で 1.9→2.8、v0.13.3で 2.8→4.2 ゆっくりに）／最初に出るまで／つぎまで／（MOLE_MAXは v0.13.2から 未使用）
+  MOLE_STEP:8.4, MOLE_FIRST:36, MOLE_COOL:60, MOLE_MAX:14,   // v0.20.20：出る 間隔を 2倍（出現率 半分：最初 18→36・つぎ 30→60秒）。モグラ：1マス すすむ秒数（v0.7.2で 1.9→2.8、v0.13.3で 2.8→4.2、v0.20.21で 4.2→8.4 ゆっくりに）／最初に出るまで／つぎまで／（MOLE_MAXは v0.13.2から 未使用）
   FLOWER_PULL:3,   // v0.13.12：モグラ・ウリ坊が 花畑の ほうへ むかう 倍率（ほかの 地面は 1）
-  URI_SPEED:1.6, URI_FIRST:22, URI_COOL:40, URI_STAY:32,     // ウリ坊：はしる速さ（v0.13.3で 2.4→1.6 ゆっくりに）／最初に出るまで／つぎまで／（URI_STAYは v0.13.2から 未使用）                  // 荒地 1マスを たがやすのに かかる秒数   // じょうろ（GDD 18.6）：水が出る秒数／ステージ開始から最初に出るまで／使いおわってから次まで（秒）
+  URI_SPEED:1.6, URI_FIRST:44, URI_COOL:80, URI_STAY:32,     // v0.20.20：出る 間隔を 2倍（最初 22→44・つぎ 40→80秒）。ウリ坊：はしる速さ（v0.13.3で 2.4→1.6 ゆっくりに）／最初に出るまで／つぎまで／（URI_STAYは v0.13.2から 未使用）                  // 荒地 1マスを たがやすのに かかる秒数   // じょうろ（GDD 18.6）：水が出る秒数／ステージ開始から最初に出るまで／使いおわってから次まで（秒）
   GIANT:1.3,                  // 巨大Cubeの大きさ（ふつうの何倍）／1つの面に 3回 スタンプ
   RARE:.012                   // 花畑に なったとき めずらしい花が うまれる もとの かくりつ
 };
@@ -5316,7 +5318,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.20.19';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.20.21';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
