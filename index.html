@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>はなころりん -Bloom Cube- — Prototype v0.22.7</title>
+<title>はなころりん -Bloom Cube- — Prototype v0.22.9</title>
 <!--
-  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.7（GDD v3.8準拠・2.5D・単一HTML）
+  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.9（GDD v3.8準拠・2.5D・単一HTML）
+  v0.22.9：タイトルの 看板の よこで ジャンプする Hanaにも 白い ふち取り（これで Hanaは ぜんぶ ふち取り つき）。
+  v0.22.8：おはなしと エンディングの Hanaにも 白い ふち取り（ゲーム画面と 同じ）。
   v0.22.7：Hanaの ジャンプから ふんばり顔の コマ（しゃがむ）を ぬいた。かわりに 立った コマを すこし つぶして しゃがむ うごきに（エンディング・オープニング・ステージクリア 共通）。
   v0.22.6：オープニングの おはなしの Hanaを 3わり 小さく（大きすぎて あらく 見えた）。おはなしの 絵を 画面の 解像度で 描く（720×360を ひきのばして いた）。
   v0.22.5：Cubeの 絵を 本決まりに。おはなし（オープニング・スタート画面）と エンディングの Cubeも ゲームと 同じ 絵（顔つき）に。おはなしの さし絵は うごく（光の すじ・きらきら・ふってくる ひかりの しっぽ・あせ・けむり・ハート・花びら・にじ）。エンディングも はなやかに（女王の うしろの 光・よろこぶ Cube・ながれぼし・かみふぶき・音符・花びらの 花火・Hanaと いっしょに ジャンプ）。花どんぐりの 木に ぶつかる 率を 2倍。花どんぐりは いくつでも もてる（×3 のように かずを 出す）。
@@ -2939,14 +2941,14 @@ function drawOutline(g,o,scale,fx,fy,dx,dy,dw,dh){   // (fx,fy)＝コマ番号�
   const ol=outlineSheet(o,scale); if(!ol) return; const k=dw/o.cw;
   g.drawImage(ol.c,fx*ol.CW,fy*ol.CH,ol.CW,ol.CH,dx-ol.P*k,dy-ol.P*k,ol.CW*k,ol.CH*k);
 }
-function hanaJumpDraw(g,t,x,y,s,hp,loop){
+function hanaJumpDraw(g,t,x,y,s,hp,loop,ol){   // v0.22.8：ol＝白い ふち取り（ゲーム画面は いつも）
   const J=HANA_JUMP; if(!(J.ok&&J.img)) return false;
   const tt=loop?t%loop:t; let q=JUMP_ANIM.pose(Math.max(0,tt));
   if(loop&&tt>JUMP_ANIM.F+JUMP_ANIM.P) q={fr:6,hop:0,sq:0,n:-1};
   const k=s/J.ss, ky=1-.06*q.sq, kx=1+.05*q.sq, tilt=q.n>0?(q.n%2?1:-1)*.05*q.hop:0;
   g.save(); g.translate(x+J.dx*s,y-q.hop*hp); if(tilt) g.rotate(tilt); g.scale(kx,ky);
   g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high';
-  if(g===ctx) drawOutline(g,J,k,q.fr,0,-J.ax*k,-J.ay*k,J.cw*k,J.ch*k);   // ゲーム画面だけ ふち取り（エンディングは なし）
+  if(g===ctx||ol) drawOutline(g,J,k,q.fr,0,-J.ax*k,-J.ay*k,J.cw*k,J.ch*k);   // ゲーム画面と、ol の とき（エンディング）
   g.drawImage(J.img,q.fr*J.cw,0,J.cw,J.ch,-J.ax*k,-J.ay*k,J.cw*k,J.ch*k); g.restore(); return true;
 }
 const Assets={flower:[],bud:null,
@@ -5592,7 +5594,7 @@ const Ending={on:false,t:0,last:0,cb:null,
       const kc=r=>26*u+5;
       for(const r of row){ const x=walk+r.o*u*1.4, hop=Math.abs(Math.sin(t*6+r.o))*10*u, y=gy+6;
         if(x<-80||x>W+120) continue;
-        if(r.k==='hana'){ if(H2.ok&&H2.img){ const fr=Math.floor(t*10)%H2.walkFrames, s=.55*u+.2; g.drawImage(H2.img,fr*H2.cw,H2.rows.walk_right*H2.ch,H2.cw,H2.ch,x-H2.ax*s,y-H2.ay*s-hop*.3,H2.cw*s,H2.ch*s); } }
+        if(r.k==='hana'){ if(H2.ok&&H2.img){ const fr=Math.floor(t*10)%H2.walkFrames, s=.55*u+.2; drawOutline(g,H2,s,fr,H2.rows.walk_right,x-H2.ax*s,y-H2.ay*s-hop*.3,H2.cw*s,H2.ch*s); g.drawImage(H2.img,fr*H2.cw,H2.rows.walk_right*H2.ch,H2.cw,H2.ch,x-H2.ax*s,y-H2.ay*s-hop*.3,H2.cw*s,H2.ch*s); } }
         else if(r.k==='cube'){ const ci=[[122,212,170],[242,142,128],[124,172,236],[238,204,92],[182,148,232]].findIndex(c=>c[0]===r.c[0]&&c[1]===r.c[1]); drawCubeChar(g,x,y-kc(r)*.5,kc(r),{color:CUBE_COLS[Math.max(0,ci)],mood:hop>7*u?5:1,hop,top:1,right:1,t}); }   // v0.22.5：ゲームと 同じ Cube（顔つき）
         else if(r.k==='uribo'&&URI_SPR.ok&&URI_SPR.img){ sprFrame(g,URI_SPR,Math.floor(t*8)%4,x,y-hop*.4,.55*u+.12,false); }   // v0.14.4：エンディングも 絵
         else if(r.k==='uribo'){ g.save(); g.translate(x,y-hop*.5); g.scale(1.8*u+.3,1.8*u+.3); g.fillStyle='#c98f5a'; g.strokeStyle='#5d3b26'; g.lineWidth=1.4; g.beginPath(); g.ellipse(0,-11,12,8,0,0,7); g.fill(); g.stroke(); g.beginPath(); g.ellipse(11,-12,6.5,5.5,0,0,7); g.fill(); g.stroke(); g.strokeStyle='#f3dcb9'; g.lineWidth=2; for(const q of [-5,0,5]){ g.beginPath(); g.moveTo(q-4,-15); g.lineTo(q+4,-15); g.stroke(); } g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(12,-14,1.3,0,7); g.fill(); g.restore(); }
@@ -5624,13 +5626,13 @@ const Ending={on:false,t:0,last:0,cb:null,
           if(room<80){   // 高さが たりない（スマホの よこ画面など）：Hanaは「おわる」ボタンの 左よこで ジャンプ
             const bw=bd.offsetWidth||90; hx=W/2-Math.max(bw/2+70,170*u); hf=H-12; s=Math.min(.7*u+.25,(hf-lb-10-hop)/H2.ch); }   // 文字は まんなかだけ なので、よこに いる Hanaは ロゴの 下まで つかえる
           if(room>=80&&t>31) for(let q=0;q<4;q++){ const sd=q<2?-1:1, d=(q%2?130:72)*u+24, kk=Math.max(12,22*u); drawCubeChar(g,hx+sd*d,hf-kk*.5,kk,{color:CUBE_COLS[(q+1)%5],mood:q%2?5:1,hop:Math.abs(Math.sin((t-30)*5+q*1.3))*16*u,top:1,t}); }   // v0.22.5：Cubeも いっしょに ジャンプ
-          if(s>.12&&!hanaJumpDraw(g,t-30,hx,hf,s,hop,2.0)) g.drawImage(H2.img,H2.smile*H2.cw,0,H2.cw,H2.ch,hx-H2.ax*s,hf-H2.ay*s,H2.cw*s,H2.ch*s); } }
+          if(s>.12&&!hanaJumpDraw(g,t-30,hx,hf,s,hop,2.0,true)){ drawOutline(g,H2,s,H2.smile,0,hx-H2.ax*s,hf-H2.ay*s,H2.cw*s,H2.ch*s); g.drawImage(H2.img,H2.smile*H2.cw,0,H2.cw,H2.ch,hx-H2.ax*s,hf-H2.ay*s,H2.cw*s,H2.ch*s); } } }   // v0.22.8：白い ふち取り
       if(t>34){ g.globalAlpha=clamp((t-34)/1.5); g.font=`800 ${Math.max(22,34*u)}px ${FONT}`; g.fillStyle='#ffc93c'; g.fillText('― おしまい ―',W/2,y3); }
       g.globalAlpha=1;
     }
   }
 };
-const VERSION='v0.22.7';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.22.9';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -5861,7 +5863,7 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
     if(t>=this.fin&&!this.fx){ this.fx=1; for(let k=0;k<6;k++) this.burst(cx+(k-2.5)*bw*.18,cy-bh*.3,16,420*u,PETAL); }
     if(t>=this.fin-.4){ const a=clamp((t-this.fin+.4)/.4), hop=Math.abs(Math.sin(T*6))*16*u, hx=cx-bw*.5-10*u;
       g.globalAlpha=a;
-      if(H2ok()){ const Hs=HANA_SPR, s=Math.min(.75*u+.1,(gy-cy0)*1.4/Hs.ch); if(!hanaJumpDraw(g,t-this.fin+.4,hx,gy+18*u,s,22*u,2.2)) g.drawImage(Hs.img,Hs.smile*Hs.cw,0,Hs.cw,Hs.ch,hx-Hs.ax*s,gy+18*u-Hs.ay*s-hop,Hs.cw*s,Hs.ch*s); }
+      if(H2ok()){ const Hs=HANA_SPR, s=Math.min(.75*u+.1,(gy-cy0)*1.4/Hs.ch); if(!hanaJumpDraw(g,t-this.fin+.4,hx,gy+18*u,s,22*u,2.2,true)){ drawOutline(g,Hs,s,Hs.smile,0,hx-Hs.ax*s,gy+18*u-Hs.ay*s-hop,Hs.cw*s,Hs.ch*s); g.drawImage(Hs.img,Hs.smile*Hs.cw,0,Hs.cw,Hs.ch,hx-Hs.ax*s,gy+18*u-Hs.ay*s-hop,Hs.cw*s,Hs.ch*s); } }   // v0.22.9：タイトルの Hanaにも 白い ふち取り
       [[122,212,170],[242,142,128],[238,204,92]].forEach((col,k)=>{ const x=cx+bw*.5-20*u+k*42*u, s=17*u, y=gy+14*u-Math.abs(Math.sin(T*6+k*1.3))*20*u;
         g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.5); g.lineWidth=2; g.beginPath(); g.roundRect?g.roundRect(x-s,y-2*s,2*s,2*s,s*.45):g.rect(x-s,y-2*s,2*s,2*s); g.fill(); g.stroke();
         g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(x-s*.35,y-s*1.15,2,0,7); g.arc(x+s*.35,y-s*1.15,2,0,7); g.fill(); g.strokeStyle='#3b2f2a'; g.lineWidth=1.5; g.beginPath(); g.arc(x,y-s*.95,3.5,.2,2.9); g.stroke(); });
@@ -5905,7 +5907,7 @@ function drawStoryArt(g,ending,k,T){ T=T||0;
   if(!ending&&k===3||ending&&k>=2){ g.save(); g.globalAlpha=.32+.08*Math.sin(T*1.5); g.lineWidth=12; ['#ff8fa3','#ffc36b','#fff17a','#8fe39a','#8fd0ff','#c3a3ff'].forEach((cl,q)=>{ g.strokeStyle=cl; g.beginPath(); g.arc(W/2,H+60,300-q*12,Math.PI*1.08,Math.PI*1.92); g.stroke(); }); g.restore(); }   // にじ
   g.fillStyle=(!ending&&k<2)?'#d8bd9f':'#9ed58a'; g.beginPath(); g.ellipse(W/2,H+40,W*.75,150,0,0,7); g.fill();
   const cube=(x,y,s,col,o)=>drawCubeChar(g,x,y+s*.5,s,Object.assign({color:col||'green',t:T},o||{}));
-  const hana=(x,y,s,fr)=>{ const Hs=HANA_SPR; if(Hs.ok&&Hs.img) g.drawImage(Hs.img,(fr===2?Hs.smile:(fr||0))*Hs.cw,0,Hs.cw,Hs.ch,x-Hs.ax*s,y-Hs.ay*s,Hs.cw*s,Hs.ch*s); else { g.fillStyle='#f7a531'; g.beginPath(); g.ellipse(x,y-40*s,22*s,40*s,0,0,7); g.fill(); } };
+  const hana=(x,y,s,fr)=>{ const Hs=HANA_SPR, fx=fr===2?Hs.smile:(fr||0); if(Hs.ok&&Hs.img){ drawOutline(g,Hs,s,fx,0,x-Hs.ax*s,y-Hs.ay*s,Hs.cw*s,Hs.ch*s); g.drawImage(Hs.img,fx*Hs.cw,0,Hs.cw,Hs.ch,x-Hs.ax*s,y-Hs.ay*s,Hs.cw*s,Hs.ch*s); } else { g.fillStyle='#f7a531'; g.beginPath(); g.ellipse(x,y-40*s,22*s,40*s,0,0,7); g.fill(); } };
   const flowers=(n,y0)=>{ for(let q=0;q<n;q++){ const sp=Assets.flower[q%5]; if(sp) drawSprite(g,sp,40+((q*97)%640),y0+((q*53)%60),1.6+(q%3)*.3,Math.sin(T*2.2+q)*.1); } };
   const petals=(n,sp)=>{ for(let q=0;q<n;q++){ const x=(hash(q*9)*W+Math.sin(T*.8+q)*30+T*14)%W, y=((hash(q*4)*H+T*sp*(26+hash(q)*26))%(H+30))-15; g.fillStyle=PETAL[q%5]; g.save(); g.translate(x,y); g.rotate(T*2+q); g.beginPath(); g.ellipse(0,0,7,4,0,0,7); g.fill(); g.restore(); } };
   const hop=(q,sp,h)=>Math.abs(Math.sin(T*(sp||5)+q*1.3))*(h||10);
