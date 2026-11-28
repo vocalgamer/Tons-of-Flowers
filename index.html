@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>はなころりん -Bloom Cube- — Prototype v0.22.0</title>
+<title>はなころりん -Bloom Cube- — Prototype v0.22.2</title>
 <!--
-  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.0（GDD v3.8準拠・2.5D・単一HTML）
-  v0.22.0：全21面に。7面に あたらしい「生け垣の小道」（大槌と マークの 入門・ひらけた 庭）。「迷いの生け垣」は 雲の上の庭の あと（16面）の 上級の 迷路へ（荒地なし・あたらしい ヒント）。16面〜は 1つずつ うしろへ（女王は 21面）。セーブの 記録も ずらして ひきつぐ。
-  v0.21.11：むらさきの マスは Cubeの 花でだけ ぬれる（花率90%の あと。Cubeの 花が とどくたびに 1だんずつ 土→つぼみ→花）。Hanaが ふんでも さかない。説明文も 15言語で 変更。
-  v0.21.10：花の 女王の むらさきの マスが、90%の あと Cubeの 花の ひろがりで 自動で さいて しまっていた（1回で 全部 さいて クリアに なることも）のを 修正。むらさきの マスは Hanaが ふんだ ときだけ 花に なる。
-  v0.21.9：モグラの テヘペロ（6・7コマ目）の 消した 手の あとが にじんで いたのを 作りなおし（顔の はだ色と 毛の さかい・穴の かげ・ふちを 描きなおした）。
-  v0.21.8：スコップは 荒地が なくなった ときに すぐ しまう（のこり時間が あっても）。
-  v0.21.7：オープニングの「とばす」ボタンを なくした。おはなし 4ページが ながれ おわったら、くりかえさずに つぎの 画面（はじめる 前の 画面）へ すすむ。
-  v0.21.6：タイトルの アニメーションが おわったら、クリックするまで「おはなし」が 看板の 上に 1ページずつ 自動で ながれる（絵＋文・6秒ずつ・くりかえし）。「クリックで スタート」は ずっと 出す。さいごまで 見たら はじめての プレイの おはなしは とばす。
+  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.2（GDD v3.8準拠・2.5D・単一HTML）
+  v0.22.2：せつめいが はやく きえすぎる 問題を なおす。上の おしらせ（ドレミ・ステージの ヒント・アイテム・女王戦 など）は CSSの きえる 演出が いつも 1.9秒で はじまって いたのを、字の かずに あわせた 時間に（2.4秒＋1文字 0.18秒、さいだい 13秒）。かさなったら じゅんばんに 出す。うかぶ 文字の せつめい（マークの 面・くっついて たねに など）は 2秒 上限を やめて 字の かずに あわせ（さいだい 5秒）。マークの ちからの 名前と せつめいは 2.4→3.8秒。
+  v0.22.1：エンディングの 字幕を 折りかえして 何行かで 出す（前は 1行に おしこんで 横に つぶれていた）。字が 大きめ・行間 ゆったり。さいしょの 場面を 9秒→15秒に のばし、ながい 1まい目の 字幕を 9秒 出す（前は 4.5秒）。
+  v0.22.0：全21面に。7面に あたらしい「生け垣の小道」（大槌と マークの 入門・ひらけた 庭）。「迷いの生け垣」は 雲の上の庭の あと（16面）の 上級の 迷路へ（荒地なし・あたらしい ヒント）。16面〜は 1つずつ うしろへ（女王は 21面）。セーブの 記録も ずらして ひきつぐ。
+  v0.21.11：むらさきの マスは Cubeの 花でだけ ぬれる（花率90%の あと。Cubeの 花が とどくたびに 1だんずつ 土→つぼみ→花）。Hanaが ふんでも さかない。説明文も 15言語で 変更。
+  v0.21.10：花の 女王の むらさきの マスが、90%の あと Cubeの 花の ひろがりで 自動で さいて しまっていた（1回で 全部 さいて クリアに なることも）のを 修正。むらさきの マスは Hanaが ふんだ ときだけ 花に なる。
+  v0.21.9：モグラの テヘペロ（6・7コマ目）の 消した 手の あとが にじんで いたのを 作りなおし（顔の はだ色と 毛の さかい・穴の かげ・ふちを 描きなおした）。
+  v0.21.8：スコップは 荒地が なくなった ときに すぐ しまう（のこり時間が あっても）。
+  v0.21.7：オープニングの「とばす」ボタンを なくした。おはなし 4ページが ながれ おわったら、くりかえさずに つぎの 画面（はじめる 前の 画面）へ すすむ。
+  v0.21.6：タイトルの アニメーションが おわったら、クリックするまで「おはなし」が 看板の 上に 1ページずつ 自動で ながれる（絵＋文・6秒ずつ・くりかえし）。「クリックで スタート」は ずっと 出す。さいごまで 見たら はじめての プレイの おはなしは とばす。
   v0.21.5：手袋の カーソルは ゲームで あそんでいる 間だけ。オープニング・メニュー・カード・撮影・エンディングでは ふつうの 矢印。
-  v0.21.4：オープニングの 画面（左上の 🌐）でも 言語を えらべる。えらぶと 看板の タイトルや 文字が すぐ その 言語に かわる。
+  v0.21.4：オープニングの 画面（左上の 🌐）でも 言語を えらべる。えらぶと 看板の タイトルや 文字が すぐ その 言語に かわる。
   v0.21.3：アミは 2面から 出る（1面では 出ない）。
-  v0.21.2：女王戦：女王の まわり 12マスを むらさきの マスに（花率に かぞえない）。花率90%で ぬれるように なり、Hanaが ふむ か 花の 波で 花に なる。ぜんぶ ぬれたら クリア。撮影の 上の おしらせは さわっても 下の 花を つかめる・6秒で きえる。アイテム欄の 説明は「タップで つかえるよ！」だけ（その はばが 横はばの さいてい）。くわしい 説明は ひろった とき（長めの おしらせ）・つかった とき・あたらしい アイテムが 出る ステージの はじめ（カード＋OK）・メニューの「アイテムの せつめい」ページで。
+  v0.21.2：女王戦：女王の まわり 12マスを むらさきの マスに（花率に かぞえない）。花率90%で ぬれるように なり、Hanaが ふむ か 花の 波で 花に なる。ぜんぶ ぬれたら クリア。撮影の 上の おしらせは さわっても 下の 花を つかめる・6秒で きえる。アイテム欄の 説明は「タップで つかえるよ！」だけ（その はばが 横はばの さいてい）。くわしい 説明は ひろった とき（長めの おしらせ）・つかった とき・あたらしい アイテムが 出る ステージの はじめ（カード＋OK）・メニューの「アイテムの せつめい」ページで。
   v0.21.1：花の女王の ものがたりを かえた：女王は だれよりも さきに ふってきた「さいしょの Cube」。まちの 人に「しんりゃくしゃだ！」と こわがられ、だれにも そだてて もらえず、さけないまま 黒く なった。Hanaの 花に つつまれて やっと さけた（女王戦の 勝ちかた＝花で つつむ と つながる）。エンディング・女王戦の ヒント・元に もどした ときの 文・図鑑の 説明を 14言語ぶん 合わせて 変更。
   v0.21.0：タイトルを「はなころりん -Bloom Cube-」に（英語は Bloom Cube）。15言語に対応（日本語・英語・中国語 簡体/繁体・韓国語・スペイン語・ポルトガル語・フランス語・ドイツ語・アラビア語・ヒンディー語・ロシア語・インドネシア語・ベトナム語・タイ語）。タイトルも 各国むけ ＋ -Bloom Cube-。スタート画面の 🌐 で 言語を えらぶ（さいしょは 端末の 言語）。しくみ：多言語スクリプト（i18n）が キャンバスの 文字と HTMLの 文字を 表示の 直前に おきかえる（日本語の 原文 521＋3 → I18N の 配列）。
   v0.20.23：モグラと ウリ坊が いっしょに 出ない ように（どちらかが いる 間は もう 片方は 出ず、いなく なって から 15秒 以上 あける）。モグラの スピードを さらに 半分に（1マス 8.4→16.8秒）。
@@ -2463,7 +2465,9 @@ function dustFx(x,y){ const P=S.fx.petals; if(P.length>420) return; for(let k=0;
   P.push({x,y,z:.05,vx:Math.cos(a)*.55,vy:Math.sin(a)*.55,vz:.7+Math.random()*.5,life:0,max:.45,c:'#d6bc9f',rot:0,vr:0,s:2+Math.random()*1.4}); } }
 function ringFx(x,y,color,rMax,z=0,delay=0){ S.fx.rings.push({x,y,z,color,rMax,t:-delay,max:.7}); }
 function textFx(x,y,z,text,color,scale=1,life=1.3){
-  life=Math.min(life,2);   // おしらせは みじかく
+  // v0.22.2：みじかい ひとこと（ぽん！ など）は 2秒まで。長い せつめいは 字の かずに あわせて 長く（1秒＋1文字 0.14秒、さいだい 5秒）
+  const n=String(text).replace(/\s/g,'').length;
+  life=n>=10?Math.min(5,Math.max(life,1+n*.14)):Math.min(life,2);
   const T=S.fx.texts; for(const o of T) if(o.text===text&&o.t<.4) return;
   T.push({x,y,z,text,color,scale,t:0,max:life});
 }
@@ -2483,7 +2487,7 @@ function chainFx(x,y,ch){
 const MARK_COL={sun:['#ffc93c','#ff9d2e','#fff3a8'],rain:['#4f9be8','#9fd0ff','#ffffff'],butterfly:['#ff8fb1','#ffc4d8','#fff3a8'],leaf:['#57b05a','#a8e08a','#fff3a8'],star:['#ffc93c','#fff3a8','#ffffff'],rainbow:RAINBOW};
 function markFx(x,y,a){
   const F=S.fx, cols=MARK_COL[a]||['#fff3a8'];
-  F.marks.push({x,y,a,t:0,max:2.4});
+  F.marks.push({x,y,a,t:0,max:3.8});   // v0.22.2：2.4→3.8秒（ちからの 名前と せつめいを 読めるように）
   for(let k=0;k<36;k++){ const an=Math.random()*6.283, sp=1.4+Math.random()*2.6;
     F.stars.push({x,y,z:1,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp,vz:2.5+Math.random()*3.5,life:0,max:1.2+Math.random()*.8,c:cols[k%cols.length],s:3+Math.random()*3.5,rot:Math.random()*6}); }
   cols.slice(0,3).forEach((c,k)=>ringFx(x,y,c,2.2+k*.6,.05,k*.1));
@@ -5116,7 +5120,8 @@ const UI={
   // ステージ開始カード（v0.12.5）：ステージ名だけ 出して 約1.8秒で 自動で はじまる（さわる・キーで すぐ）。
   // ヒントの 文は カードから はずし、はじまったあと 上の 小さな お知らせで 出す（とめない）
   stT:0, ST_SHOW:1.8,
-  toast(){ $('stageName').textContent=STAGE.name; $('stNo').textContent='ステージ '+(S.stage+1); $('stName').textContent=STAGE.name;
+  toast(){ this.sayClear();   // v0.22.2：まえの ステージの おしらせは のこさない
+    $('stageName').textContent=STAGE.name; $('stNo').textContent='ステージ '+(S.stage+1); $('stName').textContent=STAGE.name;
     const ov=$('stageOv'); ov.classList.remove('out'); ov.hidden=false; clearTimeout(this.stT);
     this.stNeedOk=!!STAGE.boss; $('stRule').hidden=!this.stNeedOk;   // v0.14.3：女王戦は 条件を 見せて OKを おすまで まつ
     { const seen=Save.data.seenItems||{}, nw=STAGE.boss?[]:stageItemKeys().filter(k=>!seen[k]); $('stItems').hidden=!nw.length;   // v0.21.2：あたらしい アイテムの せつめい
@@ -5133,7 +5138,22 @@ const UI={
     if(now){ hide(); return; }
     if(ov.classList.contains('out')) return;   // もう きえかけ：予約どおり きえる
     clearTimeout(this.stT); ov.classList.add('out'); this.stT=setTimeout(hide,300); },
-  say(n,t,quiet,ms){ $('toastName').textContent=n; $('toastTip').textContent=t; const el=$('toast'); el.hidden=true; void el.offsetWidth; el.hidden=false; clearTimeout(this.toastT); this.toastT=setTimeout(()=>{el.hidden=true;},ms||2400); if(!quiet) Sfx.rare(); },
+  // v0.22.2：おしらせは 字の かずに あわせて 出す（子どもが 読める はやさ：2.4秒＋1文字 0.18秒、さいだい 13秒）。
+  // 前は CSSの きえる 演出が いつも 1.9秒で はじまり、時間を 長く しても 2秒ほどで 見えなく なっていた。
+  // 出ている とちゅうで つぎが きたら、いまのを 読みおわるまで（75%）まって じゅんばんに 出す（さいだい 3こ まち）
+  toastQ:[], toastCur:null, toastQT:0,
+  say(n,t,quiet,ms){ const c=this.toastCur, same=x=>x&&x.n===n&&x.t===t;
+    if(same(c)||this.toastQ.some(same)) return;
+    if(c){ const el=performance.now()-c.at; if(el<c.min){ if(this.toastQ.length<3) this.toastQ.push({n,t,quiet,ms});
+      clearTimeout(this.toastQT); this.toastQT=setTimeout(()=>this.sayNext(),c.min-el); return; } }
+    this.sayShow({n,t,quiet,ms}); },
+  sayNext(){ const it=this.toastQ.shift(); if(it) this.sayShow(it); },
+  sayClear(){ this.toastQ=[]; this.toastCur=null; clearTimeout(this.toastT); clearTimeout(this.toastQT); $('toast').hidden=true; },
+  sayShow(it){ const len=((it.n||'')+(it.t||'')).replace(/\s/g,'').length, dur=Math.min(13000,Math.max(it.ms||0,2400+180*len));
+    it.at=performance.now(); it.min=dur*.75; this.toastCur=it;
+    $('toastName').textContent=it.n; $('toastTip').textContent=it.t; const el=$('toast'); el.hidden=true; void el.offsetWidth;
+    el.style.animation=(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)?'none':'toastIn .3s ease-out, toastOut .4s ease-in '+((dur-400)/1000)+'s forwards'; el.hidden=false;
+    clearTimeout(this.toastT); this.toastT=setTimeout(()=>{ el.hidden=true; this.toastCur=null; this.sayNext(); },dur); if(!it.quiet) Sfx.rare(); },
   next(){ this.load(S.stage+1>=STAGES.length?0:S.stage+1,true); },   // つぎの ステージへ：もちものを もちこす
   restart(){ this.load(S.stage); },   // やりなおす：もちものは なし
   load(idx,keep){ if(!keep) invClear(); Photo.me=null; Photo.on=false; document.body.classList.remove('photo'); $('photoUi').hidden=true; const was=S.started; S=newState(idx); S.started=was; this.theme(); fit(); if(was) this.toast(); $('clearOv').hidden=true; this.lastRate=-1; this.itemKey=''; Input.keys.clear(); document.activeElement&&document.activeElement.blur&&document.activeElement.blur(); },
@@ -5425,29 +5445,61 @@ function drawMe(time){
 // エンディングの 背景：横長の 帯を 画面の 高さに あわせて（はばは はみ出して OK）まんなか・下ぞろえ
 function endBg(g,k,W,H){ if(!artOk(k)) return false; const a=ART[k], [sx,sy,sw,sh]=a.f[0], h=Math.max(H,W*sh/sw), w=h*sw/sh;
   g.imageSmoothingEnabled=true; g.drawImage(a.img,sx,sy,sw,sh,(W-w)/2,H-h,w,h); return true; }
+// v0.22.1：字幕の 折りかえし（日本語・英語などは 空白で、中国語・タイ語は 単語で。句読点は 行の はじめに こない）
+const CAPC=new Map();
+function capWrap(g,s,w){ const M=x=>{ TRO.add(x); return g.measureText(x).width; };   // 切った かけらを 二重に 訳さない
+  const noSp=/^(zh|th)/.test(LANG)||!/\s/.test(s);
+  const toks=noSp?((typeof Intl!=='undefined'&&Intl.Segmenter)?Array.from(new Intl.Segmenter(LANG,{granularity:'word'}).segment(s),x=>x.segment):Array.from(s)):s.split(/(\s+)/).filter(x=>x);
+  const out=[]; let cur=''; const push=()=>{ const c=cur.trim(); if(c) out.push(c); cur=''; };
+  for(const tk of toks){
+    if(/^\s+$/.test(tk)){ if(cur) cur+=' '; continue; }
+    if(cur.trim()&&/^[、。，．！？」』）”!?,.;:)…»]+$/.test(tk)){ cur+=tk; continue; }
+    if(M(cur+tk)<=w){ cur+=tk; continue; }
+    push(); if(M(tk)<=w){ cur=tk; continue; }
+    for(const ch of Array.from(tk)){ if(cur&&M(cur+ch)>w) push(); cur+=ch; } }
+  push(); return out; }
+// 文の おわり（。！？ . ! ?）で わける（「」や “” の 中では わけない）
+function capSentences(s){ const out=[]; let cur='', dep=0; const A=Array.from(s);
+  for(let i=0;i<A.length;i++){ const c=A[i], n=A[i+1]; cur+=c; if(/[「『“（(]/.test(c)) dep++; else if(/[」』”）)]/.test(c)) dep=Math.max(0,dep-1);
+    if(dep===0&&n!==undefined&&(/[。！？]/.test(c)&&!/[」』”]/.test(n)||/[.!?]/.test(c)&&/\s/.test(n))){ out.push(cur.trim()); cur=''; } }
+  if(cur.trim()) out.push(cur.trim()); return out; }
+// 行の 長さを そろえる（行の かずは そのまま、はばを できるだけ せまく）
+function capBal(g,s,w){ const n=capWrap(g,s,w).length; if(n<=1) return capWrap(g,s,w); let lo=w*.4, hi=w;
+  for(let k=0;k<12;k++){ const m=(lo+hi)/2; if(capWrap(g,s,m).length<=n) hi=m; else lo=m; } return capWrap(g,s,hi); }
+function capLayout(g,txt,W,H,u){ const key=LANG+'|'+W+'|'+H+'|'+txt; let L=CAPC.get(key); if(L) return L;
+  const s=tr(txt), wMax=Math.min(W-30,Math.max(320,Math.min(880,W*.82))); let fs=Math.max(15,Math.min(17*u,28)), lines;
+  for(;;){ g.font=`800 ${fs}px ${FONT}`; lines=[].concat(...capSentences(s).map(x=>capBal(g,x,wMax-40)));   // 文ごとに 行を かえる
+    if(lines.length>5) lines=capBal(g,s,wMax-40);   // 行が おおすぎる ときは 文を つなげて つめる
+    if(lines.length<=5||fs<=12) break; fs--; }
+  const lw=Math.max(...lines.map(x=>{ TRO.add(x); return g.measureText(x).width; })), lh=fs*1.55, pad=Math.max(10,fs*.65), h=lines.length*lh+pad*2;
+  L={lines,font:g.font,lh,pad,h,w:Math.min(wMax,lw+48),top:H-h-(22*u+10)}; CAPC.set(key,L); return L; }
 const Ending={on:false,t:0,last:0,cb:null,
   play(cb){ this.cb=cb; this.on=true; this.t=0; this.last=0; $('endOv').hidden=false; $('endDone').hidden=true; Bgm.setTheme('garden'); Sfx.queen(); this.fit(); requestAnimationFrame(ts=>this.loop(ts)); },
   fit(){ const c=$('endCv'), d=Math.min(window.devicePixelRatio||1,2); c.width=Math.round(window.innerWidth*d); c.height=Math.round(window.innerHeight*d); this.dpr=d; },
-  loop(ts){ if(!this.on) return; const dt=Math.min(.05,(ts-this.last)/1000||0); this.last=ts; this.t+=dt; this.draw(this.t); if(this.t>=40&&$('endDone').hidden) $('endDone').hidden=false; requestAnimationFrame(t=>this.loop(t)); },
+  loop(ts){ if(!this.on) return; const dt=Math.min(.05,(ts-this.last)/1000||0); this.last=ts; this.t+=dt; this.draw(this.t); if(this.t>=46&&$('endDone').hidden) $('endDone').hidden=false; requestAnimationFrame(t=>this.loop(t)); },
   stop(){ if(!this.on) return; this.on=false; $('endOv').hidden=true; Bgm.setTheme(STAGE.theme); const cb=this.cb; this.cb=null; if(cb) cb(); },
   draw(t){
     const c=$('endCv'), g=c.getContext('2d'), d=this.dpr||1, W=c.width/d, H=c.height/d, u=Math.min(W,H*1.6)/720;
     g.setTransform(d,0,0,d,0,0);
     const bg=g.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#141633'); bg.addColorStop(1,'#2a1f47'); g.fillStyle=bg; g.fillRect(0,0,W,H);
     for(let k=0;k<120;k++){ const tw=.4+.6*Math.abs(Math.sin(t*1.3+k)); g.fillStyle=`rgba(255,255,255,${(.2+hash(k)*.5)*tw})`; g.beginPath(); g.arc(hash(k*3)*W,hash(k*7)*H,.6+hash(k*5)*1.3,0,7); g.fill(); }
-    const cap=(txt,a)=>{ g.globalAlpha=a; g.fillStyle='rgba(255,248,234,.92)'; const w=Math.min(W-30,640); g.beginPath(); g.roundRect?g.roundRect(W/2-w/2,H-78*u-30,w,56*u+20,14):g.rect(W/2-w/2,H-78*u-30,w,56*u+20); g.fill();
-      g.fillStyle='#3b2f2a'; g.font=`800 ${Math.max(14,19*u)}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(txt,W/2,H-50*u-20,w-24); g.globalAlpha=1; };
+    // v0.22.1：字幕は 折りかえして 何行かで 出す（前は 1行に おしこんで 横に つぶれ、詰まって 読みにくかった）
+    const END3='みんな、ありがとう！ おにわは これからも ずっと 花で いっぱい';
+    const capTxt=t<15?STORY_END[t<9?0:1]:t<25?STORY_END[2]:t<36?END3:null, CL=capTxt?capLayout(g,capTxt,W,H,u):null;
+    const cap=a=>{ if(!CL) return; g.globalAlpha=a; g.fillStyle='rgba(255,248,234,.92)'; const x0=W/2-CL.w/2; g.beginPath(); g.roundRect?g.roundRect(x0,CL.top,CL.w,CL.h,14):g.rect(x0,CL.top,CL.w,CL.h); g.fill();
+      g.fillStyle='#3b2f2a'; g.font=CL.font; g.textAlign='center'; g.textBaseline='middle'; CL.lines.forEach((ln,i)=>g.fillText(ln,W/2,CL.top+CL.pad+CL.lh*(i+.5))); g.globalAlpha=1; };
     const fade=(a,b)=>clamp(Math.min((t-a)/.8,(b-t)/.8));
     // v0.15.0：キャラは 字幕の わくより 上、「とばす」ボタンより 下に おさめる（PC・スマホ・iPadで 画面の 形が ちがっても かぶらない）
-    const capTop=H-78*u-30, SB=capTop-8, sk=$('endSkip').getBoundingClientRect(), ST=Math.max(H*.04,(sk.bottom||0)+6);
+    // v0.22.1：1場面目は 字幕が 2まい あるので、高い ほうに あわせる（とちゅうで 女王の 大きさが かわらない ように）
+    const capTop=t<15?Math.min(capLayout(g,STORY_END[0],W,H,u).top,capLayout(g,STORY_END[1],W,H,u).top):CL?CL.top:H-78*u-30, SB=capTop-8, sk=$('endSkip').getBoundingClientRect(), ST=Math.max(H*.04,(sk.bottom||0)+6);
     const petals=(n,sp)=>{ for(let k=0;k<n;k++){ const x=(hash(k*9)*W+Math.sin(t*.7+k)*30)%W, y=((hash(k*4)*H+t*sp*(30+hash(k)*30))%(H+40))-20; g.fillStyle=PETAL[k%5]; g.save(); g.translate(x,y); g.rotate(t*2+k); g.beginPath(); g.ellipse(0,0,12,6.9,0,0,7); g.fill(); g.restore(); } };   // v0.14.11：花びらを 3倍に（4×2.3 → 12×6.9）
-    if(t<9){   // 1. 女王が ほんとうの すがたに
-      const a=fade(0,9), k=easeBack(clamp(t/2.2)); g.globalAlpha=a; endBg(g,'bg1',W,H);
+    if(t<15){   // 1. 女王が ほんとうの すがたに（v0.22.1：9秒→15秒。字幕 1まい目 9秒・2まい目 6秒）
+      const a=fade(0,15), k=easeBack(clamp(t/2.2)); g.globalAlpha=a; endBg(g,'bg1',W,H);
       const q=Math.min(2.1*u,(SB-ST)/140), qy=SB, gcy=qy-70*q;
       const glow=g.createRadialGradient(W/2,gcy,10,W/2,gcy,260*u); glow.addColorStop(0,'rgba(255,240,200,.55)'); glow.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=glow; g.fillRect(0,0,W,H);
       g.save(); g.translate(W/2,qy); g.scale(q*k,q*k); drawQueenFlower(g,true,t); g.restore(); g.globalAlpha=1;
-      petals(40,1); cap(t<4.5?STORY_END[0]:STORY_END[1],a);
-    }else if(t<19){   // 2. 花の ほし：世界じゅうに 花が ひろがる
+      petals(40,1); cap(a);
+    }else if((t-=6)<19){   // v0.22.1：1場面目を 6秒 のばした ぶん、ここから あとは 6秒 ずらす   // 2. 花の ほし：世界じゅうに 花が ひろがる
       const a=fade(9,19), R=Math.min(150*u,(SB-ST)/2/1.3), cx=W/2, cy=(ST+SB)/2, sp=clamp((t-9.5)/7);
       g.globalAlpha=a; endBg(g,'bg2',W,H);
       if(artOk('planet')){ g.save(); g.translate(cx,cy); g.rotate(t*.05); artDraw(g,'planet',0,0,0,R*2.1,{cx:1,center:1}); g.restore();
@@ -5462,7 +5514,7 @@ const Ending={on:false,t:0,last:0,cb:null,
       for(let k=0;k<6;k++){ const ang=t*.8+k*1.047, x=cx+Math.cos(ang)*(R+34*u), y=cy+Math.sin(ang)*(R+20*u)-Math.abs(Math.sin(t*4+k))*8; const col=[[122,212,170],[242,142,128],[124,172,236],[238,204,92],[182,148,232],[122,212,170]][k];
         if(artOk('ecube')){ artDraw(g,'ecube',(k%5)*2+(Math.sin(t*4+k)>.6?1:0),x,y+14*u,30*u+6,{unit:1}); continue; }
         g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.55); g.lineWidth=1.5; g.beginPath(); g.roundRect?g.roundRect(x-9*u,y-9*u,18*u,18*u,5*u):g.rect(x-9*u,y-9*u,18*u,18*u); g.fill(); g.stroke(); }
-      g.globalAlpha=1; cap(STORY_END[2],a);
+      g.globalAlpha=1; cap(a);
     }else if(t<30){   // 3. みんなの パレード
       const art3=artOk('bg3'), a=fade(19,30), gy=Math.min(H*(art3?.8:.68),SB-4); g.globalAlpha=a;
       if(art3) endBg(g,'bg3',W,H); else {
@@ -5484,7 +5536,7 @@ const Ending={on:false,t:0,last:0,cb:null,
       }
       if(artOk('bugs')) for(let k=0;k<5;k++){ const x=(walk*.8+k*140*u)%(W+100)-50, y=gy-120*u-Math.sin(t*3+k)*20; artDraw(g,'bugs',(k%2?2:0)+(Math.sin(t*12+k)>0?0:1),x,y+12*u,26*u+6,{unit:1}); } else
       for(let k=0;k<5;k++){ const x=(walk*.8+k*140*u)%(W+100)-50, y=gy-120*u-Math.sin(t*3+k)*20; g.fillStyle=k%2?'#ffd34d':'#ff9ac1'; g.save(); g.translate(x,y); g.scale(Math.abs(Math.sin(t*12+k))+.2,1); g.beginPath(); g.ellipse(-5,-3,5,4,.3,0,7); g.ellipse(5,-3,5,4,-.3,0,7); g.fill(); g.restore(); }
-      g.globalAlpha=1; cap('みんな、ありがとう！ おにわは これからも ずっと 花で いっぱい',a);
+      g.globalAlpha=1; cap(a);
     }else{   // 4. ありがとう・おしまい
       const a=clamp((t-30)/1.2); g.globalAlpha=a; petals(70,1.2);
       g.fillStyle='#fff8ea'; g.textAlign='center'; g.textBaseline='middle';
@@ -5506,7 +5558,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.22.0';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.22.2';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
