@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>はなころりん -Bloom Cube- — Prototype v0.22.6</title>
+<title>はなころりん -Bloom Cube- — Prototype v0.22.7</title>
 <!--
-  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.6（GDD v3.8準拠・2.5D・単一HTML）
+  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.7（GDD v3.8準拠・2.5D・単一HTML）
+  v0.22.7：Hanaの ジャンプから ふんばり顔の コマ（しゃがむ）を ぬいた。かわりに 立った コマを すこし つぶして しゃがむ うごきに（エンディング・オープニング・ステージクリア 共通）。
   v0.22.6：オープニングの おはなしの Hanaを 3わり 小さく（大きすぎて あらく 見えた）。おはなしの 絵を 画面の 解像度で 描く（720×360を ひきのばして いた）。
   v0.22.5：Cubeの 絵を 本決まりに。おはなし（オープニング・スタート画面）と エンディングの Cubeも ゲームと 同じ 絵（顔つき）に。おはなしの さし絵は うごく（光の すじ・きらきら・ふってくる ひかりの しっぽ・あせ・けむり・ハート・花びら・にじ）。エンディングも はなやかに（女王の うしろの 光・よろこぶ Cube・ながれぼし・かみふぶき・音符・花びらの 花火・Hanaと いっしょに ジャンプ）。花どんぐりの 木に ぶつかる 率を 2倍。花どんぐりは いくつでも もてる（×3 のように かずを 出す）。
   v0.22.4：Cubeの 面を ChatGPTの 絵に（ためし）：たねの 面 5色・さいた 面・にじいろ。止まって いる Cubeの 左手前の 面に 顔（ふつう・にっこり・びっくり・ねむい・こまった・わくわく）。開発者モードで もとの プログラムの 絵と きりかえ。おはなし・エンディングは そのまま。
@@ -2908,7 +2909,7 @@ const JUMP_ANIM={F:.75, P:.52,
   pose(t){
     if(t<this.F){
       if(t<.08) return {fr:0,hop:0,sq:0,n:-1};
-      if(t<.26) return {fr:1,hop:0,sq:0,n:-1};
+      if(t<.26) return {fr:0,hop:0,sq:Math.sin(Math.PI*(t-.08)/.18),n:-1};   // v0.22.7：ふんばり顔の コマ（1）は つかわない。立った コマを すこし つぶして しゃがむ 感じに
       if(t<.66){ const a=(t-.26)/.40; return {fr:a<.3?2:a<.7?3:4, hop:Math.sin(Math.PI*a)*1.2, sq:0, n:0}; }
       return {fr:5,hop:0,sq:Math.sin(Math.PI*(t-.66)/(this.F-.66)),n:0};
     }
@@ -5629,7 +5630,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.22.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.22.7';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
