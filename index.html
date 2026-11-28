@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>はなころりん -Bloom Cube- — Prototype v0.22.5</title>
+<title>はなころりん -Bloom Cube- — Prototype v0.22.6</title>
 <!--
-  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.5（GDD v3.8準拠・2.5D・単一HTML）
+  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.6（GDD v3.8準拠・2.5D・単一HTML）
+  v0.22.6：オープニングの おはなしの Hanaを 3わり 小さく（大きすぎて あらく 見えた）。おはなしの 絵を 画面の 解像度で 描く（720×360を ひきのばして いた）。
   v0.22.5：Cubeの 絵を 本決まりに。おはなし（オープニング・スタート画面）と エンディングの Cubeも ゲームと 同じ 絵（顔つき）に。おはなしの さし絵は うごく（光の すじ・きらきら・ふってくる ひかりの しっぽ・あせ・けむり・ハート・花びら・にじ）。エンディングも はなやかに（女王の うしろの 光・よろこぶ Cube・ながれぼし・かみふぶき・音符・花びらの 花火・Hanaと いっしょに ジャンプ）。花どんぐりの 木に ぶつかる 率を 2倍。花どんぐりは いくつでも もてる（×3 のように かずを 出す）。
   v0.22.4：Cubeの 面を ChatGPTの 絵に（ためし）：たねの 面 5色・さいた 面・にじいろ。止まって いる Cubeの 左手前の 面に 顔（ふつう・にっこり・びっくり・ねむい・こまった・わくわく）。開発者モードで もとの プログラムの 絵と きりかえ。おはなし・エンディングは そのまま。
   v0.22.3：オープニングの おはなしで ページが かわる たびに 幕と わくごと きえて うしろの 看板が 見えていたのを なおす（幕と わくは 4ページ ずっと 出したまま、絵は 重ねて きりかえ、文字だけ ふわっと。わくの 大きさは いちばん 長い ページに そろえる）。1ページ 6→8秒。
@@ -5628,7 +5629,7 @@ const Ending={on:false,t:0,last:0,cb:null,
     }
   }
 };
-const VERSION='v0.22.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.22.6';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -5746,7 +5747,8 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
     // 絵は まえの ページから 重ねて きりかえ、文字だけ みじかく きえて 出る。わくの 大きさは いちばん 長い ページに あわせて かえない
     const f=m%P, N=STORY_OPEN.length, oa=Math.min(1,m/.5), ta=Math.min(1,f/.35,(k<N-1?(P-f)/.25:1)), xa=k>0?Math.min(1,f/.6):1;   // oa：さいごの ページの あとは 画面ごと きえるので、ここでは うすくしない（看板が 一瞬 見えない ように）
     if(!this.stCvs) this.stCvs=[];
-    const art=i=>{ let c=this.stCvs[i]; if(!c){ c=this.stCvs[i]=document.createElement('canvas'); c.width=720; c.height=360; } try{ drawStoryArt(c.getContext('2d'),false,i,st); }catch(e){} return c; };   // v0.22.5：うごく さし絵
+    const art=i=>{ let c=this.stCvs[i]; const R=Math.max(1,Math.min(2.5,Math.round(cw*(this.dpr||1)/720*4)/4));   // v0.22.6：画面に あわせた 解像度で 描く（前は 720×360を ひきのばして あらかった）
+      if(!c) c=this.stCvs[i]=document.createElement('canvas'); if(c.width!==Math.round(720*R)){ c.width=Math.round(720*R); c.height=Math.round(360*R); } try{ drawStoryArt(c.getContext('2d'),false,i,st); }catch(e){} return c; };   // v0.22.5：うごく さし絵
     g.save(); g.globalAlpha=oa*.55; g.fillStyle='#2a2440'; g.fillRect(0,0,W,H); g.globalAlpha=oa;
     const cw=Math.min(W*.66,720*u*1.05), ch=cw*.5, fs=Math.max(15,22*u), x0=(W-cw)/2;
     g.font=`800 ${fs}px ${FONT}`; const all=STORY_OPEN.map(s=>this.wrapLines(g,tr(s),cw-36*u)), lines=all[k], lh=fs*1.45, th=Math.max(...all.map(l=>l.length))*lh+26*u;
@@ -5892,7 +5894,8 @@ const STORY_END=[
 // v0.22.5：さし絵は うごく（T＝秒）。Cubeは ゲームと 同じ 絵（顔つき）。光の すじ・きらきら・花びらで はなやかに
 function drawStoryArt(g,ending,k,T){ T=T||0;
   const W=720,H=360, t=k*1.7+(ending?9:0)+T;
-  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,H);
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,g.canvas.width,g.canvas.height);
+  { const R=g.canvas.width/W; g.setTransform(R,0,0,R,0,0); }   // v0.22.6：キャンバスが 大きい ときは その まま こまかく 描く（ひきのばして ぼやけない）
   const night=!ending&&k===1, sky=g.createLinearGradient(0,0,0,H);
   sky.addColorStop(0,night?'#8e98c4':ending&&k===0?'#cdb8e6':'#bfe6f5'); sky.addColorStop(.62,night?'#d9d4ec':'#e8f4e0'); sky.addColorStop(1,'#cfe6b8'); g.fillStyle=sky; g.fillRect(0,0,W,H);
   if(!night){ g.save(); g.translate(W*.5,-60); g.rotate(T*.05); for(let q=0;q<14;q++){ const a0=q*Math.PI/7; g.fillStyle=`rgba(255,253,235,${.13+.07*Math.sin(T*1.2+q)})`; g.beginPath(); g.moveTo(0,0); g.arc(0,0,640,a0,a0+.13); g.closePath(); g.fill(); } g.restore(); }   // 光の すじ（ゆっくり まわる）
@@ -5917,10 +5920,10 @@ function drawStoryArt(g,ending,k,T){ T=T||0;
       for(let q=0;q<3;q++){ const ph=(T*.9+q/3)%1; g.globalAlpha=1-ph; g.fillStyle='#8fc8ff'; g.beginPath(); const x=330-q*14+ph*-10, y=150+ph*22; g.moveTo(x,y-9); g.quadraticCurveTo(x+7,y+2,x,y+5); g.quadraticCurveTo(x-7,y+2,x,y-9); g.fill(); } g.globalAlpha=1;   // あせ
       g.fillStyle='#5b4a6e'; g.font='800 46px '+FONT; g.textAlign='center'; g.fillText('!?',470,150-hop(0,3,8)); g.fillText('!',220,160-hop(2,3.4,8));
       for(let q=0;q<5;q++){ const ph=(T*.6+q/5)%1; g.globalAlpha=.45*(1-ph); g.fillStyle='#fff'; g.beginPath(); g.arc(120-ph*90+q*8,300-q*6,10+ph*14,0,7); g.arc(610+ph*90-q*8,296-q*6,10+ph*14,0,7); g.fill(); } g.globalAlpha=1; }   // にげる ときの けむり
-    else if(k===2){ twk(16,300,'#ffe9a8'); cube(470,262,40,'green',{mood:1,hop:hop(0,3.2,10)}); hana(280,320,1.25,2);   // Hanaが 気づく：ハートが ふわふわ
+    else if(k===2){ twk(16,300,'#ffe9a8'); cube(470,262,40,'green',{mood:1,hop:hop(0,3.2,10)}); hana(280,320,.88,2);   // v0.22.6：Hanaを 3わり 小さく（1.25→0.88。大きすぎて あらく 見えた）   // Hanaが 気づく：ハートが ふわふわ
       for(let q=0;q<4;q++){ const ph=(T*.45+q/4)%1; g.globalAlpha=Math.sin(ph*Math.PI); g.fillStyle=q%2?'#ff8fb1':'#ff5f8f'; g.font=`800 ${28+q*6}px ${FONT}`; g.textAlign='center'; g.fillText('♡',360+Math.sin(T*2+q*2)*26,210-ph*150); } g.globalAlpha=1; }
     else { flowers(18,240); petals(26,1); twk(12,160,'#ffffff');   // 旅に でる：みんなで ぴょんぴょん
-      cube(520,250,34,'green',{mood:5,hop:hop(0,5,14),top:1}); cube(150,270,28,'red',{mood:1,hop:hop(1,5,12)}); cube(640,282,22,'yellow',{mood:5,hop:hop(2,5.5,12)}); hana(340,330,1.2,0); }
+      cube(520,250,34,'green',{mood:5,hop:hop(0,5,14),top:1}); cube(150,270,28,'red',{mood:1,hop:hop(1,5,12)}); cube(640,282,22,'yellow',{mood:5,hop:hop(2,5.5,12)}); hana(340,330,.84,0); }   // v0.22.6：Hana 1.2→0.84
   }else{
     if(k===0||k===1){ flowers(10,270); petals(18,.8); g.save(); g.translate(360,330); g.scale(1.6,1.6); drawQueenFlower(g,true,t); g.restore(); if(k===1){ hana(170,330,1,2); g.fillStyle='#ff5f8f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('♡',260,170-hop(0,2,10)); } }
     else if(k===2){ flowers(30,200); petals(22,1); for(let q=0;q<4;q++) cube(130+q*150,250-(q%2)*30,26,CUBE_COLS[q],{mood:q%2?5:1,hop:hop(q,5,12),top:1}); }
