@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>はなころりん -Bloom Cube- — Prototype v0.22.4</title>
+<title>はなころりん -Bloom Cube- — Prototype v0.22.5</title>
 <!--
-  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.4（GDD v3.8準拠・2.5D・単一HTML）
+  はなころりん -Bloom Cube-（旧 TONS OF FLOWERS）  Prototype v0.22.5（GDD v3.8準拠・2.5D・単一HTML）
+  v0.22.5：Cubeの 絵を 本決まりに。おはなし（オープニング・スタート画面）と エンディングの Cubeも ゲームと 同じ 絵（顔つき）に。おはなしの さし絵は うごく（光の すじ・きらきら・ふってくる ひかりの しっぽ・あせ・けむり・ハート・花びら・にじ）。エンディングも はなやかに（女王の うしろの 光・よろこぶ Cube・ながれぼし・かみふぶき・音符・花びらの 花火・Hanaと いっしょに ジャンプ）。花どんぐりの 木に ぶつかる 率を 2倍。花どんぐりは いくつでも もてる（×3 のように かずを 出す）。
   v0.22.4：Cubeの 面を ChatGPTの 絵に（ためし）：たねの 面 5色・さいた 面・にじいろ。止まって いる Cubeの 左手前の 面に 顔（ふつう・にっこり・びっくり・ねむい・こまった・わくわく）。開発者モードで もとの プログラムの 絵と きりかえ。おはなし・エンディングは そのまま。
   v0.22.3：オープニングの おはなしで ページが かわる たびに 幕と わくごと きえて うしろの 看板が 見えていたのを なおす（幕と わくは 4ページ ずっと 出したまま、絵は 重ねて きりかえ、文字だけ ふわっと。わくの 大きさは いちばん 長い ページに そろえる）。1ページ 6→8秒。
   v0.22.2：せつめいが はやく きえすぎる 問題を なおす。上の おしらせ（ドレミ・ステージの ヒント・アイテム・女王戦 など）は CSSの きえる 演出が いつも 1.9秒で はじまって いたのを、字の かずに あわせた 時間に（2.4秒＋1文字 0.18秒、さいだい 13秒）。かさなったら じゅんばんに 出す。うかぶ 文字の せつめい（マークの 面・くっついて たねに など）は 2秒 上限を やめて 字の かずに あわせ（さいだい 5秒）。マークの ちからの 名前と せつめいは 2.4→3.8秒。
@@ -3949,6 +3950,27 @@ function cubeInner(i){ if(CUBE_INNER[i]) return CUBE_INNER[i]; let r=[240,240,23
   try{ const A=ART.cube, [sx,sy,sw,sh]=A.f[i], k=document.createElement('canvas'); k.width=sw; k.height=sh; const q=k.getContext('2d'); q.drawImage(A.img,sx,sy,sw,sh,0,0,sw,sh);
     const d=q.getImageData(Math.round(sw*.3),Math.round(sh*.3),3,3).data; r=[d[0],d[1],d[2]]; }catch(_){} return CUBE_INNER[i]=r; }
 // 顔：止まって いる Cubeの 左手前の 面に かさねる（ころがる 間は なし）
+// 顔の 面は まんなかを 地の 色で ぬって から（たね・花・マークが 顔の 鼻に 見えない ように。面の ようすは 頭の 上の 展開図で わかる）
+function cubeFaceOn(g,c,f,mood){ const [p0,p1,p2]=f.pts, A=ART.cube, [sx,sy,sw,sh]=A.f[7+mood];
+  g.save(); g.transform(p0.x-p1.x,p0.y-p1.y,p2.x-p1.x,p2.y-p1.y,p1.x,p1.y);
+  const id=f.id, gr=c.grown[id], at=c.attr[id], col=gr?GROWN_IN:at?MARK_TINT[at]||[255,240,200]:cubeInner(c.color==='rainbow'?6:Math.max(0,CUBE_COLS.indexOf(c.color)));
+  rrect(g,.14,.14,.72,.72,.2); g.fillStyle=shade(col,f.br); g.fill(); if(gr&&at) drawAttrIcon(g,at,.22,.22,.15);   // さいた マークの 面は 角の 小さな マークを 上に
+  g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(A.img,sx,sy,sw,sh,.06,.1,.88,.88); g.restore(); }
+// v0.22.5：おはなし・エンディング用の Cubeの キャラ（ゲームと 同じ 面の 絵＋顔）。(x,y)＝底の まんなか、k＝はばの 半分
+// o：color・top/right/left（その 面が さいて いるか）・mood（顔 0〜5、null で なし）・hop（うき上がり）・squash・t
+const CC_TMP={id:0,color:'green',giant:false,ori:{T:0,B:1,E:2,W:3,S:4,N:5},grown:[false,false,false,false,false,false],pop:[9,9,9,9,9,9],prog:[0,0,0,0,0,0],attr:[null,null,null,null,null,null],callT:0};
+function drawCubeChar(g,x,y,k,o={}){ if(!(k>0)) return; const c=CC_TMP, t=o.t||0; c.color=o.color||'green'; c.grown[0]=!!o.top; c.grown[2]=!!o.right; c.grown[4]=!!o.left; c.id=o.id|0;
+  const hop=o.hop||0, sq=o.squash||0, [PB,PI,PE]=cubePal(c,t);
+  if(o.shadow!==false){ g.save(); g.globalAlpha*=Math.max(.25,1-hop/(k*3)); g.fillStyle='rgba(40,30,30,.22)'; g.beginPath(); g.ellipse(x,y+k*.5,k*.95,k*.42,0,0,7); g.fill(); g.restore(); }
+  g.save(); g.translate(x,y-hop); g.scale(1+sq*.5,1-sq*.6);
+  const P=(px,py,pz)=>({x:(px-py)*k,y:(px+py)*k*.5-pz*k*1.19}), faces=[];
+  for(const slot of ['T','E','S']){ const L=LOCAL[slot]; faces.push({slot,id:c.ori[slot],pts:L.p.map(q=>P(q[0],q[1],q[2])),br:.64+.36*Math.max(0,L.n[0]*LIGHT[0]+L.n[1]*LIGHT[1]+L.n[2]*LIGHT[2])}); }
+  roundHull(faces.flatMap(f=>f.pts),k*.14,g); g.lineJoin='round'; g.strokeStyle='#fffdf4'; g.lineWidth=Math.max(1.5,k*.08); g.stroke(); g.fillStyle=shade(PE,.95); g.fill();
+  for(const f of faces){ const [a,b,,d]=f.pts; g.save(); g.transform(b.x-a.x,b.y-a.y,d.x-a.x,d.y-a.y,a.x,a.y); drawFacePlain(g,c,f.id,PB,PI,f.br,9,0,t,false); g.restore(); }
+  if(o.mood!=null&&artOk('cube')) cubeFaceOn(g,c,faces[2],o.mood);
+  g.restore(); }
+// きらっ（4つの 角の ほし）
+function starSp(g,x,y,r,col,a){ if(!(r>0)||!(a>0)) return; g.save(); g.globalAlpha*=Math.min(1,a); g.fillStyle=col; g.beginPath(); g.moveTo(x,y-r); g.quadraticCurveTo(x,y,x+r,y); g.quadraticCurveTo(x,y,x,y+r); g.quadraticCurveTo(x,y,x-r,y); g.quadraticCurveTo(x,y,x,y-r); g.fill(); g.restore(); }
 function cubeMood(c){ if(c.shake>0) return 2; if(grownCount(c)===5) return 5; if(c.emoteT>0) return 1;
   if(c.pers==='shy'&&S.hana&&Math.hypot(c.i+.5-S.hana.x,c.j+.5-S.hana.y)<2.2) return 4;
   if(c.landT>14) return 3; return 0; }
@@ -4014,11 +4036,7 @@ function drawCube(c,time){
   if(c.callT>0){ const k=clamp(c.callT); ctx.save(); ctx.lineJoin='round';
     for(const f of G.faces){ poly(f.pts); ctx.fillStyle=`rgba(255,236,150,${.45*k})`; ctx.fill(); ctx.strokeStyle=`rgba(255,201,60,${k})`; ctx.lineWidth=3; ctx.stroke(); }
     ctx.restore(); }
-  if(CUBE_ART&&artOk('cube')&&(c.state==='idle'||c.state==='prep')){ const f=G.faces.find(q=>q.slot==='S');   // v0.22.4：顔（ためし）
-    if(f){ const [p0,p1,p2]=f.pts, A=ART.cube, [sx,sy,sw,sh]=A.f[7+cubeMood(c)]; ctx.save(); ctx.transform(p0.x-p1.x,p0.y-p1.y,p2.x-p1.x,p2.y-p1.y,p1.x,p1.y);
-      { const id=f.id, gr=c.grown[id], at=c.attr[id], col=gr?GROWN_IN:at?MARK_TINT[at]||[255,240,200]:cubeInner(c.color==='rainbow'?6:Math.max(0,CUBE_COLS.indexOf(c.color)));   // 顔の 面は まんなかを 地の 色で ぬって から（たね・花・マークが 顔の 鼻に 見えない ように。面の ようすは 頭の 上の 展開図で わかる）
-        rrect(ctx,.14,.14,.72,.72,.2); ctx.fillStyle=shade(col,f.br); ctx.fill(); if(gr&&at) drawAttrIcon(ctx,at,.22,.22,.15); }   // さいた マークの 面は 角の 小さな マークを 上に かきなおす
-      ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.drawImage(A.img,sx,sy,sw,sh,.06,.1,.88,.88); ctx.restore(); } }
+  if(CUBE_ART&&artOk('cube')&&(c.state==='idle'||c.state==='prep')){ const f=G.faces.find(q=>q.slot==='S'); if(f) cubeFaceOn(ctx,c,f,cubeMood(c)); }   // v0.22.4：顔
   ctx.restore();   // 息づかい おわり
   // スタンプ対象（上に来る面）の強調
   if(S.target===c&&!S.cleared&&stampReady(c)){   // 止まって 面が 見えてから 光らせる
@@ -4309,7 +4327,7 @@ function atmosFront(time){
 }
 // v0.17.1：どんぐりの丘。丘の 木から どんぐりが おちて、手前へ ころころ ころがって とまる（2〜7マス）。
 // Hanaが ひろうと もちものに 入る → すきな ところで タップして つかうと、Hanaの まわり（半径1.6）の 土が つぼみに。つぎの 面へ もちこせる
-const ACORN={FIRST:6,GAP:[16,24],R:1.6,G:14,FRIC:.55,BUMP:1,TOWARD:1,BUMP_CD:9,EVEN_BUMP:6,EVEN_TOWARD:3.4};   // v0.18.4：ふつうの Cubeは 木の ほうへ いく くせなし。出てきた 順番が 偶数（2・4・6…ばんめ）の Cubeだけ 木へ いきやすい（v0.17.5と 同じ 数字）
+const ACORN={FIRST:6,GAP:[16,24],R:1.6,G:14,FRIC:.55,BUMP:2,TOWARD:1,BUMP_CD:9,EVEN_BUMP:12,EVEN_TOWARD:3.4};   // v0.22.5：みきへ ぶつかりに いく おもみを 2倍（BUMP 1→2、EVEN_BUMP 6→12）   // v0.18.4：ふつうの Cubeは 木の ほうへ いく くせなし。出てきた 順番が 偶数（2・4・6…ばんめ）の Cubeだけ 木へ いきやすい（v0.17.5と 同じ 数字）
 const oakFan=c=>(c.id%2===0||c.id===3)&&!c.oakDone;   // 偶数ばんめ と 3ばんめの Cube（v0.18.5）。いちど ぶつかった Cubeは ふつうの わりあいに もどる（v0.18.7）   // v0.17.5：FIRST/GAP＝ぶつかっても おちない 時間（1プレイ 3〜4つぶ）／BUMP＝みきへ ぶつかりに いく おもみ／TOWARD＝みきの ほうへ ころがりやすさ
 function updateAcorn(dt){
   if(STAGE.fx!=='hill') return;
@@ -4333,7 +4351,7 @@ function updateAcorn(dt){
           if((S.told.acorn|0)<2){ S.told.acorn=(S.told.acorn|0)+1; textFx(a.x,a.y,2,'花どんぐりが おちてきた！ ひろおう','#8a5a3c',1.05,2.4); } } } }
     else if(a.mode==='roll'){ const k=Math.max(0,1-ACORN.FRIC*dt/Math.max(.2,Math.hypot(a.vx,a.vy))); a.vx*=k; a.vy*=k; if(Math.hypot(a.vx,a.vy)<.08){ a.mode='rest'; a.vx=a.vy=0; } }
   }
-  if(a.z<.4&&Math.hypot(a.x-h.x,a.y-h.y)<.5){ S.acorn=null; invSet('acorn',true); Sfx.get(); textFx(h.x,h.y,2.1,'花どんぐり ゲット！','#8a5a3c',1.2,2); itemGot('acorn'); if(h.goal&&h.goal.acorn) h.goal=null; }
+  if(a.z<.4&&Math.hypot(a.x-h.x,a.y-h.y)<.5){ S.acorn=null; invSet('acorn',(INV.acorn|0)+1); Sfx.get();   /* v0.22.5：かず */ textFx(h.x,h.y,2.1,'花どんぐり ゲット！','#8a5a3c',1.2,2); itemGot('acorn'); if(h.goal&&h.goal.acorn) h.goal=null; }
 }
 // v0.17.4：どんぐりの 大木（ユーザーの スケッチ）。頂点の 2×2マスに 根を はり、太い みきが まっすぐ のびて 上で えだわかれ、
 // その 上に ひろい 葉の かさ（はばは ステージの 長さの 半分くらい）。地面には 根が 四方へ ひろがる
@@ -4648,7 +4666,7 @@ const Aqua={on:false,fish:[],
 // v0.17.5：Cubeが 大木の みきに ぶつかった：木が ゆれて、花どんぐりが 1つぶ おちる（つぎまで 30〜42秒。地面に ある とき・もっている ときは ゆれるだけ）
 function oakBump(c){
   c.bumpAt=S.time; c.oakDone=true; c.shake=.12; S.oakShake=.5; Sfx.poko();
-  if(S.cleared||S.acorn||INV.acorn||S.acornCool>0) return;
+  if(S.cleared||S.acorn||S.acornCool>0) return;   // v0.22.5：もって いても おちる（いくつでも もてる）
   S.acornCool=ACORN.GAP[0]+Math.random()*(ACORN.GAP[1]-ACORN.GAP[0]);
   const L=[]; for(const row of S.tiles) for(const t of row) if(t.type==='ground'&&t.i+t.j>=2&&t.i+t.j<=5&&!cubeAt(t.i,t.j)) L.push(t);   // 木の 葉の 下あたり
   if(!L.length) return; const t=L[Math.floor(Math.random()*L.length)];
@@ -4662,7 +4680,7 @@ function useAcorn(){
   for(let j=Math.floor(h.y)-2;j<=Math.floor(h.y)+2;j++)for(let i=Math.floor(h.x)-2;i<=Math.floor(h.x)+2;i++){ const t=tileAt(i,j);
     if(!t||t.type!=='ground'||t.hard||t.mole||t.state!==0||Math.hypot(i+.5-h.x,j+.5-h.y)>ACORN.R) continue; setTile(t,1); n++; }
   if(!n){ Sfx.buzzer(); textFx(h.x,h.y,2.1,'ここには うえられないよ（土の ある ところで）','#7a5a48',1,1.8); return false; }
-  invSet('acorn',false); h.stampT=.28; Sfx.poko(); ringFx(h.x,h.y,'#c8a26a',ACORN.R+.3); petalFx(h.x,h.y,.3,12,1.4);
+  invSet('acorn',INV.acorn>1?INV.acorn-1:false); h.stampT=.28;   // v0.22.5：1つ へる Sfx.poko(); ringFx(h.x,h.y,'#c8a26a',ACORN.R+.3); petalFx(h.x,h.y,.3,12,1.4);
   textFx(h.x,h.y,2.2,'花どんぐりを うえた！ つぼみが '+n+'こ','#8a5a3c',1.15,2);
   return true;
 }
@@ -5205,7 +5223,7 @@ const UI={
     let any=false, held=false, tip='';
     for(const b of document.querySelectorAll('.itm')){
       const k=b.dataset.k, on=act[k]>0, has=INV[k], show=on||has; any=any||show; held=held||has;
-      const key=show?(has?'h'+(k==='hammer'?INV.hammer:''):'a'+Math.ceil(act[k]*4))+touch:'';
+      const key=show?(has?'h'+(k==='hammer'?INV.hammer:k==='acorn'?INV.acorn:''):'a'+Math.ceil(act[k]*4))+touch:'';
       if(b._k===key) continue; b._k=key; b.hidden=!show; if(!show) continue;
       const g=b.querySelector('canvas').getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,112,112);
       const f=has?1:act[k]/MAX[k];
@@ -5217,7 +5235,7 @@ const UI={
         const ix={honey:4,can:3,scoop:2}[k], fr=ART.items.f[ix], sc=Math.min(92/fr[2],92/fr[3]);
         artDraw(g,'items',ix,56,56,fr[3]*sc,{cx:1,center:1}); }
       else if(k==='honey') drawHoneyJar(g,56,104,3.1,f); else if(k==='can') drawCan(g,46,98,2.5,f); else drawScoop(g,56,104,2.6,-.5);
-      b.querySelector('span').textContent=has?(k==='hammer'?'大槌 のこり'+INV.hammer:NAME[k]):Math.ceil(act[k])+'びょう';
+      b.querySelector('span').textContent=has?(k==='hammer'?'大槌 のこり'+INV.hammer:k==='acorn'&&INV.acorn>1?NAME[k]+' ×'+INV.acorn:NAME[k]):Math.ceil(act[k])+'びょう';
       b.classList.toggle('ready',has); b.classList.toggle('on',!has&&on);
     }
     if(held) tip=T+'で つかえるよ！';   // v0.21.2：アイテム欄の 説明は これだけ（つかって いる 間の 説明は つかった ときの おしらせで）
@@ -5276,8 +5294,9 @@ const UI={
   },
   // おはなし（GDD 3）：はじめての ときと、さいごの ステージの あと
   st:null,
-  story(ending,cb){ this.st={pages:ending?STORY_END:STORY_OPEN,k:0,cb,ending}; this.openSub('storyOv'); this.storyShow(); },
-  storyShow(){ const s=this.st; $('storyText').textContent=s.pages[s.k]; $('storyNext').textContent=s.k>=s.pages.length-1?(s.ending?'おしまい':'はじめよう'):'つぎへ'; drawStoryArt($('storyArt').getContext('2d'),s.ending,s.k); },
+  story(ending,cb){ this.st={pages:ending?STORY_END:STORY_OPEN,k:0,cb,ending}; this.openSub('storyOv'); this.st0=performance.now(); this.storyShow(); this.storyAnim(); },
+  storyAnim(){ cancelAnimationFrame(this.stRaf); const f=()=>{ const s=this.st; if(!s||$('storyOv').hidden){ this.stRaf=0; return; } try{ drawStoryArt($('storyArt').getContext('2d'),s.ending,s.k,(performance.now()-this.st0)/1000); }catch(_){} this.stRaf=requestAnimationFrame(f); }; this.stRaf=requestAnimationFrame(f); },   // v0.22.5：さし絵を うごかす
+  storyShow(){ const s=this.st; $('storyText').textContent=s.pages[s.k]; $('storyNext').textContent=s.k>=s.pages.length-1?(s.ending?'おしまい':'はじめよう'):'つぎへ'; drawStoryArt($('storyArt').getContext('2d'),s.ending,s.k,(performance.now()-(this.st0||0))/1000); },
   storyStep(){ const s=this.st; if(!s) return; Sfx.ensure(); if(s.k+1>=s.pages.length) return this.storyEnd(); s.k++; this.storyShow(); },
   storyEnd(){ const s=this.st; this.st=null; if(s&&s.cb){ $('storyOv').hidden=true; this.backTo=false; s.cb(); } else this.closeSub('storyOv'); },
   update(){
@@ -5530,12 +5549,17 @@ const Ending={on:false,t:0,last:0,cb:null,
     // v0.15.0：キャラは 字幕の わくより 上、「とばす」ボタンより 下に おさめる（PC・スマホ・iPadで 画面の 形が ちがっても かぶらない）
     // v0.22.1：1場面目は 字幕が 2まい あるので、高い ほうに あわせる（とちゅうで 女王の 大きさが かわらない ように）
     const capTop=t<15?Math.min(capLayout(g,STORY_END[0],W,H,u).top,capLayout(g,STORY_END[1],W,H,u).top):CL?CL.top:H-78*u-30, SB=capTop-8, sk=$('endSkip').getBoundingClientRect(), ST=Math.max(H*.04,(sk.bottom||0)+6);
+    const twk=(n,col,ymax)=>{ for(let k=0;k<n;k++){ const s=.5+.5*Math.sin(t*2.6+k*1.9); starSp(g,hash(k*17+3)*W,hash(k*29+7)*H*(ymax||.8),(3+hash(k*5)*6)*s*Math.max(.8,u),col||'#fff8d0',s*g.globalAlpha); } };   // v0.22.5：きらきら
     const petals=(n,sp)=>{ for(let k=0;k<n;k++){ const x=(hash(k*9)*W+Math.sin(t*.7+k)*30)%W, y=((hash(k*4)*H+t*sp*(30+hash(k)*30))%(H+40))-20; g.fillStyle=PETAL[k%5]; g.save(); g.translate(x,y); g.rotate(t*2+k); g.beginPath(); g.ellipse(0,0,12,6.9,0,0,7); g.fill(); g.restore(); } };   // v0.14.11：花びらを 3倍に（4×2.3 → 12×6.9）
     if(t<15){   // 1. 女王が ほんとうの すがたに（v0.22.1：9秒→15秒。字幕 1まい目 9秒・2まい目 6秒）
       const a=fade(0,15), k=easeBack(clamp(t/2.2)); g.globalAlpha=a; endBg(g,'bg1',W,H);
       const q=Math.min(2.1*u,(SB-ST)/140), qy=SB, gcy=qy-70*q;
       const glow=g.createRadialGradient(W/2,gcy,10,W/2,gcy,260*u); glow.addColorStop(0,'rgba(255,240,200,.55)'); glow.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=glow; g.fillRect(0,0,W,H);
-      g.save(); g.translate(W/2,qy); g.scale(q*k,q*k); drawQueenFlower(g,true,t); g.restore(); g.globalAlpha=1;
+      { g.save(); g.translate(W/2,gcy); g.rotate(t*.12); const ra=a*(t<9?.55:1); for(let j=0;j<14;j++){ const an=j*Math.PI/7; g.fillStyle=`rgba(255,244,200,${ra*(.16+.08*Math.sin(t*2+j))})`; g.beginPath(); g.moveTo(0,0); g.arc(0,0,Math.max(W,H),an,an+.12); g.closePath(); g.fill(); } g.restore(); }   // v0.22.5：女王の うしろの 光の すじ
+      g.save(); g.translate(W/2,qy); g.scale(q*k,q*k); drawQueenFlower(g,true,t); g.restore(); twk(30,'#fff8d0',.7);
+      if(t>9){ const e=easeBack(clamp((t-9)/.6)); for(let j=0;j<4;j++){ const sd=j<2?-1:1, x=W/2+sd*(j%2?1:.64)*Math.min(W*.36,300*u), kk=Math.max(14,26*u)*e;   // v0.22.5：女王が さいたら Cubeたちが よろこぶ
+        drawCubeChar(g,x,SB-kk*.5,kk,{color:CUBE_COLS[j],mood:j%2?5:1,hop:Math.abs(Math.sin(t*5+j*1.3))*14*u,top:1,t}); } }
+      g.globalAlpha=1;
       petals(40,1); cap(a);
     }else if((t-=6)<19){   // v0.22.1：1場面目を 6秒 のばした ぶん、ここから あとは 6秒 ずらす   // 2. 花の ほし：世界じゅうに 花が ひろがる
       const a=fade(9,19), R=Math.min(150*u,(SB-ST)/2/1.3), cx=W/2, cy=(ST+SB)/2, sp=clamp((t-9.5)/7);
@@ -5550,8 +5574,11 @@ const Ending={on:false,t:0,last:0,cb:null,
       g.restore();
       g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=3; g.beginPath(); g.arc(cx,cy,R+4,0,7); g.stroke(); }
       for(let k=0;k<6;k++){ const ang=t*.8+k*1.047, x=cx+Math.cos(ang)*(R+34*u), y=cy+Math.sin(ang)*(R+20*u)-Math.abs(Math.sin(t*4+k))*8; const col=[[122,212,170],[242,142,128],[124,172,236],[238,204,92],[182,148,232],[122,212,170]][k];
-        if(artOk('ecube')){ artDraw(g,'ecube',(k%5)*2+(Math.sin(t*4+k)>.6?1:0),x,y+14*u,30*u+6,{unit:1}); continue; }
+        drawCubeChar(g,x,y+10*u,19*u+4,{color:['green','red','blue','yellow','purple','rainbow'][k],mood:k%2?5:1,top:1,shadow:false,t}); continue;   // v0.22.5：ゲームと 同じ Cube
         g.fillStyle=shade(col,1); g.strokeStyle=shade(col,.55); g.lineWidth=1.5; g.beginPath(); g.roundRect?g.roundRect(x-9*u,y-9*u,18*u,18*u,5*u):g.rect(x-9*u,y-9*u,18*u,18*u); g.fill(); g.stroke(); }
+      twk(40,'#fffbe0',1);
+      for(let q=0;q<2;q++){ const per=3.4, lt=((t+q*1.7)%per)/per; if(lt>.35) continue; const id=Math.floor((t+q*1.7)/per)*3+q, p=lt/.35, x=W*(.08+.7*hash(id))+p*240*u, y=H*(.05+.25*hash(id*7))+p*120*u;   // v0.22.5：ながれぼし
+        const gr=g.createLinearGradient(x-100*u,y-50*u,x,y); gr.addColorStop(0,'rgba(255,255,255,0)'); gr.addColorStop(1,`rgba(255,250,220,${a*(1-p)})`); g.strokeStyle=gr; g.lineWidth=3*u; g.lineCap='round'; g.beginPath(); g.moveTo(x-100*u,y-50*u); g.lineTo(x,y); g.stroke(); starSp(g,x,y,7*u+2,'#fffbe0',a*(1-p)); }
       g.globalAlpha=1; cap(a);
     }else if(t<30){   // 3. みんなの パレード
       const art3=artOk('bg3'), a=fade(19,30), gy=Math.min(H*(art3?.8:.68),SB-4); g.globalAlpha=a;
@@ -5560,12 +5587,11 @@ const Ending={on:false,t:0,last:0,cb:null,
       for(let k=0;k<40;k++){ const sp=Assets.flower[k%5]; if(sp) drawSprite(g,sp,(k*53)%W,gy+12+(k*29)%Math.max(10,H-gy-24),1.2*u+.4,Math.sin(t*2+k)*.08); }
       const walk=(t-19)*70*u, H2=HANA_SPR, row=[
         {k:'hana',o:0},{k:'cube',o:-60,c:[122,212,170]},{k:'cube',o:-110,c:[242,142,128]},{k:'cube',o:-160,c:[238,204,92]},{k:'uribo',o:-220},{k:'mole',o:-280},{k:'cube',o:-330,c:[182,148,232]},{k:'queen',o:-430}];
+      const kc=r=>26*u+5;
       for(const r of row){ const x=walk+r.o*u*1.4, hop=Math.abs(Math.sin(t*6+r.o))*10*u, y=gy+6;
         if(x<-80||x>W+120) continue;
         if(r.k==='hana'){ if(H2.ok&&H2.img){ const fr=Math.floor(t*10)%H2.walkFrames, s=.55*u+.2; g.drawImage(H2.img,fr*H2.cw,H2.rows.walk_right*H2.ch,H2.cw,H2.ch,x-H2.ax*s,y-H2.ay*s-hop*.3,H2.cw*s,H2.ch*s); } }
-        else if(r.k==='cube'&&artOk('ecube')){ const ci=[[122,212,170],[242,142,128],[124,172,236],[238,204,92],[182,148,232]].findIndex(c=>c[0]===r.c[0]&&c[1]===r.c[1]); artDraw(g,'ecube',Math.max(0,ci)*2+(hop>7*u?1:0),x,y-hop,46*u+8,{unit:1}); }
-        else if(r.k==='cube'){ const s=22*u; g.fillStyle=shade(r.c,1); g.strokeStyle=shade(r.c,.5); g.lineWidth=2; g.beginPath(); g.roundRect?g.roundRect(x-s,y-2*s-hop,2*s,2*s,s*.45):g.rect(x-s,y-2*s-hop,2*s,2*s); g.fill(); g.stroke();
-          g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(x-s*.35,y-s*1.15-hop,2.4,0,7); g.arc(x+s*.35,y-s*1.15-hop,2.4,0,7); g.fill(); g.strokeStyle='#3b2f2a'; g.lineWidth=1.6; g.beginPath(); g.arc(x,y-s*.95-hop,4,.2,2.9); g.stroke(); }
+        else if(r.k==='cube'){ const ci=[[122,212,170],[242,142,128],[124,172,236],[238,204,92],[182,148,232]].findIndex(c=>c[0]===r.c[0]&&c[1]===r.c[1]); drawCubeChar(g,x,y-kc(r)*.5,kc(r),{color:CUBE_COLS[Math.max(0,ci)],mood:hop>7*u?5:1,hop,top:1,right:1,t}); }   // v0.22.5：ゲームと 同じ Cube（顔つき）
         else if(r.k==='uribo'&&URI_SPR.ok&&URI_SPR.img){ sprFrame(g,URI_SPR,Math.floor(t*8)%4,x,y-hop*.4,.55*u+.12,false); }   // v0.14.4：エンディングも 絵
         else if(r.k==='uribo'){ g.save(); g.translate(x,y-hop*.5); g.scale(1.8*u+.3,1.8*u+.3); g.fillStyle='#c98f5a'; g.strokeStyle='#5d3b26'; g.lineWidth=1.4; g.beginPath(); g.ellipse(0,-11,12,8,0,0,7); g.fill(); g.stroke(); g.beginPath(); g.ellipse(11,-12,6.5,5.5,0,0,7); g.fill(); g.stroke(); g.strokeStyle='#f3dcb9'; g.lineWidth=2; for(const q of [-5,0,5]){ g.beginPath(); g.moveTo(q-4,-15); g.lineTo(q+4,-15); g.stroke(); } g.fillStyle='#3b2f2a'; g.beginPath(); g.arc(12,-14,1.3,0,7); g.fill(); g.restore(); }
         else if(r.k==='mole'&&MOLE_SPR.ok&&MOLE_SPR.img){ sprFrame(g,MOLE_SPR,Math.floor(t*1.2)%2?6:3,x,y-hop*.3,.55*u+.12,false); }   // 穴ごと ぴょこぴょこ（顔 ⇄ テヘペロ）
@@ -5574,9 +5600,14 @@ const Ending={on:false,t:0,last:0,cb:null,
       }
       if(artOk('bugs')) for(let k=0;k<5;k++){ const x=(walk*.8+k*140*u)%(W+100)-50, y=gy-120*u-Math.sin(t*3+k)*20; artDraw(g,'bugs',(k%2?2:0)+(Math.sin(t*12+k)>0?0:1),x,y+12*u,26*u+6,{unit:1}); } else
       for(let k=0;k<5;k++){ const x=(walk*.8+k*140*u)%(W+100)-50, y=gy-120*u-Math.sin(t*3+k)*20; g.fillStyle=k%2?'#ffd34d':'#ff9ac1'; g.save(); g.translate(x,y); g.scale(Math.abs(Math.sin(t*12+k))+.2,1); g.beginPath(); g.ellipse(-5,-3,5,4,.3,0,7); g.ellipse(5,-3,5,4,-.3,0,7); g.fill(); g.restore(); }
+      for(let q=0;q<46;q++){ const x=(hash(q*11)*W+Math.sin(t*1.3+q)*25)%W, y=((hash(q*5)*H+t*(40+hash(q*2)*40)*u)%(H+20))-10; g.save(); g.translate(x,y); g.rotate(t*3+q); g.scale(1,Math.abs(Math.sin(t*4+q))+.2); g.fillStyle=RAINBOW[q%RAINBOW.length]; g.fillRect(-4*u-1,-2.5*u-1,8*u+2,5*u+2); g.restore(); }   // v0.22.5：かみふぶき
+      for(let q=0;q<6;q++){ const ph=(t*.35+q/6)%1, x=W*(.1+.8*hash(q*13))+Math.sin(t*2+q)*14*u, y=gy-40*u-ph*170*u; g.globalAlpha=a*Math.sin(ph*Math.PI); g.fillStyle=['#ff7fa6','#7a5ad8','#3fa36b'][q%3]; g.font=`900 ${22*u+6}px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(q%2?'♪':'♫',x,y); }   // 音符
       g.globalAlpha=1; cap(a);
     }else{   // 4. ありがとう・おしまい
-      const a=clamp((t-30)/1.2); g.globalAlpha=a; petals(70,1.2);
+      const a=clamp((t-30)/1.2); g.globalAlpha=a; petals(70,1.2); twk(36,'#fff6c8',.9);
+      for(let b=0;b<3;b++){ const per=2.6, tt=t+b*per/3, lt=(tt%per)/per, id=Math.floor(tt/per)*7+b, cx=W*(.12+.76*hash(id)), cy=H*(.1+.32*hash(id*3)), R=(60+50*hash(id*5))*u*easeOut(Math.min(1,lt*1.6));   // v0.22.5：花びらの 花火
+        for(let q=0;q<16;q++){ const an=q/16*6.283+id, x=cx+Math.cos(an)*R, y=cy+Math.sin(an)*R+lt*lt*30*u; g.globalAlpha=a*(1-lt); g.fillStyle=PETAL[(q+b)%5]; g.beginPath(); g.arc(x,y,(3.2-lt*1.8)*u+1,0,7); g.fill(); }
+        starSp(g,cx,cy,(14-lt*12)*u,'#fffbe0',a*(1-lt)); } g.globalAlpha=a;
       g.fillStyle='#fff8ea'; g.textAlign='center'; g.textBaseline='middle';
       const lw=Math.min(W*.74,860*u+120), lh=lw*.142, ly=Math.max(H*.14,ST+lh/2+4), lb=ly+lh/2;
       { const tl=gameTitle(); g.font=`900 ${Math.max(28,54*u)}px ${opFont()}`; let tw=g.measureText(tl).width, f=Math.min(1,W*.86/tw); g.font=`900 ${Math.max(28,54*u)*f}px ${opFont()}`; g.lineJoin='round'; g.lineWidth=8*u; g.strokeStyle='#5a3218'; g.strokeText(tl,W/2,ly-lh*.3); g.fillStyle='#ffd34d'; g.fillText(tl,W/2,ly-lh*.3);   // v0.21.0：タイトルは 文字で（言語ごと）
@@ -5590,13 +5621,14 @@ const Ending={on:false,t:0,last:0,cb:null,
         if(H2ok()){ const H2=HANA_SPR; let hx=W/2, hf=feet, s=Math.min(.7*u+.25,(room-hop)/H2.ch);
           if(room<80){   // 高さが たりない（スマホの よこ画面など）：Hanaは「おわる」ボタンの 左よこで ジャンプ
             const bw=bd.offsetWidth||90; hx=W/2-Math.max(bw/2+70,170*u); hf=H-12; s=Math.min(.7*u+.25,(hf-lb-10-hop)/H2.ch); }   // 文字は まんなかだけ なので、よこに いる Hanaは ロゴの 下まで つかえる
+          if(room>=80&&t>31) for(let q=0;q<4;q++){ const sd=q<2?-1:1, d=(q%2?130:72)*u+24, kk=Math.max(12,22*u); drawCubeChar(g,hx+sd*d,hf-kk*.5,kk,{color:CUBE_COLS[(q+1)%5],mood:q%2?5:1,hop:Math.abs(Math.sin((t-30)*5+q*1.3))*16*u,top:1,t}); }   // v0.22.5：Cubeも いっしょに ジャンプ
           if(s>.12&&!hanaJumpDraw(g,t-30,hx,hf,s,hop,2.0)) g.drawImage(H2.img,H2.smile*H2.cw,0,H2.cw,H2.ch,hx-H2.ax*s,hf-H2.ay*s,H2.cw*s,H2.ch*s); } }
       if(t>34){ g.globalAlpha=clamp((t-34)/1.5); g.font=`800 ${Math.max(22,34*u)}px ${FONT}`; g.fillStyle='#ffc93c'; g.fillText('― おしまい ―',W/2,y3); }
       g.globalAlpha=1;
     }
   }
 };
-const VERSION='v0.22.4';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
+const VERSION='v0.22.5';   // オープニングの「クリックしてね」の 右下に 出す（更新のたびに ここと <title>・先頭の コメントを 変える）
 const H2ok=()=>HANA_SPR.ok&&!!HANA_SPR.img;
 
 // オープニング：花で かざった 木の かんばんに、花が さくと 1文字ずつ「Tons of Flowers」が あらわれる（約9秒）
@@ -5714,7 +5746,7 @@ const Op={on:false,go:false,t:0,last:0,parts:[],ac:null,out:null,fadeT:0,cb:null
     // 絵は まえの ページから 重ねて きりかえ、文字だけ みじかく きえて 出る。わくの 大きさは いちばん 長い ページに あわせて かえない
     const f=m%P, N=STORY_OPEN.length, oa=Math.min(1,m/.5), ta=Math.min(1,f/.35,(k<N-1?(P-f)/.25:1)), xa=k>0?Math.min(1,f/.6):1;   // oa：さいごの ページの あとは 画面ごと きえるので、ここでは うすくしない（看板が 一瞬 見えない ように）
     if(!this.stCvs) this.stCvs=[];
-    const art=i=>{ let c=this.stCvs[i]; if(!c){ c=this.stCvs[i]=document.createElement('canvas'); c.width=720; c.height=360; try{ drawStoryArt(c.getContext('2d'),false,i); }catch(e){} } return c; };
+    const art=i=>{ let c=this.stCvs[i]; if(!c){ c=this.stCvs[i]=document.createElement('canvas'); c.width=720; c.height=360; } try{ drawStoryArt(c.getContext('2d'),false,i,st); }catch(e){} return c; };   // v0.22.5：うごく さし絵
     g.save(); g.globalAlpha=oa*.55; g.fillStyle='#2a2440'; g.fillRect(0,0,W,H); g.globalAlpha=oa;
     const cw=Math.min(W*.66,720*u*1.05), ch=cw*.5, fs=Math.max(15,22*u), x0=(W-cw)/2;
     g.font=`800 ${fs}px ${FONT}`; const all=STORY_OPEN.map(s=>this.wrapLines(g,tr(s),cw-36*u)), lines=all[k], lh=fs*1.45, th=Math.max(...all.map(l=>l.length))*lh+26*u;
@@ -5857,30 +5889,42 @@ const STORY_END=[
   'Hanaの 花に つつまれて、女王は やっと さくことが できました。「ありがとう、Hana。わたし、やっと さけた」',
   'Bloom Cubeたちは 世界じゅうに 根づき、どこまでも 花畑が ひろがりました。',
   '世界は 花で いっぱいに なりました。 ― おしまい ―'];
-function drawStoryArt(g,ending,k){
-  const W=720,H=360, t=k*1.7+(ending?9:0);
+// v0.22.5：さし絵は うごく（T＝秒）。Cubeは ゲームと 同じ 絵（顔つき）。光の すじ・きらきら・花びらで はなやかに
+function drawStoryArt(g,ending,k,T){ T=T||0;
+  const W=720,H=360, t=k*1.7+(ending?9:0)+T;
   g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,H);
   const night=!ending&&k===1, sky=g.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,night?'#9aa6c9':ending&&k===0?'#cdb8e6':'#bfe6f5'); sky.addColorStop(.62,'#e8f4e0'); sky.addColorStop(1,'#cfe6b8'); g.fillStyle=sky; g.fillRect(0,0,W,H);
+  sky.addColorStop(0,night?'#8e98c4':ending&&k===0?'#cdb8e6':'#bfe6f5'); sky.addColorStop(.62,night?'#d9d4ec':'#e8f4e0'); sky.addColorStop(1,'#cfe6b8'); g.fillStyle=sky; g.fillRect(0,0,W,H);
+  if(!night){ g.save(); g.translate(W*.5,-60); g.rotate(T*.05); for(let q=0;q<14;q++){ const a0=q*Math.PI/7; g.fillStyle=`rgba(255,253,235,${.13+.07*Math.sin(T*1.2+q)})`; g.beginPath(); g.moveTo(0,0); g.arc(0,0,640,a0,a0+.13); g.closePath(); g.fill(); } g.restore(); }   // 光の すじ（ゆっくり まわる）
+  const twk=(n,ymax,col)=>{ for(let q=0;q<n;q++){ const a=.5+.5*Math.sin(T*2.6+q*1.9); starSp(g,hash(q*17+3)*W,hash(q*29+7)*ymax,(3+hash(q*5)*6)*a,col,a); } };
+  if(night) twk(26,200,'#fffbe0');
+  if(!ending&&k===3||ending&&k>=2){ g.save(); g.globalAlpha=.32+.08*Math.sin(T*1.5); g.lineWidth=12; ['#ff8fa3','#ffc36b','#fff17a','#8fe39a','#8fd0ff','#c3a3ff'].forEach((cl,q)=>{ g.strokeStyle=cl; g.beginPath(); g.arc(W/2,H+60,300-q*12,Math.PI*1.08,Math.PI*1.92); g.stroke(); }); g.restore(); }   // にじ
   g.fillStyle=(!ending&&k<2)?'#d8bd9f':'#9ed58a'; g.beginPath(); g.ellipse(W/2,H+40,W*.75,150,0,0,7); g.fill();
-  const cube=(x,y,s,col)=>{ const c=col||[122,212,170], e=[58,128,104];
-    g.save(); g.translate(x,y); g.lineJoin='round';
-    g.fillStyle=shade(c,1.05); g.beginPath(); g.moveTo(0,-s); g.lineTo(s,-s/2); g.lineTo(0,0); g.lineTo(-s,-s/2); g.closePath(); g.fill();
-    g.fillStyle=shade(c,.85); g.beginPath(); g.moveTo(-s,-s/2); g.lineTo(0,0); g.lineTo(0,s); g.lineTo(-s,s/2); g.closePath(); g.fill();
-    g.fillStyle=shade(c,.7); g.beginPath(); g.moveTo(s,-s/2); g.lineTo(0,0); g.lineTo(0,s); g.lineTo(s,s/2); g.closePath(); g.fill();
-    g.strokeStyle=shade(e,1); g.lineWidth=2; g.beginPath(); g.moveTo(0,-s); g.lineTo(s,-s/2); g.lineTo(s,s/2); g.lineTo(0,s); g.lineTo(-s,s/2); g.lineTo(-s,-s/2); g.closePath(); g.moveTo(0,0); g.lineTo(0,s); g.moveTo(0,0); g.lineTo(-s,-s/2); g.moveTo(0,0); g.lineTo(s,-s/2); g.stroke();
-    g.fillStyle='#8a5a3c'; g.beginPath(); g.ellipse(0,-s/2,s*.18,s*.1,0,0,7); g.fill(); g.restore(); };
+  const cube=(x,y,s,col,o)=>drawCubeChar(g,x,y+s*.5,s,Object.assign({color:col||'green',t:T},o||{}));
   const hana=(x,y,s,fr)=>{ const Hs=HANA_SPR; if(Hs.ok&&Hs.img) g.drawImage(Hs.img,(fr===2?Hs.smile:(fr||0))*Hs.cw,0,Hs.cw,Hs.ch,x-Hs.ax*s,y-Hs.ay*s,Hs.cw*s,Hs.ch*s); else { g.fillStyle='#f7a531'; g.beginPath(); g.ellipse(x,y-40*s,22*s,40*s,0,0,7); g.fill(); } };
-  const flowers=(n,y0)=>{ for(let q=0;q<n;q++){ const sp=Assets.flower[q%5]; if(sp) drawSprite(g,sp,40+((q*97)%640),y0+((q*53)%60),1.6+(q%3)*.3,0); } };
+  const flowers=(n,y0)=>{ for(let q=0;q<n;q++){ const sp=Assets.flower[q%5]; if(sp) drawSprite(g,sp,40+((q*97)%640),y0+((q*53)%60),1.6+(q%3)*.3,Math.sin(T*2.2+q)*.1); } };
+  const petals=(n,sp)=>{ for(let q=0;q<n;q++){ const x=(hash(q*9)*W+Math.sin(T*.8+q)*30+T*14)%W, y=((hash(q*4)*H+T*sp*(26+hash(q)*26))%(H+30))-15; g.fillStyle=PETAL[q%5]; g.save(); g.translate(x,y); g.rotate(T*2+q); g.beginPath(); g.ellipse(0,0,7,4,0,0,7); g.fill(); g.restore(); } };
+  const hop=(q,sp,h)=>Math.abs(Math.sin(T*(sp||5)+q*1.3))*(h||10);
   if(!ending){
-    if(k===0){ for(let q=0;q<6;q++){ const x=90+q*110, y=60+((q*67)%120); g.strokeStyle='rgba(255,255,255,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(x-30,y-50); g.lineTo(x-6,y-14); g.stroke(); cube(x,y,22+(q%3)*5); } }
-    else if(k===1){ cube(360,250,46); g.fillStyle='#5b4a6e'; g.font='800 46px '+FONT; g.textAlign='center'; g.fillText('!?',470,150); g.fillText('!',220,160); }
-    else if(k===2){ cube(470,262,40); hana(280,320,1.25,2); g.fillStyle='#ff5f8f'; g.font='800 44px '+FONT; g.textAlign='center'; g.fillText('♡',370,150); }
-    else { flowers(18,240); cube(520,250,34); cube(150,270,28,[242,142,128]); hana(340,330,1.2,0); }
+    if(k===0){ twk(14,170,'#ffffff');   // 空から Cubeが ふってくる（ひかりの しっぽ つき）
+      for(let q=0;q<6;q++){ const ph=(T*.22+hash(q*3+1))%1, x=60+q*112+ph*70, y=-70+ph*330, s=20+(q%3)*5;
+        const gr=g.createLinearGradient(x-70,y-110,x,y-10); gr.addColorStop(0,'rgba(255,255,255,0)'); gr.addColorStop(1,'rgba(255,255,240,.9)'); g.strokeStyle=gr; g.lineWidth=7; g.lineCap='round'; g.beginPath(); g.moveTo(x-70,y-110); g.lineTo(x-6,y-18); g.stroke();
+        for(let d=1;d<4;d++) starSp(g,x-d*22,y-d*32-10,6-d,'#fff6c8',.9-d*.2);
+        cube(x,y-20,s,CUBE_COLS[q%5],{mood:q%2?5:0,shadow:false}); }
+      cube(250,300,26,'blue',{mood:2,hop:hop(0,4,6)}); cube(470,292,22,'yellow',{mood:5,hop:hop(1,4.5,8)}); }
+    else if(k===1){ const sh=Math.sin(T*2.4)>.6?Math.sin(T*40)*2.5:0;   // みんなが こわがって にげる：Cubeは こまり顔
+      cube(360+sh,250,46,'green',{mood:4});
+      for(let q=0;q<3;q++){ const ph=(T*.9+q/3)%1; g.globalAlpha=1-ph; g.fillStyle='#8fc8ff'; g.beginPath(); const x=330-q*14+ph*-10, y=150+ph*22; g.moveTo(x,y-9); g.quadraticCurveTo(x+7,y+2,x,y+5); g.quadraticCurveTo(x-7,y+2,x,y-9); g.fill(); } g.globalAlpha=1;   // あせ
+      g.fillStyle='#5b4a6e'; g.font='800 46px '+FONT; g.textAlign='center'; g.fillText('!?',470,150-hop(0,3,8)); g.fillText('!',220,160-hop(2,3.4,8));
+      for(let q=0;q<5;q++){ const ph=(T*.6+q/5)%1; g.globalAlpha=.45*(1-ph); g.fillStyle='#fff'; g.beginPath(); g.arc(120-ph*90+q*8,300-q*6,10+ph*14,0,7); g.arc(610+ph*90-q*8,296-q*6,10+ph*14,0,7); g.fill(); } g.globalAlpha=1; }   // にげる ときの けむり
+    else if(k===2){ twk(16,300,'#ffe9a8'); cube(470,262,40,'green',{mood:1,hop:hop(0,3.2,10)}); hana(280,320,1.25,2);   // Hanaが 気づく：ハートが ふわふわ
+      for(let q=0;q<4;q++){ const ph=(T*.45+q/4)%1; g.globalAlpha=Math.sin(ph*Math.PI); g.fillStyle=q%2?'#ff8fb1':'#ff5f8f'; g.font=`800 ${28+q*6}px ${FONT}`; g.textAlign='center'; g.fillText('♡',360+Math.sin(T*2+q*2)*26,210-ph*150); } g.globalAlpha=1; }
+    else { flowers(18,240); petals(26,1); twk(12,160,'#ffffff');   // 旅に でる：みんなで ぴょんぴょん
+      cube(520,250,34,'green',{mood:5,hop:hop(0,5,14),top:1}); cube(150,270,28,'red',{mood:1,hop:hop(1,5,12)}); cube(640,282,22,'yellow',{mood:5,hop:hop(2,5.5,12)}); hana(340,330,1.2,0); }
   }else{
-    if(k===0||k===1){ flowers(10,270); g.save(); g.translate(360,330); g.scale(1.6,1.6); drawQueenFlower(g,true,t); g.restore(); if(k===1){ hana(170,330,1,2); g.fillStyle='#ff5f8f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('♡',260,170); } }
-    else if(k===2){ flowers(30,200); for(let q=0;q<4;q++) cube(130+q*150,250-(q%2)*30,26,[[122,212,170],[242,142,128],[124,172,236],[238,204,92]][q]); }
-    else { flowers(34,190); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
+    if(k===0||k===1){ flowers(10,270); petals(18,.8); g.save(); g.translate(360,330); g.scale(1.6,1.6); drawQueenFlower(g,true,t); g.restore(); if(k===1){ hana(170,330,1,2); g.fillStyle='#ff5f8f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('♡',260,170-hop(0,2,10)); } }
+    else if(k===2){ flowers(30,200); petals(22,1); for(let q=0;q<4;q++) cube(130+q*150,250-(q%2)*30,26,CUBE_COLS[q],{mood:q%2?5:1,hop:hop(q,5,12),top:1}); }
+    else { flowers(34,190); petals(30,1.2); twk(16,160,'#fff6c8'); hana(360,330,1.3,2); g.fillStyle='#c2355f'; g.font='800 40px '+FONT; g.textAlign='center'; g.fillText('おしまい',360,80); }
   }
 }
 /* ---- 開発者モード（v0.13.1）：いまは ステージ選択だけ。セーブ（ロック・おはなし）は かえない ---- */
